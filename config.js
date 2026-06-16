@@ -66,7 +66,7 @@ const CONFIG = {
   // MANAGER AUTHENTICATION
   // =============================================
   // Mật khẩu dành cho quản lý (thay đổi mật khẩu này!)
-  MANAGER_PASSWORD: 'agr@2026',
+  MANAGER_PASSWORD: '016850Tai@',
 
   // =============================================
   // APP INFO
