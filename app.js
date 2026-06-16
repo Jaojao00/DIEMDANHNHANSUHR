@@ -157,9 +157,22 @@ const DataManager = {
 // ==========================================
 const EmployeeApp = {
   init: () => {
+    EmployeeApp.syncSettings();
     EmployeeApp.renderShifts();
     EmployeeApp.setupEvents();
     EmployeeApp.startClock();
+  },
+
+  syncSettings: () => {
+    const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times'));
+    if (savedTimes) {
+      State.shifts.forEach(s => {
+        if (savedTimes[s.id]) {
+          s.allowStart = savedTimes[s.id].allowStart;
+          s.allowEnd = savedTimes[s.id].allowEnd;
+        }
+      });
+    }
   },
 
   startClock: () => {
@@ -373,6 +386,16 @@ const AdminApp = {
     // Exit Admin
     document.getElementById('exitAdminBtn').addEventListener('click', AdminApp.switchToEmployee);
 
+    // Settings Modal
+    document.getElementById('settingsBtn').addEventListener('click', AdminApp.openSettingsModal);
+    document.getElementById('settingsCloseBtn').addEventListener('click', () => {
+      document.getElementById('settingsModal').classList.add('hidden');
+    });
+    document.getElementById('settingsCancelBtn').addEventListener('click', () => {
+      document.getElementById('settingsModal').classList.add('hidden');
+    });
+    document.getElementById('settingsSaveBtn').addEventListener('click', AdminApp.saveSettings);
+
     // Refresh & Search
     document.getElementById('refreshBtn').addEventListener('click', () => {
       const icon = document.getElementById('refreshBtn');
@@ -558,6 +581,53 @@ const AdminApp = {
         AdminApp.loadData();
       });
     });
+  },
+
+  // ---- Settings Modal Logic ----
+  openSettingsModal: () => {
+    document.getElementById('settingsModal').classList.remove('hidden');
+    const container = document.getElementById('settingsShiftList');
+    
+    // Load from localStorage if available
+    const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times')) || {};
+
+    container.innerHTML = State.shifts.map(s => {
+      const currentStart = savedTimes[s.id]?.allowStart || s.allowStart || '';
+      const currentEnd = savedTimes[s.id]?.allowEnd || s.allowEnd || '';
+      const safeId = s.id.replace(/:/g, '');
+      
+      return `
+        <div class="settings-shift-item">
+          <div class="ssi-info">
+            <strong>${s.label}</strong>
+            <span style="font-size:11px;color:var(--text-muted)">(${s.id})</span>
+          </div>
+          <div class="ssi-inputs">
+            <input type="time" id="start_${safeId}" value="${currentStart}" />
+            <span> - </span>
+            <input type="time" id="end_${safeId}" value="${currentEnd}" />
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  saveSettings: () => {
+    const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times')) || {};
+    State.shifts.forEach(s => {
+      const safeId = s.id.replace(/:/g, '');
+      const start = document.getElementById(`start_${safeId}`).value;
+      const end = document.getElementById(`end_${safeId}`).value;
+      savedTimes[s.id] = { allowStart: start, allowEnd: end };
+      
+      // Update state
+      s.allowStart = start;
+      s.allowEnd = end;
+    });
+    
+    localStorage.setItem('agr_shift_times', JSON.stringify(savedTimes));
+    Utils.showToast('Lưu cài đặt giờ thành công!', 'success');
+    document.getElementById('settingsModal').classList.add('hidden');
   },
 
   parsePastedData: () => {

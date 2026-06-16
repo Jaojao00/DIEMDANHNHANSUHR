@@ -180,6 +180,7 @@
         <div class="current-date" id="currentDate"></div>
         <div class="current-time" id="currentTime"></div>
       </div>
+      <button class="btn btn-secondary" id="settingsBtn" title="Cài đặt Khung Giờ">⚙️</button>
       <div class="status-indicator">
         <span class="status-dot" id="connectionStatus"></span>
         <span id="connectionText">Đang kết nối...</span>
@@ -421,6 +422,28 @@
         </svg>
         Xác nhận có mặt
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay hidden">
+  <div class="modal-content settings-modal">
+    <div class="modal-header">
+      <h2>⚙️ Cài Đặt Khung Giờ Điểm Danh</h2>
+      <button class="btn-icon" id="settingsCloseBtn">✕</button>
+    </div>
+    <div class="modal-body" style="padding: 16px;">
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">
+        Thiết lập thời gian bắt đầu và kết thúc cho phép nhân viên tự điểm danh của từng ca.
+      </p>
+      <div id="settingsShiftList" class="settings-shift-list">
+        <!-- Render từ JS -->
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; padding:16px; border-top:1px solid var(--border); background:var(--bg-panel); border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
+      <button class="btn btn-ghost" id="settingsCancelBtn">Hủy</button>
+      <button class="btn btn-primary" id="settingsSaveBtn">Lưu Cài Đặt</button>
     </div>
   </div>
 </div>

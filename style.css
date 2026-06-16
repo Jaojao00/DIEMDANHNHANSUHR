@@ -688,6 +688,31 @@ input, textarea { font-family: inherit; }
 .tooltip-label { color: var(--text-muted); }
 .tooltip-value { color: var(--text-primary); font-weight: 600; }
 
+/* ---- Settings Modal ---- */
+.settings-shift-list { display: flex; flex-direction: column; gap: 10px; }
+.settings-shift-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.ssi-info { display: flex; flex-direction: column; gap: 2px; }
+.ssi-inputs { display: flex; align-items: center; gap: 8px; }
+.ssi-inputs input[type="time"] {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  color-scheme: dark;
+}
+.ssi-inputs input[type="time"]:focus { border-color: var(--agr-red); }
+
 /* ============================================================
    BUTTONS (Shared)
    ============================================================ */
