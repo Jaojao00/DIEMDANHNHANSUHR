@@ -424,11 +424,10 @@ const AdminApp = {
 
   startAutoRefresh: () => {
     AdminApp.stopAutoRefresh();
-    // Setup auto refresh 15s using CONFIG.REFRESH_INTERVAL
     AdminApp.refreshTimer = setInterval(() => {
-      // Chỉ tự tải lại khi đang ở tab quản lý danh sách (không phải lúc đang preview paste data)
+      // Chỉ tự tải lại khi đang ở tab danh sách (không phải lúc đang preview)
       if (document.getElementById('previewContainer').classList.contains('hidden')) {
-        AdminApp.loadShiftData(State.selectedShiftId, true); // true = silent refresh (no spinner)
+        AdminApp.loadData(true); // true = silent refresh
       }
     }, CONFIG.REFRESH_INTERVAL);
   },
@@ -583,7 +582,7 @@ const AdminApp = {
       AdminApp.renderLogs();
 
       document.getElementById('connectionStatus').className = 'status-dot online';
-      document.getElementById('connectionText').textContent = 'Trực tuyến (Local)';
+      document.getElementById('connectionText').textContent = State.apiLink ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
     } catch (err) {
       if(!isSilent) Utils.showToast('Lỗi tải dữ liệu', 'error');
       document.getElementById('connectionStatus').className = 'status-dot error';
