@@ -63,6 +63,7 @@ input, textarea { font-family: inherit; }
    VIEW MANAGEMENT
    ============================================================ */
 .view { display: none !important; }
+.hidden { display: none !important; }
 .view.active { display: flex !important; flex-direction: column; }
 
 #adminView.view.active {
@@ -260,95 +261,13 @@ input, textarea { font-family: inherit; }
   width: 100%;
 }
 
-/* Attendance method tabs */
-.att-tabs {
-  display: flex;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
-  padding: 0 6px;
-  flex-shrink: 0;
-}
-.att-tab {
-  flex: 1;
-  display: flex; align-items: center; justify-content: center;
-  gap: 7px;
-  padding: 11px 6px;
-  background: transparent; border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-muted);
-  font-size: 13px; font-weight: 500;
-  cursor: pointer;
-  transition: var(--transition);
-  margin-bottom: -1px;
-}
-.att-tab:hover { color: var(--text-secondary); }
-.att-tab.active { color: var(--agr-red-light); border-bottom-color: var(--agr-red); }
-
-/* Tab panels */
-.att-panel { display: none; padding: 14px 16px; flex: 1; }
-.att-panel.active { display: block; }
-
-/* ---- Mobile Camera ---- */
-.mob-camera-box {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 4/3;
-  background: #000;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  margin-bottom: 10px;
+/* ---- Manual Form ---- */
+.att-manual-box {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
   border: 1px solid var(--border);
 }
-.mob-camera-box video { width: 100%; height: 100%; object-fit: cover; display: block; }
-.mob-scan-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-.mob-corners { position: absolute; inset: 20px; }
-.mc { position: absolute; width: 24px; height: 24px; border-color: var(--agr-red); border-style: solid; }
-.mc.tl { top:0;left:0;border-width:3px 0 0 3px;border-radius:3px 0 0 0; }
-.mc.tr { top:0;right:0;border-width:3px 3px 0 0;border-radius:0 3px 0 0; }
-.mc.bl { bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 3px; }
-.mc.br { bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 3px 0; }
-.mob-scan-line {
-  position: absolute; left: 20px; right: 20px; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--agr-red), var(--agr-orange), var(--agr-red), transparent);
-  box-shadow: 0 0 8px var(--agr-red);
-  animation: scanMove 2.5s ease-in-out infinite;
-  top: 20px;
-}
-@keyframes scanMove {
-  0%, 100% { transform: translateY(0); opacity: 1; }
-  50% { transform: translateY(calc((100vw * 0.75) - 40px)); opacity: 0.8; }
-}
-.mob-scan-hint {
-  position: absolute; bottom: 10px;
-  font-size: 11px; color: rgba(255,255,255,.7);
-  background: rgba(0,0,0,.5); padding: 4px 14px;
-  border-radius: 20px;
-}
-.mob-cam-placeholder {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 8px; background: var(--bg-card);
-  cursor: pointer;
-}
-.mob-cam-placeholder.hidden { display: none; }
-.mob-cam-placeholder p { font-size: 13px; color: var(--text-secondary); }
-.mob-cam-controls { display: flex; gap: 8px; margin-bottom: 10px; }
-
-/* scan result */
-.scan-result {
-  display: flex; align-items: center; gap: 12px;
-  padding: 12px 16px;
-  background: rgba(0,212,142,0.1);
-  border: 1.5px solid rgba(0,212,142,0.3);
-  border-radius: var(--radius-md);
-  margin-bottom: 10px;
-}
-.scan-result.hidden { display: none; }
-.scan-result-icon { font-size: 20px; color: var(--success); font-weight: 900; flex-shrink: 0; }
-.scan-result-info { display: flex; flex-direction: column; gap: 2px; }
-.result-id { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600; color: var(--agr-red-light); }
-.result-name { font-size: 12px; color: var(--text-secondary); }
 
 /* ---- Mobile Form ---- */
 .mob-form { display: flex; flex-direction: column; gap: 14px; }
@@ -442,6 +361,19 @@ input, textarea { font-family: inherit; }
 }
 .prc-slot-lbl { font-size: 9px; color: var(--text-muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .3px; }
 .prc-slot-val { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+
+/* No Position Warning */
+.no-position-warning {
+  background: rgba(255,184,0,0.1);
+  border: 1.5px solid rgba(255,184,0,0.3);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.npw-icon { font-size: 32px; }
+.npw-title { font-size: 16px; font-weight: 800; color: var(--warning); }
+.npw-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; text-align: center; }
 
 /* ============================================================
    ADMIN VIEW — DESKTOP

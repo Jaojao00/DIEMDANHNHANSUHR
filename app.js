@@ -8,10 +8,10 @@
 // ==========================================
 const State = {
   shifts: [
-    { id: '06:00-10:00', label: 'Ca Sáng', icon: '🌅', color: '#ffb800' },
-    { id: '15:00-22:00', label: 'Ca Chiều', icon: '☀️', color: '#4fc3f7' },
-    { id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42' },
-    { id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0' }
+    { id: '06:00-10:00', label: 'Ca Sáng', icon: '🌅', color: '#ffb800', allowStart: '06:00', allowEnd: '08:30' },
+    { id: '15:00-22:00', label: 'Ca Chiều', icon: '☀️', color: '#4fc3f7', allowStart: '15:00', allowEnd: '17:30' },
+    { id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42', allowStart: '18:00', allowEnd: '20:30' },
+    { id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0', allowStart: '22:00', allowEnd: '00:30' }
   ],
   selectedShiftId: '22:00-06:00', // Default
   scheduleData: [], // Dữ liệu lịch ca hiện tại
@@ -54,6 +54,23 @@ const Utils = {
     }, CONFIG.TOAST_DURATION || 3000);
   },
   getShiftStorageKey: (shiftId) => `agr_schedule_${shiftId}`,
+  isWithinTimeWindow: (startStr, endStr) => {
+    if (!startStr || !endStr) return true;
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    
+    let [sH, sM] = startStr.split(':').map(Number);
+    let startMins = sH * 60 + sM;
+    
+    let [eH, eM] = endStr.split(':').map(Number);
+    let endMins = eH * 60 + eM;
+    
+    if (endMins < startMins) {
+      // Qua đêm
+      return currentMins >= startMins || currentMins <= endMins;
+    }
+    return currentMins >= startMins && currentMins <= endMins;
+  },
 };
 
 // ==========================================
@@ -121,8 +138,14 @@ const DataManager = {
       data[empIndex].timestamp = Utils.formatTime();
       data[empIndex].phone = phone; // Lưu phone nếu cần (local demo)
       
+      const emp = data[empIndex];
+      const isUnassigned = (!emp.viTri1 || emp.viTri1 === 'Chưa xếp') && 
+                           (!emp.viTri2 || emp.viTri2 === 'Chưa xếp') && 
+                           (!emp.viTri3 || emp.viTri3 === 'Chưa xếp');
+      emp.noPosition = isUnassigned;
+      
       await DataManager.saveSchedule(shiftId, data);
-      return data[empIndex];
+      return emp;
     } else {
       throw new Error(`Không tìm thấy mã nhân viên ${empId} trong ca này.`);
     }
@@ -199,23 +222,16 @@ const EmployeeApp = {
       EmployeeApp.goToPhase('phaseShift');
     });
 
-    // Attendance Method Tabs
-    document.querySelectorAll('.att-tab').forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        document.querySelectorAll('.att-tab').forEach(t => t.classList.remove('active'));
-        e.currentTarget.classList.add('active');
-        
-        const method = e.currentTarget.dataset.atttab;
-        document.querySelectorAll('.att-panel').forEach(p => p.classList.add('hidden'));
-        document.getElementById(`attPanel-${method}`).classList.remove('hidden');
-
-        if (method === 'manual') EmployeeApp.stopCamera();
-      });
-    });
-
     // Manual Form Submit
     document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+      if (!Utils.isWithinTimeWindow(shift.allowStart, shift.allowEnd)) {
+        Utils.showToast(`Hiện không trong thời gian điểm danh của ca này (${shift.allowStart} - ${shift.allowEnd})`, 'error');
+        return;
+      }
+      
       const idStr = document.getElementById('employeeId').value.trim();
       const nameStr = document.getElementById('employeeName').value.trim();
       const phoneStr = document.getElementById('employeePhone').value.trim();
@@ -254,11 +270,6 @@ const EmployeeApp = {
       }
     });
 
-    // Camera Buttons
-    document.getElementById('startCameraBtn').addEventListener('click', () => EmployeeApp.startCamera());
-    document.getElementById('stopCameraBtn').addEventListener('click', () => EmployeeApp.stopCamera());
-    document.getElementById('switchCameraBtn').addEventListener('click', () => EmployeeApp.switchCamera());
-
     // Admin Access Button
     document.getElementById('adminAccessBtn').addEventListener('click', () => {
       document.getElementById('adminLoginModal').classList.remove('hidden');
@@ -271,81 +282,6 @@ const EmployeeApp = {
     });
   },
 
-  // --- ZXing Camera ---
-  startCamera: async () => {
-    if (!State.scanner) {
-      State.scanner = new ZXing.BrowserMultiFormatReader();
-    }
-    const placeholder = document.getElementById('cameraPlaceholder');
-    const btnStart = document.getElementById('startCameraBtn');
-    const btnStop = document.getElementById('stopCameraBtn');
-
-    try {
-      const videoInputDevices = await State.scanner.listVideoInputDevices();
-      if (videoInputDevices.length === 0) throw new Error('Không tìm thấy camera');
-
-      // Chọn camera sau (rear) nếu có
-      let selectedDeviceId = videoInputDevices[0].deviceId;
-      const rearCamera = videoInputDevices.find(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
-      if (rearCamera && CONFIG.PREFER_REAR_CAMERA) selectedDeviceId = rearCamera.deviceId;
-
-      placeholder.classList.add('hidden');
-      btnStart.classList.add('hidden');
-      btnStop.classList.remove('hidden');
-
-      State.isScanning = true;
-      State.scanner.decodeFromVideoDevice(selectedDeviceId, 'cameraFeed', (result, err) => {
-        if (result && State.isScanning) {
-          EmployeeApp.handleScanResult(result.text);
-        }
-      });
-    } catch (err) {
-      Utils.showToast('Lỗi truy cập camera: ' + err.message, 'error');
-      EmployeeApp.stopCamera();
-    }
-  },
-
-  stopCamera: () => {
-    if (State.scanner) {
-      State.scanner.reset();
-      State.isScanning = false;
-    }
-    document.getElementById('cameraPlaceholder').classList.remove('hidden');
-    document.getElementById('startCameraBtn').classList.remove('hidden');
-    document.getElementById('stopCameraBtn').classList.add('hidden');
-  },
-
-  switchCamera: async () => {
-    // Tính năng chuyển camera (đơn giản hóa: reset rồi cho user chọn, hoặc tự động lặp mảng devices)
-    // Tạm thời reset
-    EmployeeApp.stopCamera();
-    setTimeout(EmployeeApp.startCamera, 300);
-  },
-
-  handleScanResult: async (scannedText) => {
-    State.isScanning = false; // Tạm dừng quét
-    
-    // Giả sử mã vạch trên thẻ chính là Mã NV (VD: OPS224190)
-    // Thực tế có thể phức tạp hơn, cần parse.
-    const empId = scannedText.trim();
-    
-    if (!CONFIG.EMPLOYEE_ID_REGEX.test(empId)) {
-      Utils.showToast('Mã thẻ không đúng định dạng (VD: Ops123456)', 'error');
-      setTimeout(() => { State.isScanning = true; }, 2000);
-      return;
-    }
-
-    try {
-      // Vì quét thẻ có thể không có sđt, ta truyền rỗng hoặc null, hệ thống có thể cần check lại sau
-      const updatedEmp = await DataManager.updateAttendance(State.selectedShiftId, empId, 'Scanner');
-      EmployeeApp.stopCamera();
-      EmployeeApp.showSuccess(updatedEmp);
-    } catch (error) {
-      Utils.showToast(error.message, 'error');
-      setTimeout(() => { State.isScanning = true; }, 2000);
-    }
-  },
-
   showSuccess: (empData) => {
     EmployeeApp.goToPhase('phaseSuccess');
     
@@ -353,26 +289,33 @@ const EmployeeApp = {
     document.getElementById('successCode').textContent = empData.id;
     document.getElementById('successTs').textContent = empData.timestamp;
 
-    // Render Position
-    document.getElementById('prcMain').textContent = empData.viTri1 || 'Chưa xếp lịch';
-    
-    document.getElementById('prcSlots').innerHTML = `
-      <div class="prc-slot">
-        <span class="prc-slot-lbl">Định danh</span>
-        <span class="prc-slot-val">${empData.dinhDanh || '—'}</span>
-      </div>
-      <div class="prc-slot">
-        <span class="prc-slot-lbl">Sau giờ nghỉ</span>
-        <span class="prc-slot-val">${empData.viTri2 || '—'}</span>
-      </div>
-      <div class="prc-slot">
-        <span class="prc-slot-lbl">4h-6h</span>
-        <span class="prc-slot-val">${empData.viTri3 || '—'}</span>
-      </div>
-    `;
+    if (empData.noPosition) {
+      document.getElementById('positionResultCard').classList.add('hidden');
+      document.getElementById('noPositionWarning').classList.remove('hidden');
+    } else {
+      document.getElementById('positionResultCard').classList.remove('hidden');
+      document.getElementById('noPositionWarning').classList.add('hidden');
+      
+      // Render Position
+      document.getElementById('prcMain').textContent = empData.viTri1 || 'Chưa xếp lịch';
+      
+      document.getElementById('prcSlots').innerHTML = `
+        <div class="prc-slot">
+          <span class="prc-slot-lbl">Định danh</span>
+          <span class="prc-slot-val">${empData.dinhDanh || '—'}</span>
+        </div>
+        <div class="prc-slot">
+          <span class="prc-slot-lbl">Sau giờ nghỉ</span>
+          <span class="prc-slot-val">${empData.viTri2 || '—'}</span>
+        </div>
+        <div class="prc-slot">
+          <span class="prc-slot-lbl">4h-6h</span>
+          <span class="prc-slot-val">${empData.viTri3 || '—'}</span>
+        </div>
+      `;
+    }
   }
 };
-
 // ==========================================
 // GIAO DIỆN QUẢN TRỊ (ADMIN UI)
 // ==========================================
