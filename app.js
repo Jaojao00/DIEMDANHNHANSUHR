@@ -218,7 +218,6 @@ const EmployeeApp = {
   setupEvents: () => {
     // Back to shifts
     document.getElementById('backToShifts').addEventListener('click', () => {
-      EmployeeApp.stopCamera();
       EmployeeApp.goToPhase('phaseShift');
     });
 
