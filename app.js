@@ -336,6 +336,14 @@ const EmployeeApp = {
           <span class="prc-slot-lbl">4h-6h</span>
           <span class="prc-slot-val">${empData.viTri3 || '—'}</span>
         </div>
+        <div class="prc-slot">
+          <span class="prc-slot-lbl">Xuất Tải</span>
+          <span class="prc-slot-val">${empData.xuatTai || '—'}</span>
+        </div>
+        <div class="prc-slot" style="grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; margin-top: 5px;">
+          <span class="prc-slot-lbl">Ghi chú (NOTE)</span>
+          <span class="prc-slot-val" style="color:#aaa">${empData.note || 'Không có ghi chú'}</span>
+        </div>
       `;
     }
   }
@@ -509,7 +517,7 @@ const AdminApp = {
   renderTable: () => {
     const tbody = document.getElementById('scheduleBody');
     if (!State.scheduleData || State.scheduleData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu lịch ca này. Vui lòng thêm bằng tính năng Quản lý.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu lịch ca này. Vui lòng thêm bằng tính năng Quản lý.</td></tr>`;
       return;
     }
 
@@ -522,6 +530,8 @@ const AdminApp = {
         <td><span class="position-tag ${!emp.viTri1 ? 'empty' : ''}">${emp.viTri1 || 'Chưa xếp'}</span></td>
         <td><span class="position-tag ${!emp.viTri2 ? 'empty' : ''}">${emp.viTri2 || 'Chưa xếp'}</span></td>
         <td><span class="position-tag ${!emp.viTri3 ? 'empty' : ''}">${emp.viTri3 || 'Chưa xếp'}</span></td>
+        <td><span class="position-tag ${!emp.xuatTai ? 'empty' : ''}">${emp.xuatTai || '—'}</span></td>
+        <td><span style="font-size:12px; color:var(--text-muted)">${emp.note || ''}</span></td>
         <td class="confirm-cell">
           ${emp.status === 'confirmed' 
             ? `<div class="confirm-badge confirmed" title="Đã điểm danh lúc ${emp.timestamp}">✓</div>`
@@ -657,10 +667,13 @@ const AdminApp = {
     const rows = text.split('\n');
     const parsedData = [];
     
-    // Bỏ qua dòng tiêu đề nếu có (ví dụ STT | MÃ CTV)
+    // Bỏ qua dòng tiêu đề nếu có
     let startIndex = 0;
-    if (rows[0].toLowerCase().includes('stt') || rows[0].toLowerCase().includes('mã ctv')) {
-      startIndex = 1;
+    while (startIndex < rows.length && 
+          (rows[startIndex].toLowerCase().includes('stt') || 
+           rows[startIndex].toLowerCase().includes('mã') ||
+           rows[startIndex].split('\t').length < 3)) {
+      startIndex++;
     }
 
     for (let i = startIndex; i < rows.length; i++) {
@@ -674,6 +687,8 @@ const AdminApp = {
           viTri1: cols[4]?.trim() || '',
           viTri2: cols[5]?.trim() || '',
           viTri3: cols[6]?.trim() || '',
+          xuatTai: cols[7]?.trim() || '',
+          note: cols[8]?.trim() || '',
           status: 'pending',
           timestamp: ''
         });
@@ -689,9 +704,9 @@ const AdminApp = {
     document.getElementById('previewCount').textContent = `(${parsedData.length} nhân viên)`;
     document.getElementById('previewContainer').classList.remove('hidden');
     
-    const thead = `<tr><th>STT</th><th>Mã NV</th><th>Họ Tên</th><th>Vị Trí 1</th></tr>`;
+    const thead = `<tr><th>STT</th><th>Mã NV</th><th>Họ Tên</th><th>Xuất Tải</th><th>Ghi Chú</th></tr>`;
     const tbody = parsedData.slice(0, 5).map(r => `
-      <tr><td>${r.stt}</td><td>${r.id}</td><td>${r.name}</td><td>${r.viTri1}</td></tr>
+      <tr><td>${r.stt}</td><td>${r.id}</td><td>${r.name}</td><td>${r.xuatTai}</td><td>${r.note}</td></tr>
     `).join('');
     
     document.getElementById('previewTableWrap').innerHTML = `
