@@ -8,10 +8,10 @@
 // ==========================================
 const State = {
   shifts: [
-    { id: '06:00-10:00', label: 'Ca Sáng', icon: '🌅', color: '#ffb800', allowStart: '06:00', allowEnd: '08:30' },
-    { id: '15:00-22:00', label: 'Ca Chiều', icon: '☀️', color: '#4fc3f7', allowStart: '15:00', allowEnd: '17:30' },
+    { id: '06:00-10:00', label: 'Ca Sáng', icon: '🌅', color: '#4facf7', allowStart: '06:00', allowEnd: '10:00' },
+    { id: '15:00-22:00', label: 'Ca Chiều', icon: '☀️', color: '#ffbd3a', allowStart: '15:00', allowEnd: '22:00' },
     { id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42', allowStart: '18:00', allowEnd: '20:30' },
-    { id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0', allowStart: '22:00', allowEnd: '00:30' }
+    { id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0', allowStart: '22:00', allowEnd: '06:00' }
   ],
   selectedShiftId: null,
   scheduleData: [], // Dữ liệu lịch ca hiện tại
@@ -245,7 +245,7 @@ const EmployeeApp = {
       
       const shift = State.shifts.find(s => s.id === State.selectedShiftId);
       if (State.enableTimeCheck && !Utils.isWithinTimeWindow(shift.allowStart, shift.allowEnd)) {
-        Utils.showToast(`Hiện không trong thời gian điểm danh của ca này (${shift.allowStart} - ${shift.allowEnd})`, 'error');
+        Utils.showToast(`Hiện không trong thời gian điểm danh của ca ${shift.label} (Giờ cho phép: ${shift.allowStart} - ${shift.allowEnd})`, 'error');
         return;
       }
       
