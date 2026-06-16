@@ -13,7 +13,7 @@ const State = {
     { id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42', allowStart: '18:00', allowEnd: '20:30' },
     { id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0', allowStart: '22:00', allowEnd: '06:00' }
   ],
-  selectedShiftId: null,
+  selectedShiftId: '06:00-10:00', // Khởi tạo mặc định để tránh null
   scheduleData: [], // Dữ liệu lịch ca hiện tại
   isAdminMode: false,
   isAdminLoggedIn: false,
@@ -128,7 +128,14 @@ const DataManager = {
   updateAttendance: async (shiftId, empId, phone) => {
     // Tạm thời update ở Local Storage
     const data = await DataManager.loadSchedule(shiftId);
-    const empIndex = data.findIndex(e => e.id.toLowerCase() === empId.toLowerCase());
+    
+    // Tìm kiếm linh hoạt để đề phòng paste nhầm cột: tìm trong ID, STT hoặc Tên
+    const searchId = empId.toLowerCase().trim();
+    const empIndex = data.findIndex(e => 
+      (e.id && e.id.toLowerCase().trim() === searchId) || 
+      (e.stt && e.stt.toLowerCase().trim() === searchId) ||
+      (e.name && e.name.toLowerCase().trim() === searchId)
+    );
     
     if (empIndex >= 0) {
       if (data[empIndex].status === 'confirmed') {
