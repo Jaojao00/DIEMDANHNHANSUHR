@@ -13,7 +13,7 @@ const State = {
     { id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42', allowStart: '18:00', allowEnd: '20:30' },
     { id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0', allowStart: '22:00', allowEnd: '00:30' }
   ],
-  selectedShiftId: '22:00-06:00', // Default
+  selectedShiftId: null,
   scheduleData: [], // Dữ liệu lịch ca hiện tại
   isAdminMode: false,
   isAdminLoggedIn: false,
@@ -21,6 +21,7 @@ const State = {
   isScanning: false,
   refreshTimer: null,
   clockTimer: null,
+  enableTimeCheck: true
 };
 
 // ==========================================
@@ -173,6 +174,10 @@ const EmployeeApp = {
         }
       });
     }
+    const enableTime = localStorage.getItem('agr_enable_time_check');
+    if (enableTime !== null) {
+      State.enableTimeCheck = enableTime === 'true';
+    }
   },
 
   startClock: () => {
@@ -239,7 +244,7 @@ const EmployeeApp = {
       e.preventDefault();
       
       const shift = State.shifts.find(s => s.id === State.selectedShiftId);
-      if (!Utils.isWithinTimeWindow(shift.allowStart, shift.allowEnd)) {
+      if (State.enableTimeCheck && !Utils.isWithinTimeWindow(shift.allowStart, shift.allowEnd)) {
         Utils.showToast(`Hiện không trong thời gian điểm danh của ca này (${shift.allowStart} - ${shift.allowEnd})`, 'error');
         return;
       }
@@ -586,6 +591,7 @@ const AdminApp = {
   // ---- Settings Modal Logic ----
   openSettingsModal: () => {
     document.getElementById('settingsModal').classList.remove('hidden');
+    document.getElementById('enableTimeCheck').checked = State.enableTimeCheck;
     const container = document.getElementById('settingsShiftList');
     
     // Load from localStorage if available
@@ -614,6 +620,10 @@ const AdminApp = {
 
   saveSettings: () => {
     const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times')) || {};
+    const enableTime = document.getElementById('enableTimeCheck').checked;
+    State.enableTimeCheck = enableTime;
+    localStorage.setItem('agr_enable_time_check', enableTime);
+
     State.shifts.forEach(s => {
       const safeId = s.id.replace(/:/g, '');
       const start = document.getElementById(`start_${safeId}`).value;
