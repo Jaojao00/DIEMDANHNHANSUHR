@@ -344,6 +344,11 @@ const EmployeeApp = {
           <span class="prc-slot-lbl">Ghi chú (NOTE)</span>
           <span class="prc-slot-val" style="color:#aaa">${empData.note || 'Không có ghi chú'}</span>
         </div>
+        ${(!empData.viTri1 || empData.viTri1.toLowerCase().includes('chưa')) ? `
+        <div style="grid-column: 1 / -1; margin-top: 12px; background: rgba(255, 152, 0, 0.15); border: 1px dashed rgba(255, 152, 0, 0.5); border-radius: 8px; padding: 12px; text-align: center;">
+          <span style="color: #ffb74d; font-weight: 600; font-size: 15px;">⚠️ Chấm Công Xong Đợi Admin Sắp Vị Trí</span>
+        </div>
+        ` : ''}
       `;
     }
   }
