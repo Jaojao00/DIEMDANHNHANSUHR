@@ -21,7 +21,7 @@ const State = {
   isScanning: false,
   refreshTimer: null,
   clockTimer: null,
-  enableTimeCheck: true
+  enableTimeCheck: false
 };
 
 // ==========================================
