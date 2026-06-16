@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AGR | Điểm Danh</title>
+  <meta name="description" content="Hệ thống điểm danh AGR Logistics">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0b14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ==============================================================
+     EMPLOYEE VIEW — Mobile First (Default)
+     ============================================================== -->
+<div id="employeeView" class="view active">
+
+  <!-- PHASE 1: SHIFT SELECTION -->
+  <div id="phaseShift" class="emp-phase active">
+    <div class="emp-header">
+      <div class="emp-brand">
+        <span class="emp-logo">AGR</span>
+        <span class="emp-app-name">Điểm Danh</span>
+      </div>
+      <div class="emp-clock-wrap">
+        <div class="emp-date" id="empDate">—</div>
+        <div class="emp-time" id="empTime">--:--</div>
+      </div>
+    </div>
+
+    <div class="emp-scroll-body">
+      <div class="emp-welcome">
+        <div class="emp-welcome-icon">👋</div>
+        <h1>Xin chào!</h1>
+        <p>Chọn ca làm việc của bạn để bắt đầu điểm danh</p>
+      </div>
+      <div class="shift-cards" id="shiftCards">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <div class="emp-footer">
+      <button class="admin-link-btn" id="adminAccessBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Quản trị viên
+      </button>
+    </div>
+  </div>
+
+  <!-- PHASE 2: ATTENDANCE FORM -->
+  <div id="phaseAttendance" class="emp-phase hidden">
+    <div class="att-topbar">
+      <button class="att-back-btn" id="backToShifts" aria-label="Quay lại chọn ca">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="att-shift-pill" id="attShiftPill">
+        <span id="attShiftIcon"></span>
+        <span id="attShiftLabel"></span>
+        <span id="attShiftTime" style="font-family:'JetBrains Mono',monospace;font-size:11px;opacity:.7"></span>
+      </div>
+      <div class="att-clock-sm" id="attClockSm">--:--</div>
+    </div>
+
+    <div class="att-main">
+      <!-- Method Tabs -->
+      <div class="att-tabs">
+        <button class="att-tab active" data-atttab="camera">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Quét Thẻ
+        </button>
+        <button class="att-tab" data-atttab="manual">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Nhập Tay
+        </button>
+      </div>
+
+      <!-- Camera Panel -->
+      <div class="att-panel active" id="attPanel-camera">
+        <div class="mob-camera-box" id="cameraViewport">
+          <video id="cameraFeed" autoplay playsinline muted></video>
+          <div class="mob-scan-overlay" aria-hidden="true">
+            <div class="mob-corners">
+              <div class="mc tl"></div><div class="mc tr"></div>
+              <div class="mc bl"></div><div class="mc br"></div>
+            </div>
+            <div class="mob-scan-line" id="scanLine"></div>
+            <span class="mob-scan-hint">Hướng barcode thẻ vào khung</span>
+          </div>
+          <div class="mob-cam-placeholder" id="cameraPlaceholder">
+            <div style="font-size:40px;opacity:.4">📷</div>
+            <p>Nhấn bật camera để quét thẻ</p>
+          </div>
+        </div>
+        <div class="mob-cam-controls">
+          <button class="btn btn-primary" id="startCameraBtn" style="flex:1">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Bật Camera
+          </button>
+          <button class="btn btn-secondary hidden" id="stopCameraBtn" style="flex:1">Dừng</button>
+          <button class="btn btn-ghost btn-sq" id="switchCameraBtn" aria-label="Đổi camera">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          </button>
+        </div>
+        <div class="scan-result hidden" id="scanResult">
+          <div class="scan-result-icon">✓</div>
+          <div class="scan-result-info">
+            <span class="result-id" id="scannedId"></span>
+            <span class="result-name" id="scannedName"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual Form Panel -->
+      <div class="att-panel hidden" id="attPanel-manual">
+        <form class="mob-form" id="attendanceForm" novalidate>
+          <div class="form-group">
+            <label for="employeeId">Mã Nhân Viên <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <input type="text" id="employeeId" placeholder="VD: Ops224190"
+                autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off"/>
+              <span class="input-icon" id="idValidIcon"></span>
+            </div>
+            <span class="form-hint">Dạng: Ops + 5-6 chữ số</span>
+            <span class="form-error hidden" id="idError" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="employeeName">Họ và Tên <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <input type="text" id="employeeName" placeholder="Nhập họ và tên đầy đủ" autocomplete="name"/>
+              <span class="input-icon" id="nameValidIcon"></span>
+            </div>
+            <span class="form-error hidden" id="nameError" role="alert"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="employeePhone">Số Điện Thoại Zalo <span class="required">*</span></label>
+            <div class="input-wrapper">
+              <input type="tel" id="employeePhone" placeholder="VD: 0901234567" maxlength="10" autocomplete="tel"/>
+              <span class="input-icon" id="phoneValidIcon"></span>
+            </div>
+            <span class="form-hint">🛡️ Chỉ dùng để xác minh khi cần, không hiển thị công khai</span>
+            <span class="form-error hidden" id="phoneError" role="alert"></span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-xl" id="submitBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 11 12 14 22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            Xác Nhận Điểm Danh
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3: SUCCESS + POSITION -->
+  <div id="phaseSuccess" class="emp-phase hidden">
+    <div class="success-screen">
+      <div class="success-anim-wrap">
+        <svg class="success-svg" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h2 class="success-heading">Điểm Danh Thành Công!</h2>
+
+      <div class="success-person-card" id="successPersonCard">
+        <div class="spc-name" id="successName"></div>
+        <div class="spc-code" id="successCode"></div>
+        <div class="spc-time" id="successTs"></div>
+      </div>
+
+      <!-- Work Position -->
+      <div class="position-result-card" id="positionResultCard">
+        <div class="prc-header">
+          <span>📍</span>
+          <span>Vị trí làm việc của bạn hôm nay</span>
+        </div>
+        <div class="prc-main" id="prcMain">—</div>
+        <div class="prc-slots" id="prcSlots"></div>
+      </div>
+
+      <button class="btn btn-primary btn-full btn-xl" id="successDoneBtn">
+        ✓ &nbsp;Xong — Về trang chọn ca
+      </button>
+    </div>
+  </div>
+
+</div><!-- /#employeeView -->
+
+
+<!-- ==============================================================
+     ADMIN VIEW — Desktop (Password Protected)
+     ============================================================== -->
+<div id="adminView" class="view hidden">
+
+  <header class="header">
+    <div class="header-left">
+      <div class="logo-container">
+        <div class="logo-badge">AGR</div>
+        <div class="header-title">
+          <h1>Hệ Thống Điểm Danh</h1>
+          <span class="header-subtitle">Bảng điều khiển quản trị</span>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="datetime-display">
+        <div class="current-date" id="currentDate"></div>
+        <div class="current-time" id="currentTime"></div>
+      </div>
+      <div class="status-indicator">
+        <span class="status-dot" id="connectionStatus"></span>
+        <span id="connectionText">Đang kết nối...</span>
+      </div>
+      <button class="btn btn-ghost exit-admin-btn" id="exitAdminBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Thoát Admin
+      </button>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- LEFT: Schedule -->
+    <section class="schedule-panel" aria-labelledby="scheduleHeading">
+      <div class="panel-header">
+        <h2 class="panel-title" id="scheduleHeading">
+          <span class="title-icon">📋</span>
+          Lịch Ca Làm Việc
+          <span class="shift-badge" id="shiftBadge">CA ĐÊM</span>
+        </h2>
+        <div class="panel-actions">
+          <button class="btn-icon" id="refreshBtn" title="Làm mới">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M23 4v6h-6M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+            </svg>
+          </button>
+          <div class="search-box">
+            <input type="search" id="searchInput" placeholder="Tìm mã NV hoặc họ tên..." aria-label="Tìm kiếm"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shift Tabs -->
+      <div class="shift-tabs-row">
+        <div class="shift-tabs-list" id="shiftTabsList"></div>
+        <button class="manager-toggle-btn" id="managerBtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span>Quản Lý Lịch</span>
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-number" id="totalEmployees">0</span>
+          <span class="stat-label">Tổng NV</span>
+        </div>
+        <div class="stat-item confirmed">
+          <span class="stat-number" id="confirmedCount">0</span>
+          <span class="stat-label">Đã điểm danh</span>
+        </div>
+        <div class="stat-item pending">
+          <span class="stat-number" id="pendingCount">0</span>
+          <span class="stat-label">Chưa điểm danh</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-container">
+        <table class="schedule-table" id="scheduleTable">
+          <thead>
+            <tr>
+              <th>STT</th><th>Mã CTV</th><th>Họ tên</th><th>Định danh</th>
+              <th>Vị trí cố định</th><th>Sau giờ nghỉ</th><th>4h–6h</th><th>Xác nhận</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleBody">
+            <tr class="loading-row">
+              <td colspan="8">
+                <div class="loading-spinner"><div class="spinner"></div><span>Đang tải...</span></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- RIGHT: Admin Log -->
+    <aside class="attendance-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <span class="title-icon">📊</span>Theo Dõi Điểm Danh
+        </h2>
+      </div>
+      <div class="admin-log-section">
+        <div class="admin-progress-card">
+          <div class="admin-progress-nums">
+            <span class="apc-done" id="adminDone">0</span>
+            <span class="apc-sep">/</span>
+            <span class="apc-total" id="adminTotal">0</span>
+          </div>
+          <div class="admin-bar-wrap">
+            <div class="admin-bar" id="adminBar" style="width:0%"></div>
+          </div>
+          <div class="admin-prog-label">Nhân viên đã điểm danh</div>
+        </div>
+        <h3 class="log-title">Lịch Sử Điểm Danh</h3>
+        <div class="log-list" id="logList">
+          <div class="log-empty">Chưa có dữ liệu điểm danh</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+</div><!-- /#adminView -->
+
+
+<!-- ==============================================================
+     ADMIN LOGIN MODAL
+     ============================================================== -->
+<div class="modal-overlay hidden" id="adminLoginModal" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon">🔐</div>
+      <h3 class="modal-title" id="adminLoginTitle">Đăng Nhập Quản Trị</h3>
+    </div>
+    <div class="modal-body">
+      <p class="manager-hint-text">Khu vực dành riêng cho quản trị viên. Vui lòng nhập mật khẩu để tiếp tục.</p>
+      <div class="form-group" style="margin-top:14px">
+        <label for="adminPasswordInput" style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Mật khẩu</label>
+        <div class="input-wrapper" style="margin-top:6px">
+          <input type="password" id="adminPasswordInput" placeholder="Nhập mật khẩu admin..." autocomplete="off"/>
+        </div>
+        <span class="form-error hidden" id="adminLoginError" role="alert">Mật khẩu không đúng</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="adminLoginCancelBtn">Hủy</button>
+      <button class="btn btn-primary" id="adminLoginSubmitBtn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+          <polyline points="10 17 15 12 10 7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        Đăng Nhập
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================================================
+     MANAGER MODAL (Admin only — update schedule)
+     ============================================================== -->
+<div class="modal-overlay hidden" id="managerModal" role="dialog" aria-modal="true">
+  <div class="modal manager-modal">
+    <div class="modal-header">
+      <div class="modal-icon">📅</div>
+      <h3 class="modal-title">Cập Nhật Lịch Làm Việc</h3>
+      <button class="btn-icon" id="managerLogoutBtn" style="margin-left:auto" title="Đóng" aria-label="Đóng">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body manager-body">
+      <div class="manager-section">
+        <label class="manager-label">Chọn ca cần cập nhật:</label>
+        <div class="manager-shift-btns" id="managerShiftBtns"></div>
+      </div>
+      <div class="manager-section">
+        <label class="manager-label">
+          📋 Dán dữ liệu từ Google Sheets
+          <span class="manager-hint-inline">Ctrl+A → Ctrl+C → Dán vào đây</span>
+        </label>
+        <textarea id="pasteDataArea" class="paste-area" rows="6"
+          placeholder="Dán dữ liệu lịch từ Google Sheets...&#10;Định dạng: STT | Mã CTV | Họ tên | Định danh | Vị trí | Sau giờ nghỉ | 4h-6h | Màu (red/yellow)"></textarea>
+        <div class="manager-actions-row">
+          <button class="btn btn-secondary" id="parsePasteBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            Phân tích dữ liệu
+          </button>
+          <button class="btn btn-ghost" id="clearPasteBtn">Xóa</button>
+        </div>
+      </div>
+      <div class="manager-preview hidden" id="previewContainer">
+        <label class="manager-label">👁️ Xem trước <span class="preview-count" id="previewCount"></span></label>
+        <div class="preview-scroll" id="previewTableWrap"></div>
+      </div>
+    </div>
+    <div class="modal-footer manager-footer">
+      <button class="btn btn-ghost" id="clearScheduleBtn" style="color:var(--error);border-color:rgba(255,71,87,.25)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        </svg>
+        Xóa lịch ca
+      </button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" id="managerCloseBtn">Đóng</button>
+        <button class="btn btn-success" id="saveScheduleBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          Lưu lịch ca
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==============================================================
+     CONFIRM ATTENDANCE MODAL
+     ============================================================== -->
+<div class="modal-overlay hidden" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" id="modalIcon">👤</div>
+      <h3 class="modal-title" id="modalTitle">Xác Nhận Điểm Danh</h3>
+    </div>
+    <div class="modal-body">
+      <div class="employee-card-preview">
+        <div class="preview-item"><span class="preview-label">Mã NV</span><span class="preview-value code" id="previewId"></span></div>
+        <div class="preview-item"><span class="preview-label">Họ tên</span><span class="preview-value" id="previewName"></span></div>
+        <div class="preview-item"><span class="preview-label">Vị trí</span><span class="preview-value" id="previewPosition"></span></div>
+        <div class="preview-item"><span class="preview-label">Thời gian</span><span class="preview-value" id="previewTime"></span></div>
+        <div class="preview-item" id="previewPhoneRow">
+          <span class="preview-label">SDT Zalo</span>
+          <span class="preview-value" id="previewPhone"></span>
+        </div>
+      </div>
+      <div class="modal-warning" id="modalWarning" role="alert"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cancelModal">Hủy</button>
+      <button class="btn btn-success" id="confirmAttendance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        Xác nhận có mặt
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container" id="toastContainer" aria-live="assertive"></div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
