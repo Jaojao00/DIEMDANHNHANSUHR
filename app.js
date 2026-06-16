@@ -94,6 +94,23 @@ const DataManager = {
     }));
   },
 
+  // Chuẩn hóa đối tượng nhân viên (chuyển tất cả field số thành chuỗi)
+  normalizeEmp: (emp) => ({
+    ...emp,
+    stt: String(emp.stt || ''),
+    id: String(emp.id || ''),
+    name: String(emp.name || ''),
+    dinhDanh: String(emp.dinhDanh || ''),
+    viTri1: String(emp.viTri1 || ''),
+    viTri2: String(emp.viTri2 || ''),
+    viTri3: String(emp.viTri3 || ''),
+    xuatTai: String(emp.xuatTai || ''),
+    note: String(emp.note || ''),
+    status: String(emp.status || 'pending'),
+    timestamp: String(emp.timestamp || ''),
+    phone: String(emp.phone || ''),
+  }),
+
   loadSchedule: (shiftId) => {
     return new Promise(async (resolve) => {
       if (CONFIG.DEMO_MODE) {
@@ -113,9 +130,10 @@ const DataManager = {
           const url = `${CONFIG.API_URL}?action=load&shiftId=${shiftId}`;
           const response = await fetch(url);
           const data = await response.json();
+          const normalized = Array.isArray(data) ? data.map(DataManager.normalizeEmp) : [];
           // Cập nhật lại local cache để dự phòng
-          localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(data));
-          resolve(data);
+          localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(normalized));
+          resolve(normalized);
         } catch (error) {
           console.error("Lỗi tải lịch từ Google Sheets:", error);
           // Fallback
@@ -207,15 +225,12 @@ const DataManager = {
           throw new Error(res.error);
         }
         
-        const emp = res.employee;
-        const isUnassigned = (!emp.viTri1 || emp.viTri1 === 'Chưa xếp') && 
-                            (!emp.viTri2 || emp.viTri2 === 'Chưa xếp') && 
-                            (!emp.viTri3 || emp.viTri3 === 'Chưa xếp');
+        const emp = DataManager.normalizeEmp(res.employee);
+        const isUnassigned = (!emp.viTri1 || emp.viTri1.toLowerCase().includes('chưa')) &&
+                            (!emp.viTri2 || emp.viTri2.toLowerCase().includes('chưa')) &&
+                            (!emp.viTri3 || emp.viTri3.toLowerCase().includes('chưa'));
                             
-        return {
-          employeeData: emp,
-          isUnassigned: isUnassigned
-        };
+        return { employeeData: emp, isUnassigned: isUnassigned };
       } catch (error) {
         console.error("Lỗi điểm danh qua API:", error);
         throw new Error(error.message || "Lỗi kết nối hệ thống.");
