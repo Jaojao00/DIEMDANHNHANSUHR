@@ -11,11 +11,16 @@ const CONFIG = {
   // Xem hướng dẫn trong README.md
   APPS_SCRIPT_URL: '',
 
-  // Bật chế độ demo khi chưa có Apps Script URL
-  // Tự động chuyển sang false khi APPS_SCRIPT_URL được điền
+  // Bật chế độ demo nếu không có API URL
   get DEMO_MODE() {
-    return !this.APPS_SCRIPT_URL || this.APPS_SCRIPT_URL === '';
+    const localUrl = localStorage.getItem('agr_api_url');
+    return !localUrl || localUrl.trim() === '';
   },
+
+  // =============================================
+  // THỜI GIAN LÀM MỚI
+  // =============================================
+  REFRESH_INTERVAL: 15000, // 15 giây
 
   // =============================================
   // VALIDATION

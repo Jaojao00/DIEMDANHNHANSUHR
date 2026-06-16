@@ -20,6 +20,7 @@ const State = {
   scanner: null,
   isScanning: false,
   refreshTimer: null,
+  apiLink: localStorage.getItem('agr_api_url') || '',
   clockTimer: null,
   enableTimeCheck: false
 };
@@ -94,68 +95,131 @@ const DataManager = {
   },
 
   loadSchedule: (shiftId) => {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       if (CONFIG.DEMO_MODE) {
+        // ... code local storage cũ ...
         const key = Utils.getShiftStorageKey(shiftId);
         const stored = localStorage.getItem(key);
         if (stored) {
           resolve(JSON.parse(stored));
         } else {
-          // Khởi tạo demo
           const demo = DataManager.getDemoData();
           localStorage.setItem(key, JSON.stringify(demo));
           resolve(demo);
         }
       } else {
-        // Tương lai: Lấy từ Apps Script
-        resolve([]);
+        // Tải từ Google Sheets
+        try {
+          const url = `${State.apiLink}?action=load&shiftId=${shiftId}`;
+          const response = await fetch(url);
+          const data = await response.json();
+          // Cập nhật lại local cache để dự phòng
+          localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(data));
+          resolve(data);
+        } catch (error) {
+          console.error("Lỗi tải lịch từ Google Sheets:", error);
+          // Fallback
+          const stored = localStorage.getItem(Utils.getShiftStorageKey(shiftId));
+          resolve(stored ? JSON.parse(stored) : []);
+        }
       }
     });
   },
 
-  saveSchedule: (shiftId, data) => {
-    return new Promise((resolve) => {
+  saveSchedule: async (shiftId, data) => {
+    return new Promise(async (resolve, reject) => {
+      // Lưu local cache
+      localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(data));
+      
       if (CONFIG.DEMO_MODE) {
-        localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(data));
         resolve({ success: true });
       } else {
-        // Tương lai: Gửi lên Apps Script
-        resolve({ success: true });
+        // Gửi lên Google Sheets
+        try {
+          const response = await fetch(State.apiLink, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'save',
+              shiftId: shiftId,
+              schedule: data
+            })
+          });
+          const res = await response.json();
+          if (res.error) reject(new Error(res.error));
+          else resolve(res);
+        } catch (error) {
+          console.error("Lỗi lưu lịch lên Google Sheets:", error);
+          reject(new Error("Lỗi kết nối đến máy chủ."));
+        }
       }
     });
   },
 
   updateAttendance: async (shiftId, empId, phone) => {
-    // Tạm thời update ở Local Storage
-    const data = await DataManager.loadSchedule(shiftId);
-    
-    // Tìm kiếm linh hoạt để đề phòng paste nhầm cột: tìm trong ID, STT hoặc Tên
-    const searchId = empId.toLowerCase().trim();
-    const empIndex = data.findIndex(e => 
-      (e.id && e.id.toLowerCase().trim() === searchId) || 
-      (e.stt && e.stt.toLowerCase().trim() === searchId) ||
-      (e.name && e.name.toLowerCase().trim() === searchId)
-    );
-    
-    if (empIndex >= 0) {
-      if (data[empIndex].status === 'confirmed') {
-        throw new Error('Nhân viên này đã điểm danh rồi!');
+    if (CONFIG.DEMO_MODE) {
+      // Logic Local Demo
+      const data = await DataManager.loadSchedule(shiftId);
+      const searchId = empId.toLowerCase().trim();
+      const empIndex = data.findIndex(e => 
+        (e.id && e.id.toLowerCase().trim() === searchId) || 
+        (e.stt && e.stt.toLowerCase().trim() === searchId) ||
+        (e.name && e.name.toLowerCase().trim() === searchId)
+      );
+      
+      if (empIndex >= 0) {
+        if (data[empIndex].status === 'confirmed') {
+          throw new Error('Nhân viên này đã điểm danh rồi!');
+        }
+        
+        data[empIndex].status = 'confirmed';
+        data[empIndex].timestamp = Utils.formatTime();
+        data[empIndex].phone = phone;
+        
+        const emp = data[empIndex];
+        const isUnassigned = (!emp.viTri1 || emp.viTri1 === 'Chưa xếp') && 
+                            (!emp.viTri2 || emp.viTri2 === 'Chưa xếp') && 
+                            (!emp.viTri3 || emp.viTri3 === 'Chưa xếp');
+                            
+        await DataManager.saveSchedule(shiftId, data);
+        
+        return {
+          employeeData: emp,
+          isUnassigned: isUnassigned
+        };
+      } else {
+        throw new Error('Không tìm thấy mã nhân viên trong ca này.');
       }
-      
-      data[empIndex].status = 'confirmed';
-      data[empIndex].timestamp = Utils.formatTime();
-      data[empIndex].phone = phone; // Lưu phone nếu cần (local demo)
-      
-      const emp = data[empIndex];
-      const isUnassigned = (!emp.viTri1 || emp.viTri1 === 'Chưa xếp') && 
-                           (!emp.viTri2 || emp.viTri2 === 'Chưa xếp') && 
-                           (!emp.viTri3 || emp.viTri3 === 'Chưa xếp');
-      emp.noPosition = isUnassigned;
-      
-      await DataManager.saveSchedule(shiftId, data);
-      return emp;
     } else {
-      throw new Error(`Không tìm thấy mã nhân viên ${empId} trong ca này.`);
+      // Gửi API Google Sheets
+      try {
+        const response = await fetch(State.apiLink, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'checkin',
+            shiftId: shiftId,
+            empId: empId,
+            phone: phone
+          })
+        });
+        const res = await response.json();
+        
+        if (res.error) {
+          throw new Error(res.error);
+        }
+        
+        const emp = res.employee;
+        const isUnassigned = (!emp.viTri1 || emp.viTri1 === 'Chưa xếp') && 
+                            (!emp.viTri2 || emp.viTri2 === 'Chưa xếp') && 
+                            (!emp.viTri3 || emp.viTri3 === 'Chưa xếp');
+                            
+        return {
+          employeeData: emp,
+          isUnassigned: isUnassigned
+        };
+      } catch (error) {
+        console.error("Lỗi điểm danh qua API:", error);
+        throw new Error(error.message || "Lỗi kết nối hệ thống.");
+      }
     }
   }
 };
@@ -280,10 +344,10 @@ const EmployeeApp = {
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner" style="width:14px;height:14px"></span> Đang xử lý...';
 
-        const updatedEmp = await DataManager.updateAttendance(State.selectedShiftId, idStr, phoneStr);
+        const result = await DataManager.updateAttendance(State.selectedShiftId, idStr, phoneStr);
         
         // Hiện Success
-        EmployeeApp.showSuccess(updatedEmp);
+        EmployeeApp.showSuccess(result.employeeData, result.isUnassigned);
         document.getElementById('attendanceForm').reset();
       } catch (error) {
         Utils.showToast(error.message, 'error');
@@ -306,14 +370,14 @@ const EmployeeApp = {
     });
   },
 
-  showSuccess: (empData) => {
+  showSuccess: (empData, isUnassigned) => {
     EmployeeApp.goToPhase('phaseSuccess');
     
     document.getElementById('successName').textContent = empData.name;
     document.getElementById('successCode').textContent = empData.id;
     document.getElementById('successTs').textContent = empData.timestamp;
 
-    if (empData.noPosition) {
+    if (isUnassigned) {
       document.getElementById('positionResultCard').classList.add('hidden');
       document.getElementById('noPositionWarning').classList.remove('hidden');
     } else {
@@ -344,11 +408,6 @@ const EmployeeApp = {
           <span class="prc-slot-lbl">Ghi chú (NOTE)</span>
           <span class="prc-slot-val" style="color:#aaa">${empData.note || 'Không có ghi chú'}</span>
         </div>
-        ${(!empData.viTri1 || empData.viTri1.toLowerCase().includes('chưa')) ? `
-        <div style="grid-column: 1 / -1; margin-top: 12px; background: rgba(255, 152, 0, 0.15); border: 1px dashed rgba(255, 152, 0, 0.5); border-radius: 8px; padding: 12px; text-align: center;">
-          <span style="color: #ffb74d; font-weight: 600; font-size: 15px;">⚠️ Chấm Công Xong Đợi Admin Sắp Vị Trí</span>
-        </div>
-        ` : ''}
       `;
     }
   }
@@ -361,6 +420,21 @@ const AdminApp = {
     AdminApp.setupEvents();
     AdminApp.renderShiftTabs();
     AdminApp.startClock();
+  },
+
+  startAutoRefresh: () => {
+    AdminApp.stopAutoRefresh();
+    // Setup auto refresh 15s using CONFIG.REFRESH_INTERVAL
+    AdminApp.refreshTimer = setInterval(() => {
+      // Chỉ tự tải lại khi đang ở tab quản lý danh sách (không phải lúc đang preview paste data)
+      if (document.getElementById('previewContainer').classList.contains('hidden')) {
+        AdminApp.loadShiftData(State.selectedShiftId, true); // true = silent refresh (no spinner)
+      }
+    }, CONFIG.REFRESH_INTERVAL);
+  },
+
+  stopAutoRefresh: () => {
+    if (AdminApp.refreshTimer) clearInterval(AdminApp.refreshTimer);
   },
 
   startClock: () => {
@@ -380,14 +454,14 @@ const AdminApp = {
     
     AdminApp.loadData();
     // Auto refresh cho admin
-    State.refreshTimer = setInterval(AdminApp.loadData, CONFIG.REFRESH_INTERVAL);
+    AdminApp.startAutoRefresh();
   },
 
   switchToEmployee: () => {
     State.isAdminMode = false;
     document.getElementById('adminView').classList.remove('active');
     document.getElementById('employeeView').classList.add('active');
-    if (State.refreshTimer) clearInterval(State.refreshTimer);
+    AdminApp.stopAutoRefresh();
   },
 
   setupEvents: () => {
@@ -413,12 +487,8 @@ const AdminApp = {
 
     // Settings Modal
     document.getElementById('settingsBtn').addEventListener('click', AdminApp.openSettingsModal);
-    document.getElementById('settingsCloseBtn').addEventListener('click', () => {
-      document.getElementById('settingsModal').classList.add('hidden');
-    });
-    document.getElementById('settingsCancelBtn').addEventListener('click', () => {
-      document.getElementById('settingsModal').classList.add('hidden');
-    });
+    document.getElementById('settingsCloseBtn').addEventListener('click', AdminApp.closeSettings);
+    document.getElementById('settingsCancelBtn').addEventListener('click', AdminApp.closeSettings);
     document.getElementById('settingsSaveBtn').addEventListener('click', AdminApp.saveSettings);
 
     // Refresh & Search
@@ -493,10 +563,12 @@ const AdminApp = {
     });
   },
 
-  loadData: async () => {
+  loadData: async (isSilent = false) => {
     try {
-      document.getElementById('connectionStatus').className = 'status-dot loading';
-      document.getElementById('connectionText').textContent = 'Đang tải...';
+      if(!isSilent) {
+        document.getElementById('connectionStatus').className = 'status-dot loading';
+        document.getElementById('connectionText').textContent = 'Đang tải...';
+      }
 
       // Update badge
       const shift = State.shifts.find(s => s.id === State.selectedShiftId);
@@ -513,7 +585,7 @@ const AdminApp = {
       document.getElementById('connectionStatus').className = 'status-dot online';
       document.getElementById('connectionText').textContent = 'Trực tuyến (Local)';
     } catch (err) {
-      Utils.showToast('Lỗi tải dữ liệu', 'error');
+      if(!isSilent) Utils.showToast('Lỗi tải dữ liệu', 'error');
       document.getElementById('connectionStatus').className = 'status-dot error';
       document.getElementById('connectionText').textContent = 'Lỗi kết nối';
     }
@@ -612,7 +684,7 @@ const AdminApp = {
 
   // ---- Settings Modal Logic ----
   openSettingsModal: () => {
-    document.getElementById('settingsModal').classList.remove('hidden');
+    document.getElementById('apiLinkInput').value = State.apiLink;
     document.getElementById('enableTimeCheck').checked = State.enableTimeCheck;
     const container = document.getElementById('settingsShiftList');
     
@@ -638,6 +710,11 @@ const AdminApp = {
         </div>
       `;
     }).join('');
+    document.getElementById('settingsModal').classList.remove('hidden');
+  },
+
+  closeSettings: () => {
+    document.getElementById('settingsModal').classList.add('hidden');
   },
 
   saveSettings: () => {
@@ -658,8 +735,18 @@ const AdminApp = {
     });
     
     localStorage.setItem('agr_shift_times', JSON.stringify(savedTimes));
-    Utils.showToast('Lưu cài đặt giờ thành công!', 'success');
-    document.getElementById('settingsModal').classList.add('hidden');
+
+    // Save API Link
+    const newApiLink = document.getElementById('apiLinkInput').value.trim();
+    if (newApiLink !== State.apiLink) {
+      State.apiLink = newApiLink;
+      localStorage.setItem('agr_api_url', newApiLink);
+    }
+    
+    AdminApp.closeSettings();
+    // Reload current tab and data
+    AdminApp.loadData();
+    Utils.showToast('Đã lưu cài đặt', 'success');
   },
 
   parsePastedData: () => {
