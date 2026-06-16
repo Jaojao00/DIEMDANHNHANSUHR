@@ -20,7 +20,7 @@ const State = {
   scanner: null,
   isScanning: false,
   refreshTimer: null,
-  apiLink: localStorage.getItem('agr_api_url') || '',
+  apiLink: '',
   clockTimer: null,
   enableTimeCheck: false
 };
@@ -110,7 +110,7 @@ const DataManager = {
       } else {
         // Tải từ Google Sheets
         try {
-          const url = `${State.apiLink}?action=load&shiftId=${shiftId}`;
+          const url = `${CONFIG.API_URL}?action=load&shiftId=${shiftId}`;
           const response = await fetch(url);
           const data = await response.json();
           // Cập nhật lại local cache để dự phòng
@@ -136,7 +136,7 @@ const DataManager = {
       } else {
         // Gửi lên Google Sheets
         try {
-          const response = await fetch(State.apiLink, {
+          const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
             body: JSON.stringify({
               action: 'save',
@@ -161,9 +161,9 @@ const DataManager = {
       const data = await DataManager.loadSchedule(shiftId);
       const searchId = empId.toLowerCase().trim();
       const empIndex = data.findIndex(e => 
-        (e.id && e.id.toLowerCase().trim() === searchId) || 
-        (e.stt && e.stt.toLowerCase().trim() === searchId) ||
-        (e.name && e.name.toLowerCase().trim() === searchId)
+        (e.id && e.id.toString().toLowerCase().trim() === searchId) || 
+        (e.stt && e.stt.toString().toLowerCase().trim() === searchId) ||
+        (e.name && e.name.toString().toLowerCase().trim() === searchId)
       );
       
       if (empIndex >= 0) {
@@ -192,7 +192,7 @@ const DataManager = {
     } else {
       // Gửi API Google Sheets
       try {
-        const response = await fetch(State.apiLink, {
+        const response = await fetch(CONFIG.API_URL, {
           method: 'POST',
           body: JSON.stringify({
             action: 'checkin',
@@ -582,7 +582,7 @@ const AdminApp = {
       AdminApp.renderLogs();
 
       document.getElementById('connectionStatus').className = 'status-dot online';
-      document.getElementById('connectionText').textContent = State.apiLink ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
+      document.getElementById('connectionText').textContent = CONFIG.API_URL ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
     } catch (err) {
       if(!isSilent) Utils.showToast('Lỗi tải dữ liệu', 'error');
       document.getElementById('connectionStatus').className = 'status-dot error';

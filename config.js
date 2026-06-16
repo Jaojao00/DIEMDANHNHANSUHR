@@ -9,12 +9,17 @@ const CONFIG = {
   // =============================================
   // Dán URL Google Apps Script Web App vào đây sau khi deploy
   // Xem hướng dẫn trong README.md
-  APPS_SCRIPT_URL: '',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzRt-jqlqK88pNMQW17W9L1Yqly-Nd1oEz41CfbKvYez9rES3RJ_Hu6WvknlQLX7zXv/exec',
 
-  // Bật chế độ demo nếu không có API URL
+  // Tự động BẬT realtime nếu APPS_SCRIPT_URL đã được cài đặt
   get DEMO_MODE() {
     const localUrl = localStorage.getItem('agr_api_url');
-    return !localUrl || localUrl.trim() === '';
+    return !(this.APPS_SCRIPT_URL || localUrl);
+  },
+
+  // Trả về URL được öu tiên nhất
+  get API_URL() {
+    return this.APPS_SCRIPT_URL || localStorage.getItem('agr_api_url') || '';
   },
 
   // =============================================
