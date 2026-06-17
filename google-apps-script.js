@@ -68,8 +68,13 @@ function doPost(e) {
     // ACTION: REQUEST (Xin Nghỉ / Xin Lên Ca)
     if (action === "request") {
       try {
-        var reqSs = SpreadsheetApp.openById("1lRw1qiqLoKmwzfLhdPsW5qAvxVMGhebS6VHks46Mses");
-        var reqSheet = reqSs.getSheets()[0]; // Lấy sheet đầu tiên
+        var reqSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var reqSheet = reqSs.getSheetByName("XIN_OFF");
+        
+        // Tạo sheet nếu chưa có
+        if (!reqSheet) {
+          reqSheet = reqSs.insertSheet("XIN_OFF");
+        }
         
         // Tạo header nếu sheet trống
         if (reqSheet.getLastRow() === 0) {
@@ -215,6 +220,35 @@ function doGet(e) {
       }
       
       return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    if (action === "load_requests") {
+      try {
+        var reqSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var reqSheet = reqSs.getSheetByName("XIN_OFF");
+        
+        if (!reqSheet || reqSheet.getLastRow() <= 1) {
+          return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+        }
+        var values = reqSheet.getDataRange().getValues();
+        var result = [];
+        for (var i = 1; i < values.length; i++) {
+          var r = values[i];
+          result.push({
+            ts: r[0],
+            empId: (r[1] || "").toString().toLowerCase().trim(),
+            name: r[2],
+            phone: r[3],
+            type: r[4],
+            reason: r[5],
+            date: r[6],
+            note: r[7]
+          });
+        }
+        return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+      } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
     }
     
     // Pre-flight check (CORS ping)

@@ -198,6 +198,28 @@ const DataManager = {
     });
   },
 
+  loadRequests: async () => {
+    if (CONFIG.DEMO_MODE) {
+      return JSON.parse(localStorage.getItem('agr_requests') || '[]');
+    }
+    try {
+      const url = `${CONFIG.API_URL}?action=load_requests`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        // Cập nhật lại localStorage để dự phòng offline và để renderTable dùng chung logic
+        // Ta có thể merge hoặc ghi đè. Tốt nhất là merge theo empId và timestamp hoặc cứ ghi đè.
+        // Ghi đè bằng dữ liệu server là an toàn nhất.
+        localStorage.setItem('agr_requests', JSON.stringify(data));
+        return data;
+      }
+      return [];
+    } catch (error) {
+      console.error("Lỗi tải danh sách request từ Google Sheets:", error);
+      return JSON.parse(localStorage.getItem('agr_requests') || '[]');
+    }
+  },
+
   saveSchedule: async (shiftId, data) => {
     return new Promise(async (resolve, reject) => {
       // Lưu local cache
@@ -336,13 +358,15 @@ const EmployeeApp = {
 
   syncSettings: () => {
     // Tự động dọn dẹp API URL cũ nếu còn lưu trong localStorage
-    const oldUrl = 'https://script.google.com/macros/s/AKfycbxvVmnXSyKdEJt-H7Ag8AKlrMRaScStA5iQbWsspRjT-8r-MHopM5Tylg5wjNJXtHsm/exec';
     try {
       const currentLocalUrl = localStorage.getItem('agr_api_url');
-      if (currentLocalUrl && currentLocalUrl.trim() === oldUrl) {
+      const oldUrl1 = 'https://script.google.com/macros/s/AKfycbxvVmnXSyKdEJt-H7Ag8AKlrMRaScStA5iQbWsspRjT-8r-MHopM5Tylg5wjNJXtHsm/exec';
+      const oldUrl2 = 'https://script.google.com/macros/s/AKfycbxsQNg5OhchJ3P9MuWJF1wctPDfgRlhh2t-fWw_KNwUXyvpbCrpiTqdEMEaFsZi51kc/exec';
+      const oldUrl3 = 'https://script.google.com/macros/s/AKfycbyI46Xny1nRIe8EDiBk79yq2ot-7PafmrWKU3dkLIh6lUoF7b0qS08J9RF6iJeHU6tq/exec';
+      if (currentLocalUrl && (currentLocalUrl.trim() === oldUrl1 || currentLocalUrl.trim() === oldUrl2 || currentLocalUrl.trim() === oldUrl3)) {
         localStorage.removeItem('agr_api_url');
-        State.apiLink = typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '';
       }
+      State.apiLink = localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
     } catch (e) {
       console.error("Lỗi dọn dẹp url cũ:", e);
     }
@@ -957,6 +981,7 @@ const AdminApp = {
         badge.style.background = `linear-gradient(135deg, ${shift.color}, #222)`;
       }
 
+      const requestsData = await DataManager.loadRequests();
       const data = await DataManager.loadSchedule(State.selectedShiftId);
       State.scheduleData = data;
       
