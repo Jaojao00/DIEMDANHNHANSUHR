@@ -400,13 +400,16 @@ const EmployeeApp = {
 
   startClock: () => {
     const update = () => {
-      const d = new Date();
+      const savedDate = localStorage.getItem('agr_schedule_date');
+      const d = savedDate ? new Date(savedDate) : new Date();
       const empDateEl = document.getElementById('empDate');
       const empTimeEl = document.getElementById('empTime');
       const attClockSmEl = document.getElementById('attClockSm');
       if (empDateEl) empDateEl.textContent = Utils.formatDate(d);
-      if (empTimeEl) empTimeEl.textContent = Utils.formatTime(d);
-      if (attClockSmEl) attClockSmEl.textContent = Utils.formatTime(d);
+      
+      const now = new Date();
+      if (empTimeEl) empTimeEl.textContent = Utils.formatTime(now);
+      if (attClockSmEl) attClockSmEl.textContent = Utils.formatTime(now);
     };
     update();
     setInterval(update, 1000);
@@ -551,9 +554,13 @@ const EmployeeApp = {
         const dateEl = document.getElementById('req_date');
         const shiftGroup = document.getElementById('req_target_shift_group');
         if (typeEl) typeEl.value = 'XIN OFF';
-        if (titleEl) titleEl.textContent = '📋 Xin Nghỉ / Xin Off';
+        if (titleEl) titleEl.textContent = '⏱️ Xin Nghỉ / Xin Off';
         if (modalEl) modalEl.classList.remove('hidden');
-        if (dateEl) dateEl.valueAsDate = new Date();
+        if (dateEl) {
+          const savedDate = localStorage.getItem('agr_schedule_date');
+          if (savedDate) dateEl.value = savedDate;
+          else dateEl.valueAsDate = new Date();
+        }
         if (shiftGroup) shiftGroup.style.display = 'none';
         
         const reasonLabel = document.getElementById('req_reason_label');
@@ -570,9 +577,13 @@ const EmployeeApp = {
         const dateEl = document.getElementById('req_date');
         const shiftGroup = document.getElementById('req_target_shift_group');
         if (typeEl) typeEl.value = 'XIN LÊN CA';
-        if (titleEl) titleEl.textContent = '⬆️ Xin Lên Ca';
+        if (titleEl) titleEl.textContent = '🚀 Xin Lên Ca';
         if (modalEl) modalEl.classList.remove('hidden');
-        if (dateEl) dateEl.valueAsDate = new Date();
+        if (dateEl) {
+          const savedDate = localStorage.getItem('agr_schedule_date');
+          if (savedDate) dateEl.value = savedDate;
+          else dateEl.valueAsDate = new Date();
+        }
         if (shiftGroup) shiftGroup.style.display = 'block';
         
         const reasonLabel = document.getElementById('req_reason_label');
@@ -807,11 +818,14 @@ const AdminApp = {
 
   startClock: () => {
     const update = () => {
-      const d = new Date();
+      const savedDate = localStorage.getItem('agr_schedule_date');
+      const d = savedDate ? new Date(savedDate) : new Date();
       const dateEl = document.getElementById('currentDate');
       const timeEl = document.getElementById('currentTime');
       if (dateEl) dateEl.textContent = Utils.formatDate(d);
-      if (timeEl) timeEl.textContent = Utils.formatTime(d);
+      
+      const now = new Date();
+      if (timeEl) timeEl.textContent = Utils.formatTime(now);
     };
     update();
     setInterval(update, 1000);
@@ -1209,6 +1223,17 @@ const AdminApp = {
     document.getElementById('previewContainer').classList.add('hidden');
     document.getElementById('saveScheduleBtn').disabled = true;
 
+    const datePicker = document.getElementById('scheduleDatePicker');
+    if (datePicker) {
+      const savedDate = localStorage.getItem('agr_schedule_date');
+      if (savedDate) {
+        datePicker.value = savedDate;
+      } else {
+        const d = new Date();
+        datePicker.value = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      }
+    }
+
     // Render shift buttons inside modal
     const btnsContainer = document.getElementById('managerShiftBtns');
     btnsContainer.innerHTML = State.shifts.map(s => `
@@ -1373,6 +1398,11 @@ const AdminApp = {
 
   savePastedSchedule: async () => {
     if (!State._tempParsedData || State._tempParsedData.length === 0) return;
+    
+    const datePicker = document.getElementById('scheduleDatePicker');
+    if (datePicker && datePicker.value) {
+      localStorage.setItem('agr_schedule_date', datePicker.value);
+    }
     
     try {
       await DataManager.saveSchedule(State.selectedShiftId, State._tempParsedData);

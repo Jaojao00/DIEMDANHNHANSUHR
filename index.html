@@ -488,14 +488,20 @@
         </label>
         <textarea id="pasteDataArea" class="paste-area" rows="6"
           placeholder="Dán dữ liệu lịch từ Google Sheets...&#10;Định dạng: STT | Mã CTV | Họ tên | Định danh | Vị trí | Sau giờ nghỉ | 4h-6h | Màu (red/yellow)"></textarea>
-        <div class="manager-actions-row">
-          <button class="btn btn-secondary" id="parsePasteBtn">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-            </svg>
-            Phân tích dữ liệu
-          </button>
-          <button class="btn btn-ghost" id="clearPasteBtn">Xóa</button>
+        <div class="manager-actions-row" style="justify-content: space-between; align-items: center;">
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" id="parsePasteBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              Phân tích dữ liệu
+            </button>
+            <button class="btn btn-ghost" id="clearPasteBtn">Xóa</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Ngày Lịch:</label>
+            <input type="date" id="scheduleDatePicker" class="form-input" style="padding: 6px 10px; width: auto; font-size: 12px; background: var(--bg-lighter);">
+          </div>
         </div>
       </div>
       <div class="manager-preview hidden" id="previewContainer">
