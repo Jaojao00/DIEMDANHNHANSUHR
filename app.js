@@ -1054,6 +1054,19 @@ const AdminApp = {
     try {
       const stored = localStorage.getItem('agr_requests');
       if (stored) requests = JSON.parse(stored);
+      
+      const scheduleDate = localStorage.getItem('agr_schedule_date');
+      if (scheduleDate) {
+        requests = requests.filter(r => {
+          if (!r || !r.date) return false;
+          let rDateStr = r.date.toString();
+          if (rDateStr.includes('T')) {
+            const d = new Date(rDateStr);
+            rDateStr = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+          }
+          return rDateStr === scheduleDate || rDateStr.startsWith(scheduleDate);
+        });
+      }
     } catch (e) {
       console.error("Lỗi đọc dự án:", e);
     }
@@ -1157,6 +1170,19 @@ const AdminApp = {
     try {
       const stored = localStorage.getItem('agr_requests');
       if (stored) requests = JSON.parse(stored);
+      
+      const scheduleDate = localStorage.getItem('agr_schedule_date');
+      if (scheduleDate) {
+        requests = requests.filter(r => {
+          if (!r || !r.date) return false;
+          let rDateStr = r.date.toString();
+          if (rDateStr.includes('T')) {
+            const d = new Date(rDateStr);
+            rDateStr = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+          }
+          return rDateStr === scheduleDate || rDateStr.startsWith(scheduleDate);
+        });
+      }
     } catch (e) {}
     const offIds = new Set((requests || []).filter(r => r && r.type === 'XIN OFF' && r.empId).map(r => r.empId.toLowerCase().trim()));
 
