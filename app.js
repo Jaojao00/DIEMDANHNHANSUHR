@@ -1048,7 +1048,7 @@ const AdminApp = {
 
     tbody.innerHTML = State.scheduleData.map(emp => {
       const empIdLower = (emp.id || '').toLowerCase().trim();
-      const isOff = offIds.has(empIdLower);
+      const isOff = offIds.has(empIdLower) || emp.status === 'xin off';
       const isExtra = extraIds.has(empIdLower);
       const rowClass = isOff ? 'xin-off-row' : (emp.status === 'confirmed' ? 'attended' : '');
 
@@ -1139,8 +1139,19 @@ const AdminApp = {
   },
 
   renderStats: () => {
+    let requests = [];
+    try {
+      const stored = localStorage.getItem('agr_requests');
+      if (stored) requests = JSON.parse(stored);
+    } catch (e) {}
+    const offIds = new Set((requests || []).filter(r => r && r.type === 'XIN OFF' && r.empId).map(r => r.empId.toLowerCase().trim()));
+
     const total = State.scheduleData.length;
     const confirmed = State.scheduleData.filter(e => e.status === 'confirmed').length;
+    const xinOffCount = State.scheduleData.filter(e => {
+        const idLower = (e.id || '').toLowerCase().trim();
+        return offIds.has(idLower) || e.status === 'xin off';
+    }).length;
     
     const totalEl = document.getElementById('totalEmployees');
     const confirmedEl = document.getElementById('confirmedCount');
@@ -1151,7 +1162,7 @@ const AdminApp = {
 
     if (totalEl) totalEl.textContent = total;
     if (confirmedEl) confirmedEl.textContent = confirmed;
-    if (pendingEl) pendingEl.textContent = total - confirmed;
+    if (pendingEl) pendingEl.textContent = Math.max(0, total - confirmed - xinOffCount);
 
     if (adminDone) adminDone.textContent = confirmed;
     if (adminTotal) adminTotal.textContent = total;
