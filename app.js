@@ -236,8 +236,36 @@ const DataManager = {
         throw new Error(error.message || "Lỗi kết nối hệ thống.");
       }
     }
+  },
+
+  // Gửi yêu cầu xin nghỉ / xin lên ca lên Google Sheets
+  submitRequest: async (payload) => {
+    // Lưu vào localStorage để highlight admin
+    const requests = JSON.parse(localStorage.getItem('agr_requests') || '[]');
+    requests.push({ empId: payload.empId.toLowerCase().trim(), type: payload.type, date: payload.date, ts: Date.now() });
+    localStorage.setItem('agr_requests', JSON.stringify(requests));
+
+    if (!CONFIG.DEMO_MODE) {
+      try {
+        const response = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'request',
+            ...payload
+          })
+        });
+        const res = await response.json();
+        if (res.error) throw new Error(res.error);
+        return res;
+      } catch (error) {
+        console.error("Lỗi gửi yêu cầu:", error);
+        throw new Error(error.message || "Lỗi kết nối hệ thống.");
+      }
+    }
+    return { success: true };
   }
 };
+
 
 // ==========================================
 // GIAO DIỆN NHÂN VIÊN (EMPLOYEE UI)
@@ -382,6 +410,68 @@ const EmployeeApp = {
     // Success Done Btn
     document.getElementById('successDoneBtn').addEventListener('click', () => {
       EmployeeApp.goToPhase('phaseShift');
+    });
+
+    // ---- Xin Nghỉ / Xin Lên Ca Buttons ----
+    document.getElementById('openLeaveRequestBtn').addEventListener('click', () => {
+      document.getElementById('req_type').value = 'XIN OFF';
+      document.getElementById('requestModalTitle').textContent = '📋 Xin Nghỉ / Xin Off';
+      document.getElementById('requestModal').classList.remove('hidden');
+      document.getElementById('req_date').valueAsDate = new Date();
+    });
+
+    document.getElementById('openExtraShiftBtn').addEventListener('click', () => {
+      document.getElementById('req_type').value = 'XIN LÊN CA';
+      document.getElementById('requestModalTitle').textContent = '⬆️ Xin Lên Ca';
+      document.getElementById('requestModal').classList.remove('hidden');
+      document.getElementById('req_date').valueAsDate = new Date();
+    });
+
+    document.getElementById('requestModalCloseBtn').addEventListener('click', () => {
+      document.getElementById('requestModal').classList.add('hidden');
+      document.getElementById('requestForm').reset();
+    });
+
+    document.getElementById('requestForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const empId = document.getElementById('req_empId').value.trim();
+      const name = document.getElementById('req_name').value.trim().toUpperCase();
+      const phone = document.getElementById('req_phone').value.trim();
+      const date = document.getElementById('req_date').value;
+      const reason = document.getElementById('req_reason').value.trim();
+      const note = document.getElementById('req_note').value.trim();
+      const type = document.getElementById('req_type').value;
+
+      if (!empId || !name || !phone || !date || !reason) {
+        Utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
+        return;
+      }
+
+      try {
+        const btn = document.getElementById('requestSubmitBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang gửi...';
+
+        // Format timestamp kiểu DD/MM/YYYY HH:mm:ss
+        const now = new Date();
+        const ts = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+        
+        // Format ngày DD/MM/YYYY
+        const [y,m,d2] = date.split('-');
+        const dateFormatted = `${d2}/${m}/${y}`;
+
+        await DataManager.submitRequest({ empId, name, phone, type, reason, date: dateFormatted, note, timestamp: ts });
+
+        document.getElementById('requestModal').classList.add('hidden');
+        document.getElementById('requestForm').reset();
+        Utils.showToast(`✅ Đã gửi yêu cầu ${type} thành công!`, 'success');
+      } catch (err) {
+        Utils.showToast('Lỗi gửi yêu cầu: ' + err.message, 'error');
+      } finally {
+        const btn = document.getElementById('requestSubmitBtn');
+        btn.disabled = false;
+        btn.textContent = '📤 Gửi Yêu Cầu';
+      }
     });
   },
 
@@ -612,8 +702,30 @@ const AdminApp = {
       return;
     }
 
-    tbody.innerHTML = State.scheduleData.map(emp => `
-      <tr class="${emp.status === 'confirmed' ? 'attended' : ''}">
+    // Lấy danh sách ID đã xin nghỉ/lên ca từ localStorage
+    const requests = JSON.parse(localStorage.getItem('agr_requests') || '[]');
+    const offIds = new Set(requests.filter(r => r.type === 'XIN OFF').map(r => r.empId));
+    const extraIds = new Set(requests.filter(r => r.type === 'XIN LÊN CA').map(r => r.empId));
+
+    tbody.innerHTML = State.scheduleData.map(emp => {
+      const empIdLower = (emp.id || '').toLowerCase().trim();
+      const isOff = offIds.has(empIdLower);
+      const isExtra = extraIds.has(empIdLower);
+      const rowClass = isOff ? 'xin-off-row' : (emp.status === 'confirmed' ? 'attended' : '');
+
+      let confirmCell = '';
+      if (isOff) {
+        confirmCell = `<span class="xin-off-badge">📋 Xin Off</span>`;
+      } else if (isExtra) {
+        confirmCell = `<span class="xin-len-ca-badge">⬆️ Xin Lên Ca</span>`;
+      } else if (emp.status === 'confirmed') {
+        confirmCell = `<div class="confirm-badge confirmed" title="Đã điểm danh lúc ${emp.timestamp}">✓</div>`;
+      } else {
+        confirmCell = `<div class="confirm-badge pending"></div>`;
+      }
+
+      return `
+      <tr class="${rowClass}">
         <td>${emp.stt}</td>
         <td><span class="employee-code">${emp.id}</span></td>
         <td style="font-weight:500">${emp.name}</td>
@@ -623,15 +735,11 @@ const AdminApp = {
         <td><span class="position-tag ${!emp.viTri3 ? 'empty' : ''}">${emp.viTri3 || 'Chưa xếp'}</span></td>
         <td><span class="position-tag ${!emp.xuatTai ? 'empty' : ''}">${emp.xuatTai || '—'}</span></td>
         <td><span style="font-size:12px; color:var(--text-muted)">${emp.note || ''}</span></td>
-        <td class="confirm-cell">
-          ${emp.status === 'confirmed' 
-            ? `<div class="confirm-badge confirmed" title="Đã điểm danh lúc ${emp.timestamp}">✓</div>`
-            : `<div class="confirm-badge pending"></div>`
-          }
-        </td>
-      </tr>
-    `).join('');
+        <td class="confirm-cell">${confirmCell}</td>
+      </tr>`;
+    }).join('');
   },
+
 
   renderStats: () => {
     const total = State.scheduleData.length;

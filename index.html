@@ -42,6 +42,24 @@
       <div class="shift-cards" id="shiftCards">
         <!-- Rendered by JS -->
       </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="action-btns-wrap">
+        <button class="action-btn action-btn--off" id="openLeaveRequestBtn">
+          <span class="action-btn-icon">📋</span>
+          <div class="action-btn-text">
+            <span class="action-btn-title">Xin Nghỉ / Xin Off</span>
+            <span class="action-btn-sub">Gửi yêu cầu xin off ca</span>
+          </div>
+        </button>
+        <button class="action-btn action-btn--extra" id="openExtraShiftBtn">
+          <span class="action-btn-icon">⬆️</span>
+          <div class="action-btn-text">
+            <span class="action-btn-title">Xin Lên Ca</span>
+            <span class="action-btn-sub">Gửi yêu cầu đăng ký thêm ca</span>
+          </div>
+        </button>
+      </div>
     </div>
 
     <div class="emp-footer">
@@ -158,6 +176,48 @@
   </div>
 
 </div><!-- /#employeeView -->
+
+<!-- REQUEST MODAL -->
+<div id="requestModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+  <div class="modal-panel" style="max-width:460px">
+    <div class="modal-header">
+      <h3 id="requestModalTitle">📋 Gửi Yêu Cầu</h3>
+      <button class="modal-close-btn" id="requestModalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <form id="requestForm" autocomplete="off">
+        <div class="form-group">
+          <label class="form-label">Mã Nhân Viên (Mã OPS) <span style="color:#ff5c5c">*</span></label>
+          <input type="text" id="req_empId" class="form-input" placeholder="VD: Ops123456" style="text-transform:uppercase">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Họ và Tên (viết in hoa) <span style="color:#ff5c5c">*</span></label>
+          <input type="text" id="req_name" class="form-input" placeholder="VD: NGUYỄN VĂN A">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Số Điện Thoại <span style="color:#ff5c5c">*</span></label>
+          <input type="tel" id="req_phone" class="form-input" placeholder="VD: 0901234567" maxlength="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ngày Xin Nghỉ / Xin Lên Ca <span style="color:#ff5c5c">*</span></label>
+          <input type="date" id="req_date" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lý Do <span style="color:#ff5c5c">*</span></label>
+          <textarea id="req_reason" class="form-input" rows="3" placeholder="Nhập lý do cụ thể..." style="resize:vertical"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ghi Chú (tùy chọn)</label>
+          <input type="text" id="req_note" class="form-input" placeholder="Thêm ghi chú nếu có...">
+        </div>
+        <input type="hidden" id="req_type" value="XIN OFF">
+        <button type="submit" class="btn btn-primary btn-full" id="requestSubmitBtn" style="margin-top:8px">
+          📤 Gửi Yêu Cầu
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
 
 
 <!-- ==============================================================

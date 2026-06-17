@@ -971,3 +971,95 @@ input:checked + .slider:before {
   .emp-footer { max-width: 520px; }
   .att-topbar { width: 100%; max-width: 520px; }
 }
+
+/* ============================================================
+   ACTION BUTTONS (Xin Nghỉ / Xin Lên Ca)
+   ============================================================ */
+.action-btns-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 0 4px;
+}
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+}
+.action-btn:active { transform: scale(0.98); }
+.action-btn:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+.action-btn--off { border-color: rgba(255, 100, 80, 0.35); }
+.action-btn--off:hover { border-color: rgba(255, 100, 80, 0.7); background: rgba(255, 100, 80, 0.08); }
+.action-btn--extra { border-color: rgba(79, 195, 247, 0.35); }
+.action-btn--extra:hover { border-color: rgba(79, 195, 247, 0.7); background: rgba(79, 195, 247, 0.08); }
+.action-btn-icon { font-size: 22px; flex-shrink: 0; }
+.action-btn-text { display: flex; flex-direction: column; gap: 2px; }
+.action-btn-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.action-btn-sub { font-size: 12px; color: var(--text-muted); }
+
+/* ============================================================
+   REQUEST MODAL FORM INPUTS
+   ============================================================ */
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--agr-orange); }
+.form-label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+.form-group { margin-bottom: 14px; }
+textarea.form-input { min-height: 72px; }
+
+/* ============================================================
+   ADMIN TABLE — XIN OFF ROW HIGHLIGHT
+   ============================================================ */
+#scheduleBody tr.xin-off-row {
+  background: rgba(255, 190, 0, 0.08) !important;
+  border-left: 3px solid #ffbe00;
+}
+#scheduleBody tr.xin-off-row td { color: #ffd54f; }
+.xin-off-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,190,0,0.18);
+  border: 1px solid rgba(255,190,0,0.5);
+  color: #ffbe00;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.xin-len-ca-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(79,195,247,0.15);
+  border: 1px solid rgba(79,195,247,0.45);
+  color: #4fc3f7;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
