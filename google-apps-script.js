@@ -155,9 +155,13 @@ function doPost(e) {
               var timeIndex = headers.length - 2; // 0-based
               var phoneIndex = headers.length - 1; // 0-based
               
+              for (var p = 4; p < noteIndex; p++) {
+                newRow[p] = "Chưa sắp lịch";
+              }
+              
               if (noteIndex >= 4) {
                 newRow[noteIndex] = data.note || data.reason || "";
-                newRow[statusIndex] = "XIN LÊN CA";
+                newRow[statusIndex] = "pending";
                 newRow[timeIndex] = data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
                 newRow[phoneIndex] = data.phone || "";
               }
