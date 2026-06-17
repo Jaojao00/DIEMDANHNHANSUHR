@@ -1153,21 +1153,26 @@ const AdminApp = {
         return offIds.has(idLower) || e.status === 'xin off';
     }).length;
     
+    const effectiveTotal = Math.max(0, total - xinOffCount);
+    
     const totalEl = document.getElementById('totalEmployees');
     const confirmedEl = document.getElementById('confirmedCount');
     const pendingEl = document.getElementById('pendingCount');
+    const xinOffElTop = document.getElementById('xinOffCountTop');
+    
     const adminDone = document.getElementById('adminDone');
     const adminTotal = document.getElementById('adminTotal');
     const adminBar = document.getElementById('adminBar');
 
-    if (totalEl) totalEl.textContent = total;
+    if (totalEl) totalEl.textContent = effectiveTotal;
     if (confirmedEl) confirmedEl.textContent = confirmed;
-    if (pendingEl) pendingEl.textContent = Math.max(0, total - confirmed - xinOffCount);
+    if (pendingEl) pendingEl.textContent = Math.max(0, effectiveTotal - confirmed);
+    if (xinOffElTop) xinOffElTop.textContent = xinOffCount;
 
     if (adminDone) adminDone.textContent = confirmed;
-    if (adminTotal) adminTotal.textContent = total;
+    if (adminTotal) adminTotal.textContent = effectiveTotal;
     if (adminBar) {
-      const pct = total === 0 ? 0 : (confirmed / total) * 100;
+      const pct = effectiveTotal === 0 ? 0 : (confirmed / effectiveTotal) * 100;
       adminBar.style.width = `${pct}%`;
     }
   },
