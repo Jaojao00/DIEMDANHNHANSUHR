@@ -82,22 +82,41 @@ const Utils = {
     }, CONFIG.TOAST_DURATION || 3000);
   },
   getShiftStorageKey: (shiftId) => `agr_schedule_${shiftId}`,
-  isWithinTimeWindow: (startStr, endStr) => {
-    if (!startStr || !endStr) return true;
-    const now = new Date();
-    const currentMins = now.getHours() * 60 + now.getMinutes();
-    
-    let [sH, sM] = startStr.split(':').map(Number);
-    let startMins = sH * 60 + sM;
-    
-    let [eH, eM] = endStr.split(':').map(Number);
-    let endMins = eH * 60 + eM;
-    
-    if (endMins < startMins) {
-      // Qua đêm
-      return currentMins >= startMins || currentMins <= endMins;
+  isWithinTimeWindow: (shiftId) => {
+    const scheduleDateStr = localStorage.getItem('agr_schedule_date');
+    const scheduleDate = scheduleDateStr ? new Date(scheduleDateStr) : new Date();
+    scheduleDate.setHours(0, 0, 0, 0);
+
+    let start = new Date(scheduleDate);
+    let end = new Date(scheduleDate);
+
+    if (shiftId === '18:00-22:00') {
+      start.setHours(13, 0, 0);
+      end.setHours(14, 30, 0);
+    } else if (shiftId === '22:00-06:00') {
+      start.setHours(18, 0, 0);
+      end.setHours(20, 30, 0);
+    } else if (shiftId === '15:00-22:00') {
+      start.setHours(10, 0, 0);
+      end.setHours(12, 30, 0);
+    } else if (shiftId === '06:00-10:00' || shiftId === '06:00-15:00') {
+      start.setDate(start.getDate() - 1);
+      start.setHours(0, 0, 0);
+      end.setDate(end.getDate() - 1);
+      end.setHours(21, 0, 0);
+    } else {
+      start.setHours(0, 0, 0);
+      end.setHours(23, 59, 59);
     }
-    return currentMins >= startMins && currentMins <= endMins;
+
+    const now = new Date();
+    
+    return {
+      isAllowed: now >= start && now <= end,
+      isOver: now > end,
+      startStr: Utils.formatTime(start).substring(0, 5),
+      endStr: Utils.formatTime(end).substring(0, 5)
+    };
   },
 };
 
@@ -473,8 +492,10 @@ const EmployeeApp = {
         e.preventDefault();
         
         const shift = State.shifts.find(s => s.id === State.selectedShiftId);
-        if (State.enableTimeCheck && !Utils.isWithinTimeWindow(shift.allowStart, shift.allowEnd)) {
-          Utils.showToast(`Hiện không trong thời gian điểm danh của ca ${shift.label} (Giờ cho phép: ${shift.allowStart} - ${shift.allowEnd})`, 'error');
+        const timeStatus = Utils.isWithinTimeWindow(shift.id);
+        
+        if (!timeStatus.isAllowed) {
+          Utils.showToast(`Hiện không trong thời gian điểm danh của ca ${shift.label} (Giờ cho phép: ${timeStatus.startStr} - ${timeStatus.endStr})`, 'error');
           return;
         }
         
@@ -1073,15 +1094,23 @@ const AdminApp = {
     const offIds = new Set((requests || []).filter(r => r && r.type === 'XIN OFF' && r.empId).map(r => r.empId.toLowerCase().trim()));
     const extraIds = new Set((requests || []).filter(r => r && r.type === 'XIN LÊN CA' && r.empId).map(r => r.empId.toLowerCase().trim()));
 
+    const timeStatus = Utils.isWithinTimeWindow(State.selectedShiftId);
+    const isTimeOver = timeStatus.isOver;
+
     tbody.innerHTML = State.scheduleData.map(emp => {
       const empIdLower = (emp.id || '').toLowerCase().trim();
       const isOff = offIds.has(empIdLower) || emp.status === 'xin off';
       const isExtra = extraIds.has(empIdLower);
-      const rowClass = isOff ? 'xin-off-row' : (emp.status === 'confirmed' ? 'attended' : '');
+      const isAutoOff = !isOff && !isExtra && emp.status !== 'confirmed' && isTimeOver;
+      
+      let rowClass = isOff ? 'xin-off-row' : (emp.status === 'confirmed' ? 'attended' : '');
+      if (isAutoOff) rowClass = 'auto-off-row';
 
       let confirmCell = '';
       if (isOff) {
         confirmCell = `<span class="xin-off-badge">📋 Xin Off</span>`;
+      } else if (isAutoOff) {
+        confirmCell = `<span class="auto-off-badge">OFF CHƯA ĐIỂM DANH</span>`;
       } else if (isExtra) {
         confirmCell = `<span class="xin-len-ca-badge">⬆️ Xin Lên Ca</span>`;
       } else if (emp.status === 'confirmed') {
@@ -1186,12 +1215,27 @@ const AdminApp = {
     } catch (e) {}
     const offIds = new Set((requests || []).filter(r => r && r.type === 'XIN OFF' && r.empId).map(r => r.empId.toLowerCase().trim()));
 
+    const timeStatus = Utils.isWithinTimeWindow(State.selectedShiftId);
+    const isTimeOver = timeStatus.isOver;
+
     const total = State.scheduleData.length;
     const confirmed = State.scheduleData.filter(e => e.status === 'confirmed').length;
-    const xinOffCount = State.scheduleData.filter(e => {
+    
+    let explicitXinOffCount = 0;
+    let autoOffCount = 0;
+    
+    State.scheduleData.forEach(e => {
         const idLower = (e.id || '').toLowerCase().trim();
-        return offIds.has(idLower) || e.status === 'xin off';
-    }).length;
+        const isOff = offIds.has(idLower) || e.status === 'xin off';
+        const isExtra = extraIds.has(idLower);
+        if (isOff) {
+          explicitXinOffCount++;
+        } else if (isTimeOver && !isExtra && e.status !== 'confirmed') {
+          autoOffCount++;
+        }
+    });
+
+    const xinOffCount = explicitXinOffCount + autoOffCount;
     
     const effectiveTotal = Math.max(0, total - xinOffCount);
     
