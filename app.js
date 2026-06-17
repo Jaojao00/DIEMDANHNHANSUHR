@@ -363,7 +363,8 @@ const EmployeeApp = {
       const oldUrl1 = 'https://script.google.com/macros/s/AKfycbxvVmnXSyKdEJt-H7Ag8AKlrMRaScStA5iQbWsspRjT-8r-MHopM5Tylg5wjNJXtHsm/exec';
       const oldUrl2 = 'https://script.google.com/macros/s/AKfycbxsQNg5OhchJ3P9MuWJF1wctPDfgRlhh2t-fWw_KNwUXyvpbCrpiTqdEMEaFsZi51kc/exec';
       const oldUrl3 = 'https://script.google.com/macros/s/AKfycbyI46Xny1nRIe8EDiBk79yq2ot-7PafmrWKU3dkLIh6lUoF7b0qS08J9RF6iJeHU6tq/exec';
-      if (currentLocalUrl && (currentLocalUrl.trim() === oldUrl1 || currentLocalUrl.trim() === oldUrl2 || currentLocalUrl.trim() === oldUrl3)) {
+      const oldUrl4 = 'https://script.google.com/macros/s/AKfycbzhLm9d6ewMZ4n4QYdMrx1NpUHTwBNgw1Ji0wmK5MwKcRt8KTNnem9-9pRpY__q0qZl/exec';
+      if (currentLocalUrl && (currentLocalUrl.trim() === oldUrl1 || currentLocalUrl.trim() === oldUrl2 || currentLocalUrl.trim() === oldUrl3 || currentLocalUrl.trim() === oldUrl4)) {
         localStorage.removeItem('agr_api_url');
       }
       State.apiLink = localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
@@ -554,6 +555,9 @@ const EmployeeApp = {
         if (modalEl) modalEl.classList.remove('hidden');
         if (dateEl) dateEl.valueAsDate = new Date();
         if (shiftGroup) shiftGroup.style.display = 'none';
+        
+        const reasonLabel = document.getElementById('req_reason_label');
+        if (reasonLabel) reasonLabel.innerHTML = 'Lý Do <span style="color:#ff5c5c">*</span>';
       });
     }
 
@@ -570,6 +574,9 @@ const EmployeeApp = {
         if (modalEl) modalEl.classList.remove('hidden');
         if (dateEl) dateEl.valueAsDate = new Date();
         if (shiftGroup) shiftGroup.style.display = 'block';
+        
+        const reasonLabel = document.getElementById('req_reason_label');
+        if (reasonLabel) reasonLabel.innerHTML = 'Lý Do (Tùy chọn)';
       });
     }
 
@@ -612,7 +619,7 @@ const EmployeeApp = {
            note = `[Xin ca: ${targetShiftEl.options[targetShiftEl.selectedIndex].text}] ` + note;
         }
 
-        if (!empId || !name || !phone || !date || !reason) {
+        if (!empId || !name || !phone || !date || (type === 'XIN OFF' && !reason)) {
           Utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
           return;
         }
