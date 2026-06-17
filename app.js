@@ -605,9 +605,11 @@ const EmployeeApp = {
         const reason = reasonEl.value.trim();
         const type = typeEl.value;
         let note = noteEl ? noteEl.value.trim() : '';
+        let targetShift = '';
         
         if (type === 'XIN LÊN CA' && targetShiftEl) {
-           note = `[Xin ca: ${targetShiftEl.value}] ` + note;
+           targetShift = targetShiftEl.value;
+           note = `[Xin ca: ${targetShiftEl.options[targetShiftEl.selectedIndex].text}] ` + note;
         }
 
         if (!empId || !name || !phone || !date || !reason) {
@@ -630,7 +632,7 @@ const EmployeeApp = {
           const [y,m,d2] = date.split('-');
           const dateFormatted = `${d2}/${m}/${y}`;
 
-          await DataManager.submitRequest({ empId, name, phone, type, reason, date: dateFormatted, note, timestamp: ts });
+          await DataManager.submitRequest({ empId, name, phone, type, reason, date: dateFormatted, note, targetShift, timestamp: ts });
 
           const modalEl = document.getElementById('requestModal');
           if (modalEl) modalEl.classList.add('hidden');

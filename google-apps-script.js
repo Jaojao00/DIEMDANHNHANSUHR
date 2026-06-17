@@ -108,6 +108,7 @@ function doPost(e) {
                 var statusCol = headers.length - 2; // 1-based index (headers.length - 3 + 1)
                 var timeCol = headers.length - 1;
                 var phoneCol = headers.length;
+                var noteCol = headers.length - 3; // 1-based index (headers.length - 4 + 1)
                 
                 for (var i = 1; i < values.length; i++) {
                   var empIdInSheet = (values[i][1] || "").toString().toLowerCase().trim();
@@ -119,6 +120,9 @@ function doPost(e) {
                     if (currentStatus !== "confirmed") {
                       allSheets[s].getRange(i + 1, statusCol).setValue("XIN OFF");
                       allSheets[s].getRange(i + 1, timeCol).setValue(reqTime);
+                      if (data.reason) {
+                        allSheets[s].getRange(i + 1, noteCol).setValue(data.reason);
+                      }
                       if (data.phone) {
                         allSheets[s].getRange(i + 1, phoneCol).setValue(data.phone);
                       }
@@ -126,6 +130,39 @@ function doPost(e) {
                   }
                 }
               }
+            }
+          }
+        }
+        
+        // AUTO-APPEND "XIN LÊN CA" TO TARGET SHIFT SHEET
+        if (data.type === "XIN LÊN CA" && data.targetShift) {
+          var targetSheet = reqSs.getSheetByName(data.targetShift);
+          if (targetSheet) {
+            var dataRange = targetSheet.getDataRange();
+            var values = dataRange.getValues();
+            if (values.length > 0) {
+              var headers = values[0];
+              var newRow = new Array(headers.length);
+              for (var k = 0; k < newRow.length; k++) newRow[k] = "";
+              
+              newRow[0] = values.length; // STT
+              newRow[1] = data.empId || "";
+              newRow[2] = data.name || "";
+              newRow[3] = "A-OS"; // Định danh mặc định
+              
+              var noteIndex = headers.length - 4; // 0-based
+              var statusIndex = headers.length - 3; // 0-based
+              var timeIndex = headers.length - 2; // 0-based
+              var phoneIndex = headers.length - 1; // 0-based
+              
+              if (noteIndex >= 4) {
+                newRow[noteIndex] = data.note || data.reason || "";
+                newRow[statusIndex] = "XIN LÊN CA";
+                newRow[timeIndex] = data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
+                newRow[phoneIndex] = data.phone || "";
+              }
+              
+              targetSheet.appendRow(newRow);
             }
           }
         }
