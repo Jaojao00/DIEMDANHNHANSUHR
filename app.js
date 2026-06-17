@@ -8,10 +8,36 @@
 // ==========================================
 const State = {
   shifts: [
-    { id: '06:00-10:00', label: 'Ca Sáng', icon: '🌅', color: '#4facf7', allowStart: '06:00', allowEnd: '10:00' },
-    { id: '15:00-22:00', label: 'Ca Chiều', icon: '☀️', color: '#ffbd3a', allowStart: '15:00', allowEnd: '22:00' },
-    { id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42', allowStart: '18:00', allowEnd: '20:30' },
-    { id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0', allowStart: '22:00', allowEnd: '06:00' }
+    { 
+      id: '06:00-10:00', label: 'Ca Sáng', icon: '🌅', color: '#4facf7',
+      allowStart: '06:00', allowEnd: '10:00',
+      colHeaders: ['Vị Trí Đầu Ca', 'Vị Trí 2', 'Vị Trí 3', 'Vị Trí 4', 'Vị Trí 5'],
+      noteColIndex: 9
+    },
+    { 
+      id: '06:00-15:00', label: 'Ca OS Sáng', icon: '🌄', color: '#43e97b',
+      allowStart: '06:00', allowEnd: '15:00',
+      colHeaders: ['6h-7h (1)', '6h-7h (2)', '12h-13h (1)', '12h-13h (2)', '13h-15h'],
+      noteColIndex: 9
+    },
+    { 
+      id: '15:00-22:00', label: 'Ca Chiều', icon: '☀️', color: '#ffbd3a',
+      allowStart: '15:00', allowEnd: '22:00',
+      colHeaders: ['13h-15h', '15h-17h', '17h-17h30', '17h30-18h', '18h-19h', '19h-20h', '21h-22h'],
+      noteColIndex: 11
+    },
+    { 
+      id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42',
+      allowStart: '18:00', allowEnd: '20:30',
+      colHeaders: ['13h-15h', '15h-17h', '17h-17h30', '17h30-18h', '18h-19h', '19h-20h', '21h-22h'],
+      noteColIndex: 11
+    },
+    { 
+      id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0',
+      allowStart: '22:00', allowEnd: '06:00',
+      colHeaders: ['Vị Trí Cố Định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'],
+      noteColIndex: 8
+    }
   ],
   selectedShiftId: '06:00-10:00', // Khởi tạo mặc định để tránh null
   scheduleData: [], // Dữ liệu lịch ca hiện tại
@@ -101,14 +127,29 @@ const DataManager = {
     id: String(emp.id || ''),
     name: String(emp.name || ''),
     dinhDanh: String(emp.dinhDanh || ''),
-    viTri1: String(emp.viTri1 || ''),
-    viTri2: String(emp.viTri2 || ''),
-    viTri3: String(emp.viTri3 || ''),
-    xuatTai: String(emp.xuatTai || ''),
-    note: String(emp.note || ''),
-    status: String(emp.status || 'pending'),
-    timestamp: String(emp.timestamp || ''),
-    phone: String(emp.phone || ''),
+    // Nếu đã có positions[], chuẩn hóa từng phần tử
+    let positions = emp.positions;
+    if (!positions) {
+      // Tương thích ngược: đọc từ viTri1-7 + xuatTai
+      positions = [
+        emp.viTri1 || '', emp.viTri2 || '', emp.viTri3 || '',
+        emp.xuatTai || '', emp.viTri4 || '', emp.viTri5 || '',
+        emp.viTri6 || '', emp.viTri7 || ''
+      ];
+      while (positions.length > 0 && positions[positions.length - 1] === '') positions.pop();
+    }
+    return {
+      ...emp,
+      stt: String(emp.stt || ''),
+      id: String(emp.id || ''),
+      name: String(emp.name || ''),
+      dinhDanh: String(emp.dinhDanh || ''),
+      positions: positions.map(String),
+      note: String(emp.note || ''),
+      status: String(emp.status || 'pending'),
+      timestamp: String(emp.timestamp || ''),
+      phone: String(emp.phone || ''),
+    };
   }),
 
   loadSchedule: (shiftId) => {
@@ -730,15 +771,21 @@ const AdminApp = {
         <td><span class="employee-code">${emp.id}</span></td>
         <td style="font-weight:500">${emp.name}</td>
         <td><span class="dinhDanh-badge">${emp.dinhDanh || ''}</span></td>
-        <td><span class="position-tag ${!emp.viTri1 ? 'empty' : ''}">${emp.viTri1 || 'Chưa xếp'}</span></td>
-        <td><span class="position-tag ${!emp.viTri2 ? 'empty' : ''}">${emp.viTri2 || 'Chưa xếp'}</span></td>
-        <td><span class="position-tag ${!emp.viTri3 ? 'empty' : ''}">${emp.viTri3 || 'Chưa xếp'}</span></td>
-        <td><span class="position-tag ${!emp.xuatTai ? 'empty' : ''}">${emp.xuatTai || '—'}</span></td>
+        ${(emp.positions || []).map(p => `<td><span class="position-tag ${!p ? 'empty' : ''}">${p || 'Chưa xếp'}</span></td>`).join('')}
         <td><span style="font-size:12px; color:var(--text-muted)">${emp.note || ''}</span></td>
         <td class="confirm-cell">${confirmCell}</td>
       </tr>`;
     }).join('');
+
+    // Cập nhật header bảng theo ca hiện tại
+    const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+    const thead = document.getElementById('scheduleHead');
+    if (thead && shift) {
+      const posHeaders = shift.colHeaders.map(h => `<th>${h}</th>`).join('');
+      thead.innerHTML = `<tr><th>STT</th><th>Mã CTV</th><th>Họ tên</th><th>Định danh</th>${posHeaders}<th>Note</th><th>Xác nhận</th></tr>`;
+    }
   },
+
 
 
   renderStats: () => {
@@ -878,6 +925,12 @@ const AdminApp = {
       return;
     }
 
+    const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+    if (!shift || !shift.colHeaders) {
+      Utils.showToast('Không tìm thấy cấu hình ca làm việc!', 'error');
+      return;
+    }
+
     const rows = text.split('\n');
     const parsedData = [];
     
@@ -893,16 +946,15 @@ const AdminApp = {
     for (let i = startIndex; i < rows.length; i++) {
       const cols = rows[i].split('\t'); // TSV từ Excel/Sheets
       if (cols.length >= 3 && cols[1].trim() !== '') {
+        // Đọc positions[] theo số lượng colHeaders của ca
+        const positions = shift.colHeaders.map((_, pi) => (cols[4 + pi]?.trim() || ''));
         parsedData.push({
           stt: cols[0]?.trim() || (i + 1 - startIndex),
           id: cols[1]?.trim() || '',
           name: cols[2]?.trim() || '',
           dinhDanh: cols[3]?.trim() || '',
-          viTri1: cols[4]?.trim() || '',
-          viTri2: cols[5]?.trim() || '',
-          viTri3: cols[6]?.trim() || '',
-          xuatTai: cols[7]?.trim() || '',
-          note: cols[8]?.trim() || '',
+          positions: positions,
+          note: cols[shift.noteColIndex]?.trim() || '',
           status: 'pending',
           timestamp: ''
         });
@@ -914,21 +966,23 @@ const AdminApp = {
       return;
     }
 
-    // Hiển thị preview
+    // Hiển thị preview với cột đúng theo ca
     document.getElementById('previewCount').textContent = `(${parsedData.length} nhân viên)`;
     document.getElementById('previewContainer').classList.remove('hidden');
     
-    const thead = `<tr><th>STT</th><th>Mã NV</th><th>Họ Tên</th><th>Xuất Tải</th><th>Ghi Chú</th></tr>`;
-    const tbody = parsedData.slice(0, 5).map(r => `
-      <tr><td>${r.stt}</td><td>${r.id}</td><td>${r.name}</td><td>${r.xuatTai}</td><td>${r.note}</td></tr>
-    `).join('');
+    const previewCols = ['STT', 'Mã NV', 'Họ Tên', ...shift.colHeaders.slice(0, 3), 'Ghi Chú'];
+    const thead = `<tr>${previewCols.map(h => `<th>${h}</th>`).join('')}</tr>`;
+    const tbody = parsedData.slice(0, 5).map(r => {
+      const pos = r.positions || [];
+      return `<tr><td>${r.stt}</td><td>${r.id}</td><td>${r.name}</td>${pos.slice(0,3).map(p=>`<td>${p}</td>`).join('')}<td>${r.note}</td></tr>`;
+    }).join('');
     
     document.getElementById('previewTableWrap').innerHTML = `
       <table class="preview-table">
         ${thead}
         <tbody>
           ${tbody}
-          ${parsedData.length > 5 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);font-style:italic">... và ${parsedData.length - 5} dòng nữa</td></tr>` : ''}
+          ${parsedData.length > 5 ? `<tr><td colspan="${previewCols.length}" style="text-align:center;color:var(--text-muted);font-style:italic">... và ${parsedData.length - 5} dòng nữa</td></tr>` : ''}
         </tbody>
       </table>
     `;
@@ -937,6 +991,7 @@ const AdminApp = {
     State._tempParsedData = parsedData;
     document.getElementById('saveScheduleBtn').disabled = false;
   },
+
 
   savePastedSchedule: async () => {
     if (!State._tempParsedData || State._tempParsedData.length === 0) return;
