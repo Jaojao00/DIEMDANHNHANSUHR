@@ -46,7 +46,7 @@ const State = {
   scanner: null,
   isScanning: false,
   refreshTimer: null,
-  apiLink: '',
+  apiLink: localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : ''),
   clockTimer: null,
   enableTimeCheck: false
 };
@@ -317,6 +317,14 @@ const EmployeeApp = {
   },
 
   syncSettings: () => {
+    // Tự động dọn dẹp API URL cũ nếu còn lưu trong localStorage
+    const oldUrl = 'https://script.google.com/macros/s/AKfycbxvVmnXSyKdEJt-H7Ag8AKlrMRaScStA5iQbWsspRjT-8r-MHopM5Tylg5wjNJXtHsm/exec';
+    const currentLocalUrl = localStorage.getItem('agr_api_url');
+    if (currentLocalUrl && currentLocalUrl.trim() === oldUrl) {
+      localStorage.removeItem('agr_api_url');
+      State.apiLink = typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '';
+    }
+
     const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times'));
     if (savedTimes) {
       State.shifts.forEach(s => {
