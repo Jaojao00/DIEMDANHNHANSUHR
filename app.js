@@ -644,6 +644,10 @@ const EmployeeApp = {
           const modalEl = document.getElementById('requestModal');
           if (modalEl) modalEl.classList.add('hidden');
           requestForm.reset();
+          
+          // Tự động tải lại bảng để thấy ngay người vừa xin lên ca
+          const refreshBtn = document.getElementById('refreshBtn');
+          if (refreshBtn) refreshBtn.click();
 
           // Hiển thị thông tin lên bảng thông báo thành công
           const reqSuccessModal = document.getElementById('requestSuccessModal');
