@@ -92,6 +92,44 @@ function doPost(e) {
           data.note || ""
         ]);
         
+        // AUTO-UPDATE "XIN OFF" IN SHIFT SHEETS
+        if (data.type === "XIN OFF") {
+          var allSheets = reqSs.getSheets();
+          var searchId = (data.empId || "").toString().toLowerCase().trim();
+          var reqTime = data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
+          
+          for (var s = 0; s < allSheets.length; s++) {
+            var sName = allSheets[s].getName();
+            if (sName.indexOf("Ca_") === 0) {
+              var dataRange = allSheets[s].getDataRange();
+              var values = dataRange.getValues();
+              if (values.length > 1) {
+                var headers = values[0];
+                var statusCol = headers.length - 2; // 1-based index (headers.length - 3 + 1)
+                var timeCol = headers.length - 1;
+                var phoneCol = headers.length;
+                
+                for (var i = 1; i < values.length; i++) {
+                  var empIdInSheet = (values[i][1] || "").toString().toLowerCase().trim();
+                  var empStt = (values[i][0] || "").toString().toLowerCase().trim();
+                  var empName = (values[i][2] || "").toString().toLowerCase().trim();
+                  
+                  if (empIdInSheet === searchId || empStt === searchId || empName === searchId) {
+                    var currentStatus = values[i][statusCol - 1]; // 0-based index
+                    if (currentStatus !== "confirmed") {
+                      allSheets[s].getRange(i + 1, statusCol).setValue("XIN OFF");
+                      allSheets[s].getRange(i + 1, timeCol).setValue(reqTime);
+                      if (data.phone) {
+                        allSheets[s].getRange(i + 1, phoneCol).setValue(data.phone);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        
         return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Gửi yêu cầu thành công" })).setMimeType(ContentService.MimeType.JSON);
       } catch(reqErr) {
         return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi ghi trang tính yêu cầu: " + reqErr.toString() })).setMimeType(ContentService.MimeType.JSON);

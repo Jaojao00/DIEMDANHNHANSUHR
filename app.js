@@ -548,10 +548,12 @@ const EmployeeApp = {
         const titleEl = document.getElementById('requestModalTitle');
         const modalEl = document.getElementById('requestModal');
         const dateEl = document.getElementById('req_date');
+        const shiftGroup = document.getElementById('req_target_shift_group');
         if (typeEl) typeEl.value = 'XIN OFF';
         if (titleEl) titleEl.textContent = '📋 Xin Nghỉ / Xin Off';
         if (modalEl) modalEl.classList.remove('hidden');
         if (dateEl) dateEl.valueAsDate = new Date();
+        if (shiftGroup) shiftGroup.style.display = 'none';
       });
     }
 
@@ -562,10 +564,12 @@ const EmployeeApp = {
         const titleEl = document.getElementById('requestModalTitle');
         const modalEl = document.getElementById('requestModal');
         const dateEl = document.getElementById('req_date');
+        const shiftGroup = document.getElementById('req_target_shift_group');
         if (typeEl) typeEl.value = 'XIN LÊN CA';
         if (titleEl) titleEl.textContent = '⬆️ Xin Lên Ca';
         if (modalEl) modalEl.classList.remove('hidden');
         if (dateEl) dateEl.valueAsDate = new Date();
+        if (shiftGroup) shiftGroup.style.display = 'block';
       });
     }
 
@@ -591,6 +595,7 @@ const EmployeeApp = {
         const reasonEl = document.getElementById('req_reason');
         const noteEl = document.getElementById('req_note');
         const typeEl = document.getElementById('req_type');
+        const targetShiftEl = document.getElementById('req_target_shift');
         if (!empIdEl || !nameEl || !phoneEl || !dateEl || !reasonEl || !typeEl) return;
 
         const empId = empIdEl.value.trim();
@@ -598,8 +603,12 @@ const EmployeeApp = {
         const phone = phoneEl.value.trim();
         const date = dateEl.value;
         const reason = reasonEl.value.trim();
-        const note = noteEl ? noteEl.value.trim() : '';
         const type = typeEl.value;
+        let note = noteEl ? noteEl.value.trim() : '';
+        
+        if (type === 'XIN LÊN CA' && targetShiftEl) {
+           note = `[Xin ca: ${targetShiftEl.value}] ` + note;
+        }
 
         if (!empId || !name || !phone || !date || !reason) {
           Utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
