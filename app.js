@@ -121,12 +121,7 @@ const DataManager = {
   },
 
   // Chuẩn hóa đối tượng nhân viên (chuyển tất cả field số thành chuỗi)
-  normalizeEmp: (emp) => ({
-    ...emp,
-    stt: String(emp.stt || ''),
-    id: String(emp.id || ''),
-    name: String(emp.name || ''),
-    dinhDanh: String(emp.dinhDanh || ''),
+  normalizeEmp: (emp) => {
     // Nếu đã có positions[], chuẩn hóa từng phần tử
     let positions = emp.positions;
     if (!positions) {
@@ -150,7 +145,7 @@ const DataManager = {
       timestamp: String(emp.timestamp || ''),
       phone: String(emp.phone || ''),
     };
-  }),
+  },
 
   loadSchedule: (shiftId) => {
     return new Promise(async (resolve) => {
@@ -195,11 +190,15 @@ const DataManager = {
       } else {
         // Gửi lên Google Sheets
         try {
+          const shift = State.shifts.find(s => s.id === shiftId);
+          const headers = shift ? [...shift.colHeaders] : [];
+
           const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
             body: JSON.stringify({
               action: 'save',
               shiftId: shiftId,
+              headers: headers,
               schedule: data
             })
           });
@@ -234,10 +233,9 @@ const DataManager = {
         data[empIndex].timestamp = Utils.formatTime();
         data[empIndex].phone = phone;
         
-        const emp = data[empIndex];
-        const isUnassigned = (!emp.viTri1 || emp.viTri1 === 'Chưa xếp') && 
-                            (!emp.viTri2 || emp.viTri2 === 'Chưa xếp') && 
-                            (!emp.viTri3 || emp.viTri3 === 'Chưa xếp');
+        const emp = DataManager.normalizeEmp(data[empIndex]);
+        const positions = emp.positions || [];
+        const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
                             
         await DataManager.saveSchedule(shiftId, data);
         
@@ -267,9 +265,8 @@ const DataManager = {
         }
         
         const emp = DataManager.normalizeEmp(res.employee);
-        const isUnassigned = (!emp.viTri1 || emp.viTri1.toLowerCase().includes('chưa')) &&
-                            (!emp.viTri2 || emp.viTri2.toLowerCase().includes('chưa')) &&
-                            (!emp.viTri3 || emp.viTri3.toLowerCase().includes('chưa'));
+        const positions = emp.positions || [];
+        const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
                             
         return { employeeData: emp, isUnassigned: isUnassigned };
       } catch (error) {
@@ -530,31 +527,38 @@ const EmployeeApp = {
       document.getElementById('positionResultCard').classList.remove('hidden');
       document.getElementById('noPositionWarning').classList.add('hidden');
       
-      // Render Position
-      document.getElementById('prcMain').textContent = empData.viTri1 || 'Chưa xếp lịch';
+      const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+      const positions = empData.positions || [];
       
-      document.getElementById('prcSlots').innerHTML = `
+      // Render vị trí đầu tiên làm chính
+      document.getElementById('prcMain').textContent = positions[0] || 'Chưa xếp lịch';
+      
+      let slotsHTML = `
         <div class="prc-slot">
           <span class="prc-slot-lbl">Định danh</span>
           <span class="prc-slot-val">${empData.dinhDanh || '—'}</span>
         </div>
-        <div class="prc-slot">
-          <span class="prc-slot-lbl">Sau giờ nghỉ</span>
-          <span class="prc-slot-val">${empData.viTri2 || '—'}</span>
-        </div>
-        <div class="prc-slot">
-          <span class="prc-slot-lbl">4h-6h</span>
-          <span class="prc-slot-val">${empData.viTri3 || '—'}</span>
-        </div>
-        <div class="prc-slot">
-          <span class="prc-slot-lbl">Xuất Tải</span>
-          <span class="prc-slot-val">${empData.xuatTai || '—'}</span>
-        </div>
+      `;
+
+      if (shift && shift.colHeaders) {
+        shift.colHeaders.forEach((header, index) => {
+          slotsHTML += `
+            <div class="prc-slot">
+              <span class="prc-slot-lbl">${header}</span>
+              <span class="prc-slot-val">${positions[index] || '—'}</span>
+            </div>
+          `;
+        });
+      }
+
+      slotsHTML += `
         <div class="prc-slot" style="grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px; margin-top: 5px;">
           <span class="prc-slot-lbl">Ghi chú (NOTE)</span>
           <span class="prc-slot-val" style="color:#aaa">${empData.note || 'Không có ghi chú'}</span>
         </div>
       `;
+
+      document.getElementById('prcSlots').innerHTML = slotsHTML;
     }
   }
 };
@@ -738,8 +742,11 @@ const AdminApp = {
 
   renderTable: () => {
     const tbody = document.getElementById('scheduleBody');
+    const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+    const colCount = shift ? shift.colHeaders.length + 6 : 10;
+
     if (!State.scheduleData || State.scheduleData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu lịch ca này. Vui lòng thêm bằng tính năng Quản lý.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu lịch ca này. Vui lòng thêm bằng tính năng Quản lý.</td></tr>`;
       return;
     }
 
@@ -765,20 +772,24 @@ const AdminApp = {
         confirmCell = `<div class="confirm-badge pending"></div>`;
       }
 
+      const posCells = shift ? shift.colHeaders.map((_, idx) => {
+        const p = emp.positions ? emp.positions[idx] : '';
+        return `<td><span class="position-tag ${!p ? 'empty' : ''}">${p || 'Chưa xếp'}</span></td>`;
+      }).join('') : '';
+
       return `
       <tr class="${rowClass}">
         <td>${emp.stt}</td>
         <td><span class="employee-code">${emp.id}</span></td>
         <td style="font-weight:500">${emp.name}</td>
         <td><span class="dinhDanh-badge">${emp.dinhDanh || ''}</span></td>
-        ${(emp.positions || []).map(p => `<td><span class="position-tag ${!p ? 'empty' : ''}">${p || 'Chưa xếp'}</span></td>`).join('')}
+        ${posCells}
         <td><span style="font-size:12px; color:var(--text-muted)">${emp.note || ''}</span></td>
         <td class="confirm-cell">${confirmCell}</td>
       </tr>`;
     }).join('');
 
     // Cập nhật header bảng theo ca hiện tại
-    const shift = State.shifts.find(s => s.id === State.selectedShiftId);
     const thead = document.getElementById('scheduleHead');
     if (thead && shift) {
       const posHeaders = shift.colHeaders.map(h => `<th>${h}</th>`).join('');
