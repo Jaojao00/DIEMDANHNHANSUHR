@@ -14,17 +14,20 @@ function doPost(e) {
     var action = data.action;
     var shiftId = data.shiftId;
     
-    if (!shiftId) {
+    if (!shiftId && action !== "request") {
       return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    var sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getSheetByName(sheetName);
-    
-    // Tạo sheet mới nếu chưa có
-    if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
+    var sheetName, sheet;
+    if (shiftId) {
+      sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      sheet = ss.getSheetByName(sheetName);
+      
+      // Tạo sheet mới nếu chưa có
+      if (!sheet) {
+        sheet = ss.insertSheet(sheetName);
+      }
     }
 
     // ACTION: SAVE (Lưu danh sách lịch làm việc từ Admin)
