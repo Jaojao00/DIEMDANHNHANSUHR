@@ -1063,3 +1063,30 @@ textarea.form-input { min-height: 72px; }
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
+
+/* Status Filter Selector */
+.status-filter-select {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition);
+  min-width: 155px;
+}
+.status-filter-select:hover {
+  border-color: var(--border-light);
+}
+.status-filter-select:focus {
+  border-color: var(--agr-red);
+  background: var(--bg-input);
+}
+.status-filter-select option {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+}
+

@@ -150,15 +150,22 @@ const DataManager = {
   loadSchedule: (shiftId) => {
     return new Promise(async (resolve) => {
       if (CONFIG.DEMO_MODE) {
-        // ... code local storage cũ ...
         const key = Utils.getShiftStorageKey(shiftId);
-        const stored = localStorage.getItem(key);
-        if (stored) {
-          resolve(JSON.parse(stored));
-        } else {
+        try {
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            const normalized = Array.isArray(parsed) ? parsed.map(DataManager.normalizeEmp) : [];
+            resolve(normalized);
+          } else {
+            const demo = DataManager.getDemoData();
+            localStorage.setItem(key, JSON.stringify(demo));
+            resolve(demo.map(DataManager.normalizeEmp));
+          }
+        } catch (e) {
+          console.error("Lỗi đọc demo data hoặc cache ca:", e);
           const demo = DataManager.getDemoData();
-          localStorage.setItem(key, JSON.stringify(demo));
-          resolve(demo);
+          resolve(demo.map(DataManager.normalizeEmp));
         }
       } else {
         // Tải từ Google Sheets
@@ -173,8 +180,19 @@ const DataManager = {
         } catch (error) {
           console.error("Lỗi tải lịch từ Google Sheets:", error);
           // Fallback
-          const stored = localStorage.getItem(Utils.getShiftStorageKey(shiftId));
-          resolve(stored ? JSON.parse(stored) : []);
+          try {
+            const stored = localStorage.getItem(Utils.getShiftStorageKey(shiftId));
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              const normalized = Array.isArray(parsed) ? parsed.map(DataManager.normalizeEmp) : [];
+              resolve(normalized);
+            } else {
+              resolve([]);
+            }
+          } catch (err) {
+            console.error("Lỗi đọc cache local dự phòng:", err);
+            resolve([]);
+          }
         }
       }
     });
@@ -319,13 +337,23 @@ const EmployeeApp = {
   syncSettings: () => {
     // Tự động dọn dẹp API URL cũ nếu còn lưu trong localStorage
     const oldUrl = 'https://script.google.com/macros/s/AKfycbxvVmnXSyKdEJt-H7Ag8AKlrMRaScStA5iQbWsspRjT-8r-MHopM5Tylg5wjNJXtHsm/exec';
-    const currentLocalUrl = localStorage.getItem('agr_api_url');
-    if (currentLocalUrl && currentLocalUrl.trim() === oldUrl) {
-      localStorage.removeItem('agr_api_url');
-      State.apiLink = typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '';
+    try {
+      const currentLocalUrl = localStorage.getItem('agr_api_url');
+      if (currentLocalUrl && currentLocalUrl.trim() === oldUrl) {
+        localStorage.removeItem('agr_api_url');
+        State.apiLink = typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '';
+      }
+    } catch (e) {
+      console.error("Lỗi dọn dẹp url cũ:", e);
     }
 
-    const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times'));
+    let savedTimes = null;
+    try {
+      const stored = localStorage.getItem('agr_shift_times');
+      if (stored) savedTimes = JSON.parse(stored);
+    } catch (e) {
+      console.error("Lỗi đọc agr_shift_times:", e);
+    }
     if (savedTimes) {
       State.shifts.forEach(s => {
         if (savedTimes[s.id]) {
@@ -334,18 +362,26 @@ const EmployeeApp = {
         }
       });
     }
-    const enableTime = localStorage.getItem('agr_enable_time_check');
-    if (enableTime !== null) {
-      State.enableTimeCheck = enableTime === 'true';
+
+    try {
+      const enableTime = localStorage.getItem('agr_enable_time_check');
+      if (enableTime !== null) {
+        State.enableTimeCheck = enableTime === 'true';
+      }
+    } catch (e) {
+      console.error("Lỗi đọc agr_enable_time_check:", e);
     }
   },
 
   startClock: () => {
     const update = () => {
       const d = new Date();
-      document.getElementById('empDate').textContent = Utils.formatDate(d);
-      document.getElementById('empTime').textContent = Utils.formatTime(d);
-      document.getElementById('attClockSm').textContent = Utils.formatTime(d);
+      const empDateEl = document.getElementById('empDate');
+      const empTimeEl = document.getElementById('empTime');
+      const attClockSmEl = document.getElementById('attClockSm');
+      if (empDateEl) empDateEl.textContent = Utils.formatDate(d);
+      if (empTimeEl) empTimeEl.textContent = Utils.formatTime(d);
+      if (attClockSmEl) attClockSmEl.textContent = Utils.formatTime(d);
     };
     update();
     setInterval(update, 1000);
@@ -395,130 +431,234 @@ const EmployeeApp = {
 
   setupEvents: () => {
     // Back to shifts
-    document.getElementById('backToShifts').addEventListener('click', () => {
-      EmployeeApp.goToPhase('phaseShift');
-    });
+    const backToShiftsBtn = document.getElementById('backToShifts');
+    if (backToShiftsBtn) {
+      backToShiftsBtn.addEventListener('click', () => {
+        EmployeeApp.goToPhase('phaseShift');
+      });
+    }
 
     // Manual Form Submit
-    document.getElementById('attendanceForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const shift = State.shifts.find(s => s.id === State.selectedShiftId);
-      if (State.enableTimeCheck && !Utils.isWithinTimeWindow(shift.allowStart, shift.allowEnd)) {
-        Utils.showToast(`Hiện không trong thời gian điểm danh của ca ${shift.label} (Giờ cho phép: ${shift.allowStart} - ${shift.allowEnd})`, 'error');
-        return;
-      }
-      
-      const idStr = document.getElementById('employeeId').value.trim();
-      const nameStr = document.getElementById('employeeName').value.trim();
-      const phoneStr = document.getElementById('employeePhone').value.trim();
-
-      // Validation cơ bản
-      if (!CONFIG.EMPLOYEE_ID_REGEX.test(idStr)) {
-        Utils.showToast('Mã nhân viên không hợp lệ (Ví dụ: Ops123456)', 'error');
-        return;
-      }
-      if (nameStr.length < CONFIG.MIN_NAME_LENGTH) {
-        Utils.showToast('Vui lòng nhập đầy đủ họ tên', 'error');
-        return;
-      }
-      if (!CONFIG.PHONE_REGEX.test(phoneStr)) {
-        Utils.showToast('Số điện thoại không hợp lệ', 'error');
-        return;
-      }
-
-      // Xử lý điểm danh
-      try {
-        const btn = document.getElementById('submitBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner" style="width:14px;height:14px"></span> Đang xử lý...';
-
-        const result = await DataManager.updateAttendance(State.selectedShiftId, idStr, phoneStr);
+    const attendanceForm = document.getElementById('attendanceForm');
+    if (attendanceForm) {
+      attendanceForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        // Hiện Success
-        EmployeeApp.showSuccess(result.employeeData, result.isUnassigned);
-        document.getElementById('attendanceForm').reset();
-      } catch (error) {
-        Utils.showToast(error.message, 'error');
-      } finally {
+        const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+        if (State.enableTimeCheck && !Utils.isWithinTimeWindow(shift.allowStart, shift.allowEnd)) {
+          Utils.showToast(`Hiện không trong thời gian điểm danh của ca ${shift.label} (Giờ cho phép: ${shift.allowStart} - ${shift.allowEnd})`, 'error');
+          return;
+        }
+        
+        const idInput = document.getElementById('employeeId');
+        const nameInput = document.getElementById('employeeName');
+        const phoneInput = document.getElementById('employeePhone');
+        if (!idInput || !nameInput || !phoneInput) return;
+
+        const idStr = idInput.value.trim();
+        const nameStr = nameInput.value.trim();
+        const phoneStr = phoneInput.value.trim();
+
+        // Validation cơ bản
+        if (!CONFIG.EMPLOYEE_ID_REGEX.test(idStr)) {
+          Utils.showToast('Mã nhân viên không hợp lệ (Ví dụ: Ops123456)', 'error');
+          return;
+        }
+        if (nameStr.length < CONFIG.MIN_NAME_LENGTH) {
+          Utils.showToast('Vui lòng nhập đầy đủ họ tên', 'error');
+          return;
+        }
+        if (!CONFIG.PHONE_REGEX.test(phoneStr)) {
+          Utils.showToast('Số điện thoại không hợp lệ', 'error');
+          return;
+        }
+
+        // Xử lý điểm danh
         const btn = document.getElementById('submitBtn');
-        btn.disabled = false;
-        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Xác Nhận Điểm Danh';
-      }
-    });
+        try {
+          if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner" style="width:14px;height:14px"></span> Đang xử lý...';
+          }
+
+          const result = await DataManager.updateAttendance(State.selectedShiftId, idStr, phoneStr);
+          
+          // Hiện Success
+          EmployeeApp.showSuccess(result.employeeData, result.isUnassigned);
+          attendanceForm.reset();
+        } catch (error) {
+          Utils.showToast(error.message, 'error');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Xác Nhận Điểm Danh';
+          }
+        }
+      });
+    }
 
     // Admin Access Button
-    document.getElementById('adminAccessBtn').addEventListener('click', () => {
-      document.getElementById('adminLoginModal').classList.remove('hidden');
-      document.getElementById('adminPasswordInput').focus();
-    });
+    const adminAccessBtn = document.getElementById('adminAccessBtn');
+    if (adminAccessBtn) {
+      adminAccessBtn.addEventListener('click', () => {
+        const loginModal = document.getElementById('adminLoginModal');
+        const passInput = document.getElementById('adminPasswordInput');
+        if (loginModal) loginModal.classList.remove('hidden');
+        if (passInput) passInput.focus();
+      });
+    }
 
     // Success Done Btn
-    document.getElementById('successDoneBtn').addEventListener('click', () => {
-      EmployeeApp.goToPhase('phaseShift');
-    });
+    const successDoneBtn = document.getElementById('successDoneBtn');
+    if (successDoneBtn) {
+      successDoneBtn.addEventListener('click', () => {
+        EmployeeApp.goToPhase('phaseShift');
+      });
+    }
 
     // ---- Xin Nghỉ / Xin Lên Ca Buttons ----
-    document.getElementById('openLeaveRequestBtn').addEventListener('click', () => {
-      document.getElementById('req_type').value = 'XIN OFF';
-      document.getElementById('requestModalTitle').textContent = '📋 Xin Nghỉ / Xin Off';
-      document.getElementById('requestModal').classList.remove('hidden');
-      document.getElementById('req_date').valueAsDate = new Date();
-    });
+    const openLeaveRequestBtn = document.getElementById('openLeaveRequestBtn');
+    if (openLeaveRequestBtn) {
+      openLeaveRequestBtn.addEventListener('click', () => {
+        const typeEl = document.getElementById('req_type');
+        const titleEl = document.getElementById('requestModalTitle');
+        const modalEl = document.getElementById('requestModal');
+        const dateEl = document.getElementById('req_date');
+        if (typeEl) typeEl.value = 'XIN OFF';
+        if (titleEl) titleEl.textContent = '📋 Xin Nghỉ / Xin Off';
+        if (modalEl) modalEl.classList.remove('hidden');
+        if (dateEl) dateEl.valueAsDate = new Date();
+      });
+    }
 
-    document.getElementById('openExtraShiftBtn').addEventListener('click', () => {
-      document.getElementById('req_type').value = 'XIN LÊN CA';
-      document.getElementById('requestModalTitle').textContent = '⬆️ Xin Lên Ca';
-      document.getElementById('requestModal').classList.remove('hidden');
-      document.getElementById('req_date').valueAsDate = new Date();
-    });
+    const openExtraShiftBtn = document.getElementById('openExtraShiftBtn');
+    if (openExtraShiftBtn) {
+      openExtraShiftBtn.addEventListener('click', () => {
+        const typeEl = document.getElementById('req_type');
+        const titleEl = document.getElementById('requestModalTitle');
+        const modalEl = document.getElementById('requestModal');
+        const dateEl = document.getElementById('req_date');
+        if (typeEl) typeEl.value = 'XIN LÊN CA';
+        if (titleEl) titleEl.textContent = '⬆️ Xin Lên Ca';
+        if (modalEl) modalEl.classList.remove('hidden');
+        if (dateEl) dateEl.valueAsDate = new Date();
+      });
+    }
 
-    document.getElementById('requestModalCloseBtn').addEventListener('click', () => {
-      document.getElementById('requestModal').classList.add('hidden');
-      document.getElementById('requestForm').reset();
-    });
+    const requestModalCloseBtn = document.getElementById('requestModalCloseBtn');
+    if (requestModalCloseBtn) {
+      requestModalCloseBtn.addEventListener('click', () => {
+        const modalEl = document.getElementById('requestModal');
+        const formEl = document.getElementById('requestForm');
+        if (modalEl) modalEl.classList.add('hidden');
+        if (formEl) formEl.reset();
+      });
+    }
 
-    document.getElementById('requestForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const empId = document.getElementById('req_empId').value.trim();
-      const name = document.getElementById('req_name').value.trim().toUpperCase();
-      const phone = document.getElementById('req_phone').value.trim();
-      const date = document.getElementById('req_date').value;
-      const reason = document.getElementById('req_reason').value.trim();
-      const note = document.getElementById('req_note').value.trim();
-      const type = document.getElementById('req_type').value;
-
-      if (!empId || !name || !phone || !date || !reason) {
-        Utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
-        return;
-      }
-
-      try {
-        const btn = document.getElementById('requestSubmitBtn');
-        btn.disabled = true;
-        btn.textContent = '⏳ Đang gửi...';
-
-        // Format timestamp kiểu DD/MM/YYYY HH:mm:ss
-        const now = new Date();
-        const ts = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    const requestForm = document.getElementById('requestForm');
+    if (requestForm) {
+      requestForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
         
-        // Format ngày DD/MM/YYYY
-        const [y,m,d2] = date.split('-');
-        const dateFormatted = `${d2}/${m}/${y}`;
+        const empIdEl = document.getElementById('req_empId');
+        const nameEl = document.getElementById('req_name');
+        const phoneEl = document.getElementById('req_phone');
+        const dateEl = document.getElementById('req_date');
+        const reasonEl = document.getElementById('req_reason');
+        const noteEl = document.getElementById('req_note');
+        const typeEl = document.getElementById('req_type');
+        if (!empIdEl || !nameEl || !phoneEl || !dateEl || !reasonEl || !typeEl) return;
 
-        await DataManager.submitRequest({ empId, name, phone, type, reason, date: dateFormatted, note, timestamp: ts });
+        const empId = empIdEl.value.trim();
+        const name = nameEl.value.trim().toUpperCase();
+        const phone = phoneEl.value.trim();
+        const date = dateEl.value;
+        const reason = reasonEl.value.trim();
+        const note = noteEl ? noteEl.value.trim() : '';
+        const type = typeEl.value;
 
-        document.getElementById('requestModal').classList.add('hidden');
-        document.getElementById('requestForm').reset();
-        Utils.showToast(`✅ Đã gửi yêu cầu ${type} thành công!`, 'success');
-      } catch (err) {
-        Utils.showToast('Lỗi gửi yêu cầu: ' + err.message, 'error');
-      } finally {
+        if (!empId || !name || !phone || !date || !reason) {
+          Utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
+          return;
+        }
+
         const btn = document.getElementById('requestSubmitBtn');
-        btn.disabled = false;
-        btn.textContent = '📤 Gửi Yêu Cầu';
-      }
-    });
+        try {
+          if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Đang gửi...';
+          }
+
+          // Format timestamp kiểu DD/MM/YYYY HH:mm:ss
+          const now = new Date();
+          const ts = `${now.getDate().toString().padStart(2,'0')}/${(now.getMonth()+1).toString().padStart(2,'0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+          
+          // Format ngày DD/MM/YYYY
+          const [y,m,d2] = date.split('-');
+          const dateFormatted = `${d2}/${m}/${y}`;
+
+          await DataManager.submitRequest({ empId, name, phone, type, reason, date: dateFormatted, note, timestamp: ts });
+
+          const modalEl = document.getElementById('requestModal');
+          if (modalEl) modalEl.classList.add('hidden');
+          requestForm.reset();
+
+          // Hiển thị thông tin lên bảng thông báo thành công
+          const reqSuccessModal = document.getElementById('requestSuccessModal');
+          if (reqSuccessModal) {
+            const successTypeEl = document.getElementById('reqSuccessType');
+            const successTypeLabelEl = document.getElementById('reqSuccessTypeLabel');
+            const successIdEl = document.getElementById('reqSuccessId');
+            const successNameEl = document.getElementById('reqSuccessName');
+            const successPhoneEl = document.getElementById('reqSuccessPhone');
+            const successDateEl = document.getElementById('reqSuccessDate');
+            const successReasonEl = document.getElementById('reqSuccessReason');
+            const successNoteRowEl = document.getElementById('reqSuccessNoteRow');
+            const successNoteEl = document.getElementById('reqSuccessNote');
+
+            if (successTypeEl) successTypeEl.textContent = type === 'XIN OFF' ? 'OFF' : 'LÊN CA';
+            if (successTypeLabelEl) {
+              successTypeLabelEl.textContent = type;
+              successTypeLabelEl.style.color = type === 'XIN OFF' ? '#ffbe00' : '#4fc3f7';
+            }
+            if (successIdEl) successIdEl.textContent = empId.toUpperCase();
+            if (successNameEl) successNameEl.textContent = name;
+            if (successPhoneEl) successPhoneEl.textContent = phone;
+            if (successDateEl) successDateEl.textContent = dateFormatted;
+            if (successReasonEl) successReasonEl.textContent = reason;
+            
+            if (successNoteRowEl) {
+              if (note) {
+                successNoteRowEl.style.display = 'flex';
+                if (successNoteEl) successNoteEl.textContent = note;
+              } else {
+                successNoteRowEl.style.display = 'none';
+              }
+            }
+            
+            reqSuccessModal.classList.remove('hidden');
+          }
+
+          Utils.showToast(`✅ Đăng ký ${type} thành công!`, 'success');
+        } catch (err) {
+          Utils.showToast('Lỗi gửi yêu cầu: ' + err.message, 'error');
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = '📤 Gửi Yêu Cầu';
+          }
+        }
+      });
+    }
+
+    // Close Request Success Modal
+    const reqSuccessCloseBtn = document.getElementById('reqSuccessCloseBtn');
+    if (reqSuccessCloseBtn) {
+      reqSuccessCloseBtn.addEventListener('click', () => {
+        const successModal = document.getElementById('requestSuccessModal');
+        if (successModal) successModal.classList.add('hidden');
+      });
+    }
   },
 
   showSuccess: (empData, isUnassigned) => {
@@ -566,25 +706,50 @@ const EmployeeApp = {
         </div>
       `;
 
-      document.getElementById('prcSlots').innerHTML = slotsHTML;
+      const prcSlotsEl = document.getElementById('prcSlots');
+      if (prcSlotsEl) prcSlotsEl.innerHTML = slotsHTML;
     }
   }
 };
+
 // ==========================================
 // GIAO DIỆN QUẢN TRỊ (ADMIN UI)
 // ==========================================
 const AdminApp = {
   init: () => {
-    AdminApp.setupEvents();
-    AdminApp.renderShiftTabs();
-    AdminApp.startClock();
+    try {
+      AdminApp.setupEvents();
+    } catch (e) {
+      console.error("Lỗi setupEvents:", e);
+    }
+    try {
+      AdminApp.renderShiftTabs();
+    } catch (e) {
+      console.error("Lỗi renderShiftTabs:", e);
+    }
+    try {
+      AdminApp.startClock();
+    } catch (e) {
+      console.error("Lỗi startClock:", e);
+    }
+    
+    // Clear search and filter values on startup to prevent browser autofill bugs
+    try {
+      const searchInput = document.getElementById('adminQuerySearch') || document.getElementById('searchInput');
+      if (searchInput) searchInput.value = '';
+      const statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) statusFilter.value = 'all';
+    } catch (e) {
+      console.error("Lỗi reset ô lọc:", e);
+    }
   },
 
   startAutoRefresh: () => {
     AdminApp.stopAutoRefresh();
     AdminApp.refreshTimer = setInterval(() => {
       // Chỉ tự tải lại khi đang ở tab danh sách (không phải lúc đang preview)
-      if (document.getElementById('previewContainer').classList.contains('hidden')) {
+      const preview = document.getElementById('previewContainer');
+      if (preview && preview.classList.contains('hidden')) {
         AdminApp.loadData(true); // true = silent refresh
       }
     }, CONFIG.REFRESH_INTERVAL);
@@ -597,8 +762,10 @@ const AdminApp = {
   startClock: () => {
     const update = () => {
       const d = new Date();
-      document.getElementById('currentDate').textContent = Utils.formatDate(d);
-      document.getElementById('currentTime').textContent = Utils.formatTime(d);
+      const dateEl = document.getElementById('currentDate');
+      const timeEl = document.getElementById('currentTime');
+      if (dateEl) dateEl.textContent = Utils.formatDate(d);
+      if (timeEl) timeEl.textContent = Utils.formatTime(d);
     };
     update();
     setInterval(update, 1000);
@@ -606,8 +773,10 @@ const AdminApp = {
 
   switchToAdmin: () => {
     State.isAdminMode = true;
-    document.getElementById('employeeView').classList.remove('active');
-    document.getElementById('adminView').classList.add('active');
+    const empView = document.getElementById('employeeView');
+    const admView = document.getElementById('adminView');
+    if (empView) empView.classList.remove('active');
+    if (admView) admView.classList.add('active');
     
     AdminApp.loadData();
     // Auto refresh cho admin
@@ -616,89 +785,140 @@ const AdminApp = {
 
   switchToEmployee: () => {
     State.isAdminMode = false;
-    document.getElementById('adminView').classList.remove('active');
-    document.getElementById('employeeView').classList.add('active');
+    const empView = document.getElementById('employeeView');
+    const admView = document.getElementById('adminView');
+    if (admView) admView.classList.remove('active');
+    if (empView) empView.classList.add('active');
     AdminApp.stopAutoRefresh();
   },
 
   setupEvents: () => {
     // Modal Login
-    document.getElementById('adminLoginCancelBtn').addEventListener('click', () => {
-      document.getElementById('adminLoginModal').classList.add('hidden');
-      document.getElementById('adminPasswordInput').value = '';
-    });
+    const loginCancelBtn = document.getElementById('adminLoginCancelBtn');
+    if (loginCancelBtn) {
+      loginCancelBtn.addEventListener('click', () => {
+        const loginModal = document.getElementById('adminLoginModal');
+        const passInput = document.getElementById('adminPasswordInput');
+        if (loginModal) loginModal.classList.add('hidden');
+        if (passInput) passInput.value = '';
+      });
+    }
     
-    document.getElementById('adminLoginSubmitBtn').addEventListener('click', () => {
-      const pass = document.getElementById('adminPasswordInput').value;
-      if (pass === CONFIG.MANAGER_PASSWORD) {
-        document.getElementById('adminLoginModal').classList.add('hidden');
-        document.getElementById('adminPasswordInput').value = '';
-        AdminApp.switchToAdmin();
-      } else {
-        document.getElementById('adminLoginError').classList.remove('hidden');
-      }
-    });
+    const loginSubmitBtn = document.getElementById('adminLoginSubmitBtn');
+    if (loginSubmitBtn) {
+      loginSubmitBtn.addEventListener('click', () => {
+        const passInput = document.getElementById('adminPasswordInput');
+        const pass = passInput ? passInput.value : '';
+        if (pass === CONFIG.MANAGER_PASSWORD) {
+          const loginModal = document.getElementById('adminLoginModal');
+          if (loginModal) loginModal.classList.add('hidden');
+          if (passInput) passInput.value = '';
+          AdminApp.switchToAdmin();
+        } else {
+          const errorEl = document.getElementById('adminLoginError');
+          if (errorEl) errorEl.classList.remove('hidden');
+        }
+      });
+    }
 
     // Exit Admin
-    document.getElementById('exitAdminBtn').addEventListener('click', AdminApp.switchToEmployee);
+    const exitAdminBtn = document.getElementById('exitAdminBtn');
+    if (exitAdminBtn) {
+      exitAdminBtn.addEventListener('click', AdminApp.switchToEmployee);
+    }
 
     // Settings Modal
-    document.getElementById('settingsBtn').addEventListener('click', AdminApp.openSettingsModal);
-    document.getElementById('settingsCloseBtn').addEventListener('click', AdminApp.closeSettings);
-    document.getElementById('settingsCancelBtn').addEventListener('click', AdminApp.closeSettings);
-    document.getElementById('settingsSaveBtn').addEventListener('click', AdminApp.saveSettings);
+    const settingsBtn = document.getElementById('settingsBtn');
+    if (settingsBtn) settingsBtn.addEventListener('click', AdminApp.openSettingsModal);
+    const settingsCloseBtn = document.getElementById('settingsCloseBtn');
+    if (settingsCloseBtn) settingsCloseBtn.addEventListener('click', AdminApp.closeSettings);
+    const settingsCancelBtn = document.getElementById('settingsCancelBtn');
+    if (settingsCancelBtn) settingsCancelBtn.addEventListener('click', AdminApp.closeSettings);
+    const settingsSaveBtn = document.getElementById('settingsSaveBtn');
+    if (settingsSaveBtn) settingsSaveBtn.addEventListener('click', AdminApp.saveSettings);
 
     // Refresh & Search
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-      const icon = document.getElementById('refreshBtn');
-      icon.classList.add('spinning');
-      AdminApp.loadData().then(() => {
-        setTimeout(() => icon.classList.remove('spinning'), 500);
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        refreshBtn.classList.add('spinning');
+        AdminApp.loadData().then(() => {
+          setTimeout(() => refreshBtn.classList.remove('spinning'), 500);
+        });
       });
-    });
+    }
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      const val = e.target.value.toLowerCase();
-      document.querySelectorAll('#scheduleBody tr').forEach(row => {
-        if(row.classList.contains('loading-row')) return;
-        const text = row.textContent.toLowerCase();
-        if (text.includes(val)) row.classList.remove('hidden');
-        else row.classList.add('hidden');
-      });
-    });
+    const searchInput = document.getElementById('adminQuerySearch') || document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', AdminApp.filterScheduleTable);
+    }
+
+    const filterSelect = document.getElementById('statusFilter');
+    if (filterSelect) {
+      filterSelect.addEventListener('change', AdminApp.filterScheduleTable);
+    }
 
     // Manager Panel (Update Schedule)
-    document.getElementById('managerBtn').addEventListener('click', () => {
-      AdminApp.openManagerModal();
-    });
-    document.getElementById('managerCloseBtn').addEventListener('click', () => {
-      document.getElementById('managerModal').classList.add('hidden');
-    });
-    document.getElementById('managerLogoutBtn').addEventListener('click', () => {
-      document.getElementById('managerModal').classList.add('hidden');
-    });
+    const managerBtn = document.getElementById('managerBtn');
+    if (managerBtn) {
+      managerBtn.addEventListener('click', () => {
+        AdminApp.openManagerModal();
+      });
+    }
+    const managerCloseBtn = document.getElementById('managerCloseBtn');
+    if (managerCloseBtn) {
+      managerCloseBtn.addEventListener('click', () => {
+        const modal = document.getElementById('managerModal');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+    const managerLogoutBtn = document.getElementById('managerLogoutBtn');
+    if (managerLogoutBtn) {
+      managerLogoutBtn.addEventListener('click', () => {
+        const modal = document.getElementById('managerModal');
+        if (modal) modal.classList.add('hidden');
+      });
+    }
 
-    document.getElementById('parsePasteBtn').addEventListener('click', AdminApp.parsePastedData);
-    document.getElementById('clearPasteBtn').addEventListener('click', () => {
-      document.getElementById('pasteDataArea').value = '';
-      document.getElementById('previewContainer').classList.add('hidden');
-      document.getElementById('saveScheduleBtn').disabled = true;
-    });
-
-    document.getElementById('saveScheduleBtn').addEventListener('click', AdminApp.savePastedSchedule);
+    const parsePasteBtn = document.getElementById('parsePasteBtn');
+    if (parsePasteBtn) parsePasteBtn.addEventListener('click', AdminApp.parsePastedData);
     
-    document.getElementById('clearScheduleBtn').addEventListener('click', async () => {
-      if (confirm('Bạn có chắc chắn muốn XÓA LỊCH CA này và trở về dữ liệu Demo ban đầu?')) {
-        localStorage.removeItem(Utils.getShiftStorageKey(State.selectedShiftId));
-        Utils.showToast('Đã khôi phục dữ liệu Demo.', 'info');
-        document.getElementById('managerModal').classList.add('hidden');
-        AdminApp.loadData();
-      }
-    });
+    const clearPasteBtn = document.getElementById('clearPasteBtn');
+    if (clearPasteBtn) {
+      clearPasteBtn.addEventListener('click', () => {
+        const pasteArea = document.getElementById('pasteDataArea');
+        const preview = document.getElementById('previewContainer');
+        const saveBtn = document.getElementById('saveScheduleBtn');
+        if (pasteArea) pasteArea.value = '';
+        if (preview) preview.classList.add('hidden');
+        if (saveBtn) saveBtn.disabled = true;
+      });
+    }
+
+    const saveScheduleBtn = document.getElementById('saveScheduleBtn');
+    if (saveScheduleBtn) saveScheduleBtn.addEventListener('click', AdminApp.savePastedSchedule);
+    
+    const clearScheduleBtn = document.getElementById('clearScheduleBtn');
+    if (clearScheduleBtn) {
+      clearScheduleBtn.addEventListener('click', async () => {
+        if (confirm('Bạn có chắc chắn muốn XÓA LỊCH CA này và trở về dữ liệu Demo ban đầu?')) {
+          try {
+            localStorage.removeItem(Utils.getShiftStorageKey(State.selectedShiftId));
+            Utils.showToast('Đã khôi phục dữ liệu Demo.', 'info');
+            const modal = document.getElementById('managerModal');
+            if (modal) modal.classList.add('hidden');
+            AdminApp.loadData();
+          } catch (e) {
+            console.error("Lỗi xóa ca:", e);
+          }
+        }
+      });
+    }
   },
 
   renderShiftTabs: () => {
     const list = document.getElementById('shiftTabsList');
+    if (!list) return;
     list.innerHTML = State.shifts.map(s => `
       <div class="shift-tab ${s.id === State.selectedShiftId ? 'active' : ''}" 
            data-shift="${s.id}" style="--tab-color:${s.color}">
@@ -723,14 +943,19 @@ const AdminApp = {
   loadData: async (isSilent = false) => {
     try {
       if(!isSilent) {
-        document.getElementById('connectionStatus').className = 'status-dot loading';
-        document.getElementById('connectionText').textContent = 'Đang tải...';
+        const statusDot = document.getElementById('connectionStatus');
+        const statusText = document.getElementById('connectionText');
+        if (statusDot) statusDot.className = 'status-dot loading';
+        if (statusText) statusText.textContent = 'Đang tải...';
       }
 
       // Update badge
       const shift = State.shifts.find(s => s.id === State.selectedShiftId);
-      document.getElementById('shiftBadge').textContent = shift.label.toUpperCase();
-      document.getElementById('shiftBadge').style.background = `linear-gradient(135deg, ${shift.color}, #222)`;
+      const badge = document.getElementById('shiftBadge');
+      if (badge && shift) {
+        badge.textContent = shift.label.toUpperCase();
+        badge.style.background = `linear-gradient(135deg, ${shift.color}, #222)`;
+      }
 
       const data = await DataManager.loadSchedule(State.selectedShiftId);
       State.scheduleData = data;
@@ -739,17 +964,22 @@ const AdminApp = {
       AdminApp.renderStats();
       AdminApp.renderLogs();
 
-      document.getElementById('connectionStatus').className = 'status-dot online';
-      document.getElementById('connectionText').textContent = CONFIG.API_URL ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
+      const statusDot = document.getElementById('connectionStatus');
+      const statusText = document.getElementById('connectionText');
+      if (statusDot) statusDot.className = 'status-dot online';
+      if (statusText) statusText.textContent = CONFIG.API_URL ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
     } catch (err) {
       if(!isSilent) Utils.showToast('Lỗi tải dữ liệu', 'error');
-      document.getElementById('connectionStatus').className = 'status-dot error';
-      document.getElementById('connectionText').textContent = 'Lỗi kết nối';
+      const statusDot = document.getElementById('connectionStatus');
+      const statusText = document.getElementById('connectionText');
+      if (statusDot) statusDot.className = 'status-dot error';
+      if (statusText) statusText.textContent = 'Lỗi kết nối';
     }
   },
 
   renderTable: () => {
     const tbody = document.getElementById('scheduleBody');
+    if (!tbody) return;
     const shift = State.shifts.find(s => s.id === State.selectedShiftId);
     const colCount = shift ? shift.colHeaders.length + 6 : 10;
 
@@ -759,9 +989,15 @@ const AdminApp = {
     }
 
     // Lấy danh sách ID đã xin nghỉ/lên ca từ localStorage
-    const requests = JSON.parse(localStorage.getItem('agr_requests') || '[]');
-    const offIds = new Set(requests.filter(r => r.type === 'XIN OFF').map(r => r.empId));
-    const extraIds = new Set(requests.filter(r => r.type === 'XIN LÊN CA').map(r => r.empId));
+    let requests = [];
+    try {
+      const stored = localStorage.getItem('agr_requests');
+      if (stored) requests = JSON.parse(stored);
+    } catch (e) {
+      console.error("Lỗi đọc dự án:", e);
+    }
+    const offIds = new Set((requests || []).filter(r => r && r.type === 'XIN OFF' && r.empId).map(r => r.empId.toLowerCase().trim()));
+    const extraIds = new Set((requests || []).filter(r => r && r.type === 'XIN LÊN CA' && r.empId).map(r => r.empId.toLowerCase().trim()));
 
     tbody.innerHTML = State.scheduleData.map(emp => {
       const empIdLower = (emp.id || '').toLowerCase().trim();
@@ -803,26 +1039,84 @@ const AdminApp = {
       const posHeaders = shift.colHeaders.map(h => `<th>${h}</th>`).join('');
       thead.innerHTML = `<tr><th>STT</th><th>Mã CTV</th><th>Họ tên</th><th>Định danh</th>${posHeaders}<th>Note</th><th>Xác nhận</th></tr>`;
     }
+
+    // Áp dụng bộ lọc và tìm kiếm hiện tại
+    AdminApp.filterScheduleTable();
   },
 
+  filterScheduleTable: () => {
+    const searchInput = document.getElementById('adminQuerySearch') || document.getElementById('searchInput');
+    if (!searchInput) return;
+    let searchVal = searchInput.value.trim();
+    const lowerVal = searchVal.toLowerCase();
+    
+    // Tự động dọn dẹp các từ khóa tiêu đề do browser autofill nhầm
+    if (lowerVal === "hệ thống điểm danh" || 
+        lowerVal === "hệ thống" || 
+        lowerVal === "hệ thống điểm danh quản trị" || 
+        lowerVal === "agr điểm danh" || 
+        lowerVal === "agr | điểm danh") {
+      searchInput.value = '';
+      searchVal = '';
+    }
 
+    const searchValLower = searchVal.toLowerCase();
+    const filterEl = document.getElementById('statusFilter');
+    const filterVal = filterEl ? filterEl.value : 'all';
+
+    document.querySelectorAll('#scheduleBody tr').forEach(row => {
+      if (row.classList.contains('loading-row') || row.cells.length <= 1) return;
+
+      const text = row.textContent.toLowerCase();
+      const matchesSearch = text.includes(searchValLower);
+
+      let matchesFilter = true;
+      if (filterVal !== 'all') {
+        if (filterVal === 'confirmed') {
+          matchesFilter = row.classList.contains('attended');
+        } else if (filterVal === 'pending') {
+          matchesFilter = !row.classList.contains('attended') && !row.classList.contains('xin-off-row') && !row.querySelector('.xin-len-ca-badge');
+        } else if (filterVal === 'xin-off') {
+          matchesFilter = row.classList.contains('xin-off-row') || row.querySelector('.xin-off-badge') !== null;
+        } else if (filterVal === 'xin-len-ca') {
+          matchesFilter = row.querySelector('.xin-len-ca-badge') !== null;
+        }
+      }
+
+      if (matchesSearch && matchesFilter) {
+        row.classList.remove('hidden');
+      } else {
+        row.classList.add('hidden');
+      }
+    });
+  },
 
   renderStats: () => {
     const total = State.scheduleData.length;
     const confirmed = State.scheduleData.filter(e => e.status === 'confirmed').length;
     
-    document.getElementById('totalEmployees').textContent = total;
-    document.getElementById('confirmedCount').textContent = confirmed;
-    document.getElementById('pendingCount').textContent = total - confirmed;
+    const totalEl = document.getElementById('totalEmployees');
+    const confirmedEl = document.getElementById('confirmedCount');
+    const pendingEl = document.getElementById('pendingCount');
+    const adminDone = document.getElementById('adminDone');
+    const adminTotal = document.getElementById('adminTotal');
+    const adminBar = document.getElementById('adminBar');
 
-    document.getElementById('adminDone').textContent = confirmed;
-    document.getElementById('adminTotal').textContent = total;
-    const pct = total === 0 ? 0 : (confirmed / total) * 100;
-    document.getElementById('adminBar').style.width = `${pct}%`;
+    if (totalEl) totalEl.textContent = total;
+    if (confirmedEl) confirmedEl.textContent = confirmed;
+    if (pendingEl) pendingEl.textContent = total - confirmed;
+
+    if (adminDone) adminDone.textContent = confirmed;
+    if (adminTotal) adminTotal.textContent = total;
+    if (adminBar) {
+      const pct = total === 0 ? 0 : (confirmed / total) * 100;
+      adminBar.style.width = `${pct}%`;
+    }
   },
 
   renderLogs: () => {
     const logList = document.getElementById('logList');
+    if (!logList) return;
     const confirmed = State.scheduleData.filter(e => e.status === 'confirmed')
       .sort((a,b) => (b.timestamp || '').localeCompare(a.timestamp || '')); // Xếp mới nhất lên trên
 
@@ -831,16 +1125,18 @@ const AdminApp = {
       return;
     }
 
-    logList.innerHTML = confirmed.map(emp => `
+    logList.innerHTML = confirmed.map(emp => {
+      const initial = (emp.name || '').trim().charAt(0) || '?';
+      return `
       <div class="log-item">
-        <div class="log-avatar">${emp.name.charAt(0)}</div>
+        <div class="log-avatar">${initial}</div>
         <div class="log-info">
-          <div class="log-name">${emp.name}</div>
-          <div class="log-code">${emp.id}</div>
+          <div class="log-name">${emp.name || ''}</div>
+          <div class="log-code">${emp.id || ''}</div>
         </div>
         <div class="log-time">${emp.timestamp || '--:--'}</div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
   },
 
   // ---- Manager Modal Logic ----
