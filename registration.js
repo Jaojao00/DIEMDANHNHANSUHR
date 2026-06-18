@@ -59,7 +59,7 @@ const EmpNav = {
       vsView.style.display = 'block';
     }
 
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }
 };
 
@@ -75,7 +75,7 @@ const RegApp = {
     if (s1) s1.style.display = step === 1 ? 'block' : 'none';
     if (s2) s2.style.display = step === 2 ? 'block' : 'none';
     if (step === 1) RegApp.renderShiftList();
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   },
 
   renderShiftList: () => {
