@@ -97,15 +97,21 @@ input, textarea { font-family: inherit; }
   z-index: 100;
   flex-shrink: 0;
 }
-.emp-brand { display: flex; align-items: center; gap: 10px; }
+.emp-brand { display: flex; align-items: center; gap: 12px; }
 .emp-logo-img {
-  width: 36px; height: 36px;
-  border-radius: 10px;
+  width: 42px; height: 42px;
+  border-radius: 12px;
   object-fit: contain;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   background: white;
+  padding: 3px;
+  box-shadow: 0 0 0 2px rgba(0,180,180,0.35), 0 4px 18px rgba(0,180,180,0.25), 0 2px 8px rgba(0,0,0,0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-.emp-app-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.emp-logo-img:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(0,180,180,0.5), 0 6px 24px rgba(0,180,180,0.35), 0 4px 12px rgba(0,0,0,0.5);
+}
+.emp-app-name { font-size: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: 0.3px; }
 .emp-clock-wrap { text-align: right; }
 .emp-date { font-size: 10px; color: var(--text-muted); }
 .emp-time {
@@ -391,16 +397,22 @@ input, textarea { font-family: inherit; }
   gap: 16px;
 }
 .header-left, .header-right { display: flex; align-items: center; gap: 16px; }
-.logo-container { display: flex; align-items: center; gap: 12px; }
+.logo-container { display: flex; align-items: center; gap: 14px; }
 .logo-badge-img {
-  width: 40px; height: 40px;
-  border-radius: 10px;
+  width: 46px; height: 46px;
+  border-radius: 12px;
   object-fit: contain;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
   background: white;
+  padding: 3px;
+  box-shadow: 0 0 0 2px rgba(0,180,180,0.35), 0 4px 20px rgba(0,180,180,0.25), 0 2px 8px rgba(0,0,0,0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-.header-title h1 { font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
-.header-subtitle { font-size: 11px; color: var(--text-muted); }
+.logo-badge-img:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(0,180,180,0.5), 0 6px 28px rgba(0,180,180,0.35), 0 4px 12px rgba(0,0,0,0.5);
+}
+.header-title h1 { font-size: 16px; font-weight: 800; color: var(--text-primary); line-height: 1.2; }
+.header-subtitle { font-size: 11px; color: rgba(0,200,200,0.7); font-weight: 600; letter-spacing: 0.3px; }
 .datetime-display { text-align: right; }
 .current-date { font-size: 10px; color: var(--text-muted); }
 .current-time { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 800; color: var(--text-primary); letter-spacing: 2px; }
