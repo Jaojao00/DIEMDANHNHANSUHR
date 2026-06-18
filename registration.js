@@ -208,7 +208,6 @@ const RegApp = {
       if (CONFIG && CONFIG.API_URL) {
         const resp = await fetch(CONFIG.API_URL, {
           method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify(payload)
         });
         const result = await resp.json();
