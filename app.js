@@ -587,6 +587,13 @@ const EmployeeApp = {
     const openLeaveRequestBtn = document.getElementById('openLeaveRequestBtn');
     if (openLeaveRequestBtn) {
       openLeaveRequestBtn.addEventListener('click', () => {
+        const now = new Date();
+        const hour = now.getHours();
+        if (hour >= 18 || hour < 6) {
+          Utils.showToast('Hệ thống khóa Xin Off trong thời gian từ 18:00 đến 06:00 sáng hôm sau!', 'error');
+          return;
+        }
+
         const typeEl = document.getElementById('req_type');
         const titleEl = document.getElementById('requestModalTitle');
         const modalEl = document.getElementById('requestModal');
@@ -664,6 +671,15 @@ const EmployeeApp = {
         let note = noteEl ? noteEl.value.trim() : '';
         let targetShift = '';
         
+        if (type === 'XIN OFF') {
+          const now = new Date();
+          const hour = now.getHours();
+          if (hour >= 18 || hour < 6) {
+            Utils.showToast('Hệ thống khóa Xin Off trong thời gian từ 18:00 đến 06:00 sáng hôm sau!', 'error');
+            return;
+          }
+        }
+
         if (type === 'XIN LÊN CA' && targetShiftEl) {
            targetShift = targetShiftEl.value;
            note = `[Xin ca: ${targetShiftEl.options[targetShiftEl.selectedIndex].text}] ` + note;
