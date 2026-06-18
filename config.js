@@ -81,7 +81,7 @@ const CONFIG = {
   // =============================================
   // APP INFO
   // =============================================
-  APP_NAME: 'AGR Điểm Danh',
+  APP_NAME: 'Tyler Nguyen HR Điểm Danh',
   VERSION: '1.0.0',
-  COMPANY: 'AGR',
+  COMPANY: 'Tyler Nguyen HR',
 };
