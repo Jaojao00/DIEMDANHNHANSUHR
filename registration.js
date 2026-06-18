@@ -40,6 +40,7 @@ const EmpNav = {
     if (!empView || !regView || !vsView) return;
 
     // Hide all explicitly
+    empView.classList.remove('active');
     empView.style.display = 'none';
     regView.style.display = 'none';
     vsView.style.display = 'none';
@@ -47,6 +48,7 @@ const EmpNav = {
     if (tab === 'diemDanh') {
       const btn = document.getElementById('navDiemDanh');
       if (btn) btn.classList.add('active');
+      empView.classList.add('active');
       empView.style.display = 'block';
     } else if (tab === 'dangKy') {
       const btn = document.getElementById('navDangKy');
