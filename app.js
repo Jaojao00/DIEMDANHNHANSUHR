@@ -253,7 +253,11 @@ const DataManager = {
       return [];
     } catch (error) {
       console.error("Lỗi tải danh sách request từ Google Sheets:", error);
-      return JSON.parse(localStorage.getItem('agr_requests') || '[]');
+      try {
+        return JSON.parse(localStorage.getItem('agr_requests') || '[]');
+      } catch (e) {
+        return [];
+      }
     }
   },
 
@@ -1214,15 +1218,34 @@ const AdminApp = {
 
   renderRegistrationTable: (dataList) => {
     const tbody = document.getElementById('scheduleBody');
+    const thead = document.getElementById('scheduleHead');
     if (!tbody) return;
+    
+    // Đổi header cho chế độ Đăng Ký
+    if (thead) {
+      thead.innerHTML = `
+        <tr>
+          <th>STT</th>
+          <th>Mã NV</th>
+          <th>Họ Tên</th>
+          <th colspan="5" style="text-align:left">Thời gian gửi</th>
+        </tr>
+      `;
+    }
+    
     tbody.innerHTML = '';
     
     // update counters
     const totalCount = dataList.length;
-    document.getElementById('statTotal').innerText = totalCount;
-    document.getElementById('statPresent').innerText = '0';
-    document.getElementById('statAbsent').innerText = totalCount;
-    document.getElementById('statOff').innerText = '0'; 
+    const statTotal = document.getElementById('totalEmployees');
+    const statPresent = document.getElementById('confirmedCount');
+    const statAbsent = document.getElementById('pendingCount');
+    const statOff = document.getElementById('xinOffCountTop');
+    
+    if (statTotal) statTotal.innerText = totalCount;
+    if (statPresent) statPresent.innerText = '0';
+    if (statAbsent) statAbsent.innerText = totalCount;
+    if (statOff) statOff.innerText = '0';
 
     if (dataList.length === 0) {
       tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:24px; color:var(--text-secondary)">Chưa có ai đăng ký ca này</td></tr>`;

@@ -169,6 +169,20 @@ const RegApp = {
       Utils.showToast('Vui lòng nhập đầy đủ mã NV, họ tên, số điện thoại', 'error');
       return;
     }
+    
+    // Kiểm tra đã đăng ký chưa trên LocalStorage
+    const key = 'agr_reg_' + empId.toLowerCase();
+    let existing = [];
+    try {
+      existing = JSON.parse(localStorage.getItem(key) || '[]');
+    } catch(e) {
+      existing = [];
+    }
+    
+    if (existing.length > 0) {
+      Utils.showToast('Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!', 'error');
+      return;
+    }
 
     const dates = RegApp.getDateRange();
     if (dates.length === 0) {
