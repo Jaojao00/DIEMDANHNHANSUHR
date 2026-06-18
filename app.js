@@ -1329,6 +1329,12 @@ const AdminApp = {
   openSettingsModal: () => {
     document.getElementById('apiLinkInput').value = State.apiLink;
     document.getElementById('enableTimeCheck').checked = State.enableTimeCheck;
+    const regFrom = localStorage.getItem('agr_reg_date_from') || '';
+    const regTo = localStorage.getItem('agr_reg_date_to') || '';
+    const dfEl = document.getElementById('regDateFrom');
+    const dtEl = document.getElementById('regDateTo');
+    if (dfEl) dfEl.value = regFrom;
+    if (dtEl) dtEl.value = regTo;
     const container = document.getElementById('settingsShiftList');
     
     // Load from localStorage if available
@@ -1386,6 +1392,12 @@ const AdminApp = {
       localStorage.setItem('agr_api_url', newApiLink);
     }
     
+    // Save Reg Date Range
+    const regFrom = document.getElementById('regDateFrom');
+    const regTo = document.getElementById('regDateTo');
+    if (regFrom && regFrom.value) localStorage.setItem('agr_reg_date_from', regFrom.value);
+    if (regTo && regTo.value) localStorage.setItem('agr_reg_date_to', regTo.value);
+
     AdminApp.closeSettings();
     // Reload current tab and data
     AdminApp.loadData();
@@ -1492,4 +1504,294 @@ const AdminApp = {
 document.addEventListener('DOMContentLoaded', () => {
   EmployeeApp.init();
   AdminApp.init();
+  EmpNav.init();
 });
+
+// ==========================================
+// ÐI?U HU?NG NHÂN VIÊN (EmpNav)
+// ==========================================
+const EmpNav = {
+  currentTab: 'diemDanh',
+
+  init: () => {
+    const regBackBtn = document.getElementById('regBackToStep1');
+    if (regBackBtn) regBackBtn.addEventListener('click', () => RegApp.showStep(1));
+    const regSubmitBtn = document.getElementById('regSubmitBtn');
+    if (regSubmitBtn) regSubmitBtn.addEventListener('click', RegApp.submit);
+    const vsLookupBtn = document.getElementById('vsLookupBtn');
+    if (vsLookupBtn) vsLookupBtn.addEventListener('click', ViewScheduleApp.lookup);
+    const vsEmpIdInput = document.getElementById('vsEmpId');
+    if (vsEmpIdInput) vsEmpIdInput.addEventListener('keydown', e => { if (e.key === 'Enter') ViewScheduleApp.lookup(); });
+  },
+
+  show: (tab) => {
+    EmpNav.currentTab = tab;
+
+    // Update nav buttons
+    document.querySelectorAll('.emp-nav-item').forEach(b => b.classList.remove('active'));
+
+    const empView = document.getElementById('employeeView');
+    const regView = document.getElementById('empRegView');
+    const vsView = document.getElementById('empViewScheduleView');
+
+    // Hide all
+    empView.style.display = 'none';
+    regView.classList.remove('active');
+    vsView.classList.remove('active');
+
+    if (tab === 'diemDanh') {
+      document.getElementById('navDiemDanh').classList.add('active');
+      empView.style.display = 'block';
+    } else if (tab === 'dangKy') {
+      document.getElementById('navDangKy').classList.add('active');
+      regView.classList.add('active');
+      RegApp.showStep(1);
+    } else if (tab === 'xemLich') {
+      document.getElementById('navXemLich').classList.add('active');
+      vsView.classList.add('active');
+    }
+
+    // Scroll to top
+    window.scrollTo(0, 0);
+  }
+};
+
+// ==========================================
+// ÐANG KÝ L?CH (RegApp)
+// ==========================================
+const RegApp = {
+  selectedShift: null,
+
+  showStep: (step) => {
+    document.getElementById('regStep1').style.display = step === 1 ? 'block' : 'none';
+    document.getElementById('regStep2').style.display = step === 2 ? 'block' : 'none';
+    if (step === 1) {
+      RegApp.renderShiftList();
+    }
+    window.scrollTo(0, 0);
+  },
+
+  renderShiftList: () => {
+    const container = document.getElementById('regShiftList');
+    if (!container) return;
+    container.innerHTML = State.shifts.map(shift => 
+      <div class="reg-shift-card" onclick="RegApp.selectShift('')">
+        <div class="rsc-icon" style="background:22; color:;"></div>
+        <div class="rsc-info">
+          <div class="rsc-name"></div>
+          <div class="rsc-time"></div>
+        </div>
+        <div class="rsc-arrow">?</div>
+      </div>
+    ).join('');
+  },
+
+  selectShift: (shiftId) => {
+    const shift = State.shifts.find(s => s.id === shiftId);
+    if (!shift) return;
+    RegApp.selectedShift = shift;
+
+    // Update banner
+    document.getElementById('regBannerIcon').textContent = shift.icon;
+    document.getElementById('regBannerIcon').style.background = shift.color + '22';
+    document.getElementById('regBannerName').textContent = shift.label;
+    document.getElementById('regBannerTime').textContent = shift.id;
+    document.getElementById('regStep2ShiftLabel').textContent = shift.label + ' — ' + shift.id;
+
+    // Update table header
+    const colHeader = document.getElementById('regColShift');
+    if (colHeader) colHeader.textContent = shift.label + ' (' + shift.id + ')';
+
+    // Render date rows
+    RegApp.renderDateTable();
+    RegApp.showStep(2);
+  },
+
+  getDateRange: () => {
+    const fromStr = localStorage.getItem('agr_reg_date_from');
+    const toStr = localStorage.getItem('agr_reg_date_to');
+    if (!fromStr || !toStr) return [];
+
+    const dates = [];
+    const days = ['Ch? Nh?t', 'Th? Hai', 'Th? Ba', 'Th? Tu', 'Th? Nam', 'Th? Sáu', 'Th? B?y'];
+    let cur = new Date(fromStr + 'T00:00:00');
+    const end = new Date(toStr + 'T00:00:00');
+
+    while (cur <= end) {
+      const yyyy = cur.getFullYear();
+      const mm = (cur.getMonth() + 1).toString().padStart(2, '0');
+      const dd = cur.getDate().toString().padStart(2, '0');
+      dates.push({
+        iso: ${yyyy}--,
+        label: ${dd}// ()
+      });
+      cur.setDate(cur.getDate() + 1);
+    }
+    return dates;
+  },
+
+  renderDateTable: () => {
+    const tbody = document.getElementById('regTableBody');
+    if (!tbody || !RegApp.selectedShift) return;
+    const dates = RegApp.getDateRange();
+
+    if (dates.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted)">Admin chua c?u hình ngày dang ký. Vui lòng liên h? qu?n lý.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = dates.map((d, i) => 
+      <tr>
+        <td></td>
+        <td><input type="radio" class="reg-radio" name="regDay_" value="WORK" data-date="" id="w_"></td>
+        <td><input type="radio" class="reg-radio" name="regDay_" value="OFF" data-date="" id="o_"></td>
+      </tr>
+    ).join('');
+  },
+
+  submit: async () => {
+    const empId = (document.getElementById('regEmpId').value || '').trim();
+    const empName = (document.getElementById('regEmpName').value || '').trim();
+    const empPhone = (document.getElementById('regEmpPhone').value || '').trim();
+
+    if (!empId || !empName || !empPhone) {
+      Utils.showToast('Vui lòng nh?p d?y d? mã NV, h? tên, s? di?n tho?i', 'error');
+      return;
+    }
+
+    const dates = RegApp.getDateRange();
+    if (dates.length === 0) {
+      Utils.showToast('Admin chua c?u hình ngày dang ký', 'error');
+      return;
+    }
+
+    // Collect selections
+    const selections = [];
+    let allFilled = true;
+    dates.forEach((d, i) => {
+      const chosen = document.querySelector(input[name="regDay_"]:checked);
+      if (!chosen) { allFilled = false; return; }
+      selections.push({ date: d.iso, label: d.label, choice: chosen.value });
+    });
+
+    if (!allFilled) {
+      Utils.showToast('Vui lòng ch?n ca ho?c OFF cho t?t c? các ngày!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('regSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = '? Ðang g?i...';
+
+    const payload = {
+      action: 'submit_registration',
+      empId, empName, empPhone,
+      shiftId: RegApp.selectedShift.id,
+      shiftLabel: RegApp.selectedShift.label,
+      selections,
+      timestamp: new Date().toISOString()
+    };
+
+    try {
+      if (CONFIG.API_URL) {
+        const resp = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await resp.json();
+        if (result.error) throw new Error(result.error);
+      }
+
+      // Save to localStorage for view
+      const key = gr_reg_;
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const updated = existing.filter(r => r.shiftId !== RegApp.selectedShift.id);
+      updated.push(payload);
+      localStorage.setItem(key, JSON.stringify(updated));
+
+      Utils.showToast('? Ðang ký l?ch thành công!', 'success');
+
+      // Switch to view tab
+      setTimeout(() => {
+        const vsInput = document.getElementById('vsEmpId');
+        if (vsInput) vsInput.value = empId;
+        EmpNav.show('xemLich');
+        ViewScheduleApp.lookup();
+      }, 800);
+
+    } catch (err) {
+      Utils.showToast('L?i g?i dang ký: ' + err.message, 'error');
+      btn.disabled = false;
+      btn.textContent = '? G?i Ðang Ký';
+    }
+  }
+};
+
+// ==========================================
+// XEM L?CH ÐÃ ÐANG KÝ (ViewScheduleApp)
+// ==========================================
+const ViewScheduleApp = {
+  lookup: async () => {
+    const empId = (document.getElementById('vsEmpId').value || '').trim().toLowerCase();
+    const area = document.getElementById('vsResultArea');
+    if (!empId) {
+      Utils.showToast('Vui lòng nh?p mã nhân viên', 'error');
+      return;
+    }
+
+    area.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">? Ðang t?i...</div>';
+
+    // Try backend first, fallback to localStorage
+    let allRegs = [];
+    try {
+      if (CONFIG.API_URL) {
+        const url = ${CONFIG.API_URL}?action=get_registration&empId=;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (Array.isArray(data)) allRegs = data;
+      }
+    } catch (e) {}
+
+    // Merge with localStorage
+    const key = gr_reg_;
+    const local = JSON.parse(localStorage.getItem(key) || '[]');
+    if (allRegs.length === 0 && local.length > 0) allRegs = local;
+
+    if (allRegs.length === 0) {
+      area.innerHTML = 
+        <div class="vs-empty-state">
+          <div class="vs-empty-icon">??</div>
+          <div>Không tìm th?y l?ch dang ký cho mã: <strong></strong></div>
+          <div style="font-size:12px;margin-top:8px;color:var(--text-muted)">B?n có th? chua dang ký l?ch ho?c nh?p sai mã nhân viên.</div>
+        </div>;
+      return;
+    }
+
+    // Build display grouped by shift
+    let html = <div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">L?ch c?a: <strong style="color:var(--text-primary)"></strong></div>;
+
+    allRegs.forEach(reg => {
+      const shiftObj = State.shifts.find(s => s.id === reg.shiftId) || {};
+      html += 
+        <div class="view-schedule-result">
+          <div class="vsr-header">
+            <div class="vsr-name"> </div>
+            <div class="vsr-meta"> &nbsp;|&nbsp; </div>
+          </div>
+          <table class="vsr-table">;
+
+      (reg.selections || []).forEach(sel => {
+        const isOff = sel.choice === 'OFF';
+        html += <tr>
+          <td class="vsr-date"></td>
+          <td class="vsr-shift "></td>
+        </tr>;
+      });
+
+      html += </table></div>;
+    });
+
+    area.innerHTML = html;
+  }
+};

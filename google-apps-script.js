@@ -244,6 +244,55 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ success: true, employee: empObj })).setMimeType(ContentService.MimeType.JSON);
     }
     
+    // ACTION: SUBMIT_REGISTRATION (Đăng ký lịch làm việc)
+    if (action === "submit_registration") {
+      try {
+        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var regSheetName = "DangKyLich";
+        var regSheet = regSs.getSheetByName(regSheetName);
+        
+        if (!regSheet) {
+          regSheet = regSs.insertSheet(regSheetName);
+          // Build dynamic headers from dates
+          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Ca", "Tên Ca"];
+          (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
+          regSheet.appendRow(headerRow);
+        } else if (regSheet.getLastRow() === 0) {
+          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Ca", "Tên Ca"];
+          (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
+          regSheet.appendRow(headerRow);
+        }
+        
+        // Remove old rows for same empId + shiftId combo
+        var searchId = (data.empId || "").toLowerCase().trim();
+        var searchShift = data.shiftId || "";
+        var lastRow = regSheet.getLastRow();
+        for (var ri = lastRow; ri >= 2; ri--) {
+          var rowId = (regSheet.getRange(ri, 2).getValue() || "").toString().toLowerCase().trim();
+          var rowShift = (regSheet.getRange(ri, 5).getValue() || "").toString().trim();
+          if (rowId === searchId && rowShift === searchShift) {
+            regSheet.deleteRow(ri);
+          }
+        }
+        
+        // Append new row
+        var newRow = [
+          Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"),
+          data.empId || "",
+          data.empName || "",
+          data.empPhone || "",
+          data.shiftId || "",
+          data.shiftLabel || ""
+        ];
+        (data.selections || []).forEach(function(sel) { newRow.push(sel.choice); });
+        regSheet.appendRow(newRow);
+        
+        return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+      } catch(regErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: regErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     return ContentService.createTextOutput(JSON.stringify({ error: "Invalid POST action" })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (e) {
@@ -330,6 +379,40 @@ function doGet(e) {
       }
     }
     
+    if (action === "get_registration") {
+      try {
+        var empIdSearch = (e.parameter.empId || "").toLowerCase().trim();
+        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var regSheet = regSs.getSheetByName("DangKyLich");
+        if (!regSheet || regSheet.getLastRow() <= 1) {
+          return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+        }
+        var vals = regSheet.getDataRange().getValues();
+        var headers = vals[0];
+        var result = [];
+        // Group rows by shiftId for this empId
+        for (var ri = 1; ri < vals.length; ri++) {
+          var rowId = (vals[ri][1] || "").toString().toLowerCase().trim();
+          if (rowId !== empIdSearch) continue;
+          var selections = [];
+          for (var ci = 6; ci < headers.length; ci++) {
+            selections.push({ label: headers[ci], choice: vals[ri][ci] || "OFF" });
+          }
+          result.push({
+            empId: vals[ri][1],
+            empName: vals[ri][2],
+            shiftId: vals[ri][4],
+            shiftLabel: vals[ri][5],
+            selections: selections,
+            timestamp: vals[ri][0]
+          });
+        }
+        return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+      } catch(getRegErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: getRegErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     // Pre-flight check (CORS ping)
     return ContentService.createTextOutput(JSON.stringify({ status: "AGR API is running" })).setMimeType(ContentService.MimeType.JSON);
     

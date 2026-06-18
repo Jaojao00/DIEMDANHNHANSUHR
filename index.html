@@ -73,6 +73,22 @@
     </div>
   </div>
 
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="emp-bottom-nav" id="empBottomNav">
+    <button class="emp-nav-item active" id="navDiemDanh" onclick="EmpNav.show('diemDanh')">
+      <span class="nav-icon">📍</span>
+      <span>Điểm danh</span>
+    </button>
+    <button class="emp-nav-item" id="navDangKy" onclick="EmpNav.show('dangKy')">
+      <span class="nav-icon">📅</span>
+      <span>Đăng ký lịch</span>
+    </button>
+    <button class="emp-nav-item" id="navXemLich" onclick="EmpNav.show('xemLich')">
+      <span class="nav-icon">🔍</span>
+      <span>Xem lịch</span>
+    </button>
+  </nav>
+
   <!-- PHASE 2: ATTENDANCE FORM -->
   <div id="phaseAttendance" class="emp-phase hidden">
     <div class="att-topbar">
@@ -585,6 +601,17 @@
         <input type="text" id="apiLinkInput" placeholder="Dán Web App URL vào đây..." style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: white; font-family: inherit;">
         <div style="font-size: 11px; color: #aaa; margin-top: 5px;">Hệ thống sẽ đồng bộ Realtime nếu có link này. (Để trống để dùng thử Offline).</div>
       </div>
+
+      <!-- Registration date range config -->
+      <div class="reg-date-config">
+        <label>📅 Cấu Hình Ngày Đăng Ký Lịch</label>
+        <div class="reg-date-row">
+          <input type="date" id="regDateFrom" title="Từ ngày">
+          <span>đến</span>
+          <input type="date" id="regDateTo" title="Đến ngày">
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:6px;">Nhân sự chỉ được đăng ký lịch trong khoảng ngày này.</div>
+      </div>
     </div>
     <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; padding:16px; border-top:1px solid var(--border); background:var(--bg-panel); border-radius: 0 0 var(--radius-lg) var(--radius-lg);">
       <div class="setting-toggle">
@@ -597,6 +624,124 @@
       <div style="display:flex; gap:10px;">
         <button class="btn btn-ghost" id="settingsCancelBtn">Hủy</button>
         <button class="btn btn-primary" id="settingsSaveBtn">Lưu Cài Đặt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================
+     ĐĂNG KÝ LỊCH VIEW
+     ====================================================== -->
+<div id="empRegView">
+
+  <!-- STEP 1: Chọn ca -->
+  <div id="regStep1">
+    <div class="reg-header">
+      <div class="reg-header-title">
+        <h2>📅 Đăng Ký Lịch Làm Việc</h2>
+        <p>Chọn ca bạn muốn đăng ký lịch</p>
+      </div>
+    </div>
+    <div class="reg-body" id="regShiftList">
+      <!-- Rendered by JS -->
+    </div>
+  </div>
+
+  <!-- STEP 2: Form đăng ký -->
+  <div id="regStep2" style="display:none">
+    <div class="reg-header">
+      <button class="reg-header-back" id="regBackToStep1">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </button>
+      <div class="reg-header-title">
+        <h2>Đăng Ký Lịch</h2>
+        <p id="regStep2ShiftLabel">Ca làm việc</p>
+      </div>
+    </div>
+    <div class="reg-body">
+      <!-- Shift banner -->
+      <div class="reg-shift-banner" id="regShiftBanner">
+        <div class="rsb-icon" id="regBannerIcon">⭐</div>
+        <div class="rsb-info">
+          <div class="rsb-name" id="regBannerName">Ca làm việc</div>
+          <div class="rsb-time" id="regBannerTime">--:-- - --:--</div>
+        </div>
+      </div>
+
+      <!-- Personal info -->
+      <div class="reg-info-section">
+        <div class="reg-section-title">Thông tin cá nhân</div>
+        <div class="form-group">
+          <label for="regEmpId">Mã Nhân Viên <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <input type="text" id="regEmpId" placeholder="VD: Ops224190" autocomplete="off" autocapitalize="none"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="regEmpName">Họ và Tên <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <input type="text" id="regEmpName" placeholder="Nguyễn Văn A" autocomplete="off"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="regEmpPhone">Số điện thoại <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <input type="tel" id="regEmpPhone" placeholder="0912 345 678" autocomplete="tel"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule table -->
+      <div class="reg-info-section" style="padding:0;overflow:hidden">
+        <div style="padding:14px 20px 10px"><div class="reg-section-title" style="margin-bottom:0">Đăng ký ca làm việc <span class="required">*</span></div></div>
+        <div class="reg-table-wrap" style="border:none;border-radius:0;margin-bottom:0">
+          <table class="reg-table" id="regTable">
+            <thead>
+              <tr>
+                <th>Ngày</th>
+                <th id="regColShift">Ca làm việc</th>
+                <th>OFF (Không đăng ký)</th>
+              </tr>
+            </thead>
+            <tbody id="regTableBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="height:16px"></div>
+      <button class="reg-submit-btn" id="regSubmitBtn">✅ Gửi Đăng Ký</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ======================================================
+     XEM LỊCH ĐÃ ĐĂNG KÝ VIEW
+     ====================================================== -->
+<div id="empViewScheduleView">
+  <div class="reg-header">
+    <div class="reg-header-title">
+      <h2>🔍 Xem Lịch Đã Đăng Ký</h2>
+      <p>Nhập mã nhân viên để tra cứu lịch</p>
+    </div>
+  </div>
+  <div class="reg-body">
+    <div class="view-schedule-lookup">
+      <div class="reg-section-title">Tra cứu lịch</div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label for="vsEmpId">Mã Nhân Viên</label>
+        <div class="input-wrapper">
+          <input type="text" id="vsEmpId" placeholder="VD: Ops224190" autocomplete="off" autocapitalize="none"/>
+        </div>
+      </div>
+      <button class="reg-submit-btn" id="vsLookupBtn" style="margin-bottom:0">🔍 Tra cứu lịch</button>
+    </div>
+    <div id="vsResultArea">
+      <div class="vs-empty-state">
+        <div class="vs-empty-icon">📋</div>
+        <div>Nhập mã nhân viên để xem lịch đã đăng ký</div>
       </div>
     </div>
   </div>
