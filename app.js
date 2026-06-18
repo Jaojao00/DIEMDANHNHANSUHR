@@ -217,6 +217,24 @@ const DataManager = {
     });
   },
 
+  loadRegistrations: async (shiftId) => {
+    return new Promise(async (resolve) => {
+      try {
+        const url = `${CONFIG.API_URL}?action=get_shift_registrations&shiftId=${shiftId}`;
+        const response = await fetch(url);
+        const json = await response.json();
+        if (json.data && Array.isArray(json.data)) {
+          resolve(json.data);
+        } else {
+          resolve([]);
+        }
+      } catch (error) {
+        console.error("Lỗi tải danh sách đăng ký:", error);
+        resolve([]);
+      }
+    });
+  },
+
   loadRequests: async () => {
     if (CONFIG.DEMO_MODE) {
       return JSON.parse(localStorage.getItem('agr_requests') || '[]');
@@ -794,9 +812,23 @@ const EmployeeApp = {
 // GIAO DIỆN QUẢN TRỊ (ADMIN UI)
 // ==========================================
 const AdminApp = {
+  currentViewMode: 'final', // 'final' (Đã Chốt) hoặc 'registration' (Lịch Đăng Ký)
+  
   init: () => {
     try {
       AdminApp.setupEvents();
+      
+      // Khôi phục tài khoản đăng nhập nếu có
+      const savedEmail = localStorage.getItem('admin_email');
+      if (savedEmail) {
+        const emailInput = document.getElementById('adminEmailInput');
+        const changeBtn = document.getElementById('changeAdminAccountBtn');
+        if (emailInput && changeBtn) {
+          emailInput.value = savedEmail;
+          emailInput.setAttribute('readonly', 'true');
+          changeBtn.classList.remove('hidden');
+        }
+      }
     } catch (e) {
       console.error("Lỗi setupEvents:", e);
     }
@@ -856,8 +888,10 @@ const AdminApp = {
     State.isAdminMode = true;
     const empView = document.getElementById('employeeView');
     const admView = document.getElementById('adminView');
+    const empBottomNav = document.getElementById('empBottomNav');
     if (empView) empView.classList.remove('active');
     if (admView) admView.classList.add('active');
+    if (empBottomNav) empBottomNav.classList.add('hidden');
     
     AdminApp.loadData();
     // Auto refresh cho admin
@@ -868,8 +902,10 @@ const AdminApp = {
     State.isAdminMode = false;
     const empView = document.getElementById('employeeView');
     const admView = document.getElementById('adminView');
+    const empBottomNav = document.getElementById('empBottomNav');
     if (admView) admView.classList.remove('active');
     if (empView) empView.classList.add('active');
+    if (empBottomNav) empBottomNav.classList.remove('hidden');
     AdminApp.stopAutoRefresh();
   },
 
@@ -884,21 +920,102 @@ const AdminApp = {
         if (passInput) passInput.value = '';
       });
     }
+
+    const changeAdminAccountBtn = document.getElementById('changeAdminAccountBtn');
+    const adminEmailInput = document.getElementById('adminEmailInput');
+    if (changeAdminAccountBtn && adminEmailInput) {
+      changeAdminAccountBtn.addEventListener('click', () => {
+        localStorage.removeItem('admin_email');
+        adminEmailInput.value = '';
+        adminEmailInput.removeAttribute('readonly');
+        changeAdminAccountBtn.classList.add('hidden');
+        adminEmailInput.focus();
+      });
+    }
     
     const loginSubmitBtn = document.getElementById('adminLoginSubmitBtn');
     if (loginSubmitBtn) {
       loginSubmitBtn.addEventListener('click', () => {
         const passInput = document.getElementById('adminPasswordInput');
+        const emailInput = document.getElementById('adminEmailInput');
+        const errorEl = document.getElementById('adminLoginError');
+        
+        const email = emailInput ? emailInput.value.trim() : '';
         const pass = passInput ? passInput.value : '';
-        if (pass === CONFIG.MANAGER_PASSWORD) {
-          const loginModal = document.getElementById('adminLoginModal');
-          if (loginModal) loginModal.classList.add('hidden');
-          if (passInput) passInput.value = '';
-          AdminApp.switchToAdmin();
-        } else {
-          const errorEl = document.getElementById('adminLoginError');
-          if (errorEl) errorEl.classList.remove('hidden');
+        
+        if (!email || !pass) {
+          if (errorEl) {
+            errorEl.textContent = 'Vui lòng nhập đầy đủ Email và Mật khẩu';
+            errorEl.classList.remove('hidden');
+          }
+          return;
         }
+
+        const originalText = loginSubmitBtn.innerHTML;
+        loginSubmitBtn.disabled = true;
+        loginSubmitBtn.innerHTML = '<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;margin-right:8px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;border-radius:50%;animation:spin 1s linear infinite;"></span> Đang xử lý...';
+        if (errorEl) errorEl.classList.add('hidden');
+
+        fetch(CONFIG.APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: "admin_login", email: email, password: pass })
+        })
+        .then(res => res.json())
+        .then(json => {
+          loginSubmitBtn.disabled = false;
+          loginSubmitBtn.innerHTML = originalText;
+          if (json.success) {
+            localStorage.setItem('admin_email', email);
+            if (adminEmailInput) adminEmailInput.setAttribute('readonly', 'true');
+            if (changeAdminAccountBtn) changeAdminAccountBtn.classList.remove('hidden');
+            
+            const loginModal = document.getElementById('adminLoginModal');
+            if (loginModal) loginModal.classList.add('hidden');
+            if (passInput) passInput.value = '';
+            AdminApp.switchToAdmin();
+          } else {
+            if (errorEl) {
+              errorEl.textContent = json.error || 'Đăng nhập thất bại';
+              errorEl.classList.remove('hidden');
+            }
+          }
+        })
+        .catch(err => {
+          console.error("Login Error:", err);
+          loginSubmitBtn.disabled = false;
+          loginSubmitBtn.innerHTML = originalText;
+          if (errorEl) {
+            errorEl.textContent = 'Lỗi kết nối máy chủ';
+            errorEl.classList.remove('hidden');
+          }
+        });
+      });
+    }
+
+    // View Mode Toggle
+    const btnViewModeFinal = document.getElementById('viewModeFinal');
+    const btnViewModeReg = document.getElementById('viewModeReg');
+    if (btnViewModeFinal && btnViewModeReg) {
+      btnViewModeFinal.addEventListener('click', () => {
+        AdminApp.currentViewMode = 'final';
+        btnViewModeFinal.style.background = 'var(--primary)';
+        btnViewModeFinal.style.color = 'white';
+        btnViewModeFinal.classList.remove('btn-ghost');
+        btnViewModeReg.style.background = 'transparent';
+        btnViewModeReg.style.color = 'var(--text-secondary)';
+        btnViewModeReg.classList.add('btn-ghost');
+        AdminApp.loadData();
+      });
+      btnViewModeReg.addEventListener('click', () => {
+        AdminApp.currentViewMode = 'registration';
+        btnViewModeReg.style.background = 'var(--primary)';
+        btnViewModeReg.style.color = 'white';
+        btnViewModeReg.classList.remove('btn-ghost');
+        btnViewModeFinal.style.background = 'transparent';
+        btnViewModeFinal.style.color = 'var(--text-secondary)';
+        btnViewModeFinal.classList.add('btn-ghost');
+        AdminApp.loadData();
       });
     }
 
@@ -1042,10 +1159,27 @@ const AdminApp = {
       }
 
       const requestsData = await DataManager.loadRequests();
-      const data = await DataManager.loadSchedule(State.selectedShiftId);
-      State.scheduleData = data;
       
-      AdminApp.renderTable();
+      let data = [];
+      if (AdminApp.currentViewMode === 'final') {
+        data = await DataManager.loadSchedule(State.selectedShiftId);
+        State.scheduleData = data;
+        AdminApp.renderTable();
+      } else {
+        data = await AdminApp.loadRegistrations(State.selectedShiftId);
+        AdminApp.renderRegistrationTable(data);
+      }
+      
+      // Update filter UI based on current view mode
+      const filterSelect = document.getElementById('statusFilter');
+      if (filterSelect) {
+        filterSelect.style.display = AdminApp.currentViewMode === 'final' ? 'inline-block' : 'none';
+      }
+      
+      const adminSearch = document.getElementById('adminQuerySearch');
+      if (adminSearch) {
+         adminSearch.value = '';
+      }
       AdminApp.renderStats();
       AdminApp.renderLogs();
 
@@ -1062,11 +1196,50 @@ const AdminApp = {
     }
   },
 
+  renderRegistrationTable: (dataList) => {
+    const tbody = document.getElementById('scheduleBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    // update counters
+    const totalCount = dataList.length;
+    document.getElementById('statTotal').innerText = totalCount;
+    document.getElementById('statPresent').innerText = '0';
+    document.getElementById('statAbsent').innerText = totalCount;
+    document.getElementById('statOff').innerText = '0'; 
+
+    if (dataList.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:24px; color:var(--text-secondary)">Chưa có ai đăng ký ca này</td></tr>`;
+      return;
+    }
+
+    dataList.forEach((r, idx) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="text-align:center">${idx + 1}</td>
+        <td><span class="emp-id-badge">${r.empId}</span></td>
+        <td style="font-weight:600; color:var(--text-main); white-space:nowrap">${r.name}</td>
+        <td colspan="5" style="color:var(--text-secondary); text-align:left;">
+          <span style="display:inline-block; margin-right:8px; padding:2px 6px; background:rgba(255,255,255,0.1); border-radius:4px; font-size:11px;">Gửi lúc: ${r.timestamp}</span>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  },
+
   renderTable: () => {
     const tbody = document.getElementById('scheduleBody');
     if (!tbody) return;
     const shift = State.shifts.find(s => s.id === State.selectedShiftId);
     const colCount = shift ? shift.colHeaders.length + 6 : 10;
+    
+    tbody.innerHTML = '';
+    
+    // Check view mode
+    if (AdminApp.currentViewMode === 'registration') {
+      AdminApp.renderRegistrationTable([]); // Should not reach here normally, but just in case
+      return;
+    }
 
     if (!State.scheduleData || State.scheduleData.length === 0) {
       tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu lịch ca này. Vui lòng thêm bằng tính năng Quản lý.</td></tr>`;

@@ -327,6 +327,12 @@
           Lịch Ca Làm Việc
           <span class="shift-badge" id="shiftBadge">CA ĐÊM</span>
         </h2>
+        
+        <!-- Toggle Chế độ xem Admin -->
+        <div class="admin-view-toggle" style="margin-left: 24px; display: flex; gap: 8px; background: var(--bg-card); padding: 4px; border-radius: 8px; border: 1px solid var(--border);">
+          <button class="btn btn-sm" id="viewModeFinal" style="background: var(--primary); color: white; border: none; font-size: 13px;">Đã Chốt</button>
+          <button class="btn btn-sm btn-ghost" id="viewModeReg" style="color: var(--text-secondary); border: none; font-size: 13px;">Đăng Ký</button>
+        </div>
         <div class="panel-actions">
           <button class="btn-icon" id="refreshBtn" title="Làm mới">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -440,13 +446,22 @@
       <h3 class="modal-title" id="adminLoginTitle">Đăng Nhập Quản Trị</h3>
     </div>
     <div class="modal-body">
-      <p class="manager-hint-text">Khu vực dành riêng cho quản trị viên. Vui lòng nhập mật khẩu để tiếp tục.</p>
+      <p class="manager-hint-text">Khu vực dành riêng cho quản trị viên. Vui lòng đăng nhập để tiếp tục.</p>
+      
+      <div class="form-group" style="margin-top:14px; position:relative;">
+        <label for="adminEmailInput" style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Email</label>
+        <button id="changeAdminAccountBtn" class="hidden" style="position:absolute; right:0; top:0; background:none; border:none; color:var(--primary); font-size:12px; cursor:pointer; font-weight:600;">Đổi tài khoản</button>
+        <div class="input-wrapper" style="margin-top:6px">
+          <input type="email" id="adminEmailInput" placeholder="VD: admin@gmail.com" autocomplete="email"/>
+        </div>
+      </div>
+
       <div class="form-group" style="margin-top:14px">
         <label for="adminPasswordInput" style="font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Mật khẩu</label>
         <div class="input-wrapper" style="margin-top:6px">
-          <input type="password" id="adminPasswordInput" placeholder="Nhập mật khẩu admin..." autocomplete="off"/>
+          <input type="password" id="adminPasswordInput" placeholder="Nhập mật khẩu admin..." autocomplete="current-password"/>
         </div>
-        <span class="form-error hidden" id="adminLoginError" role="alert">Mật khẩu không đúng</span>
+        <span class="form-error hidden" id="adminLoginError" role="alert">Email hoặc mật khẩu không đúng</span>
       </div>
     </div>
     <div class="modal-footer">

@@ -14,12 +14,12 @@ function doPost(e) {
     var action = data.action;
     var shiftId = data.shiftId;
     
-    if (!shiftId && action !== "request") {
+    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login") {
       return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
     }
     
     var sheetName, sheet;
-    if (shiftId) {
+    if (shiftId && action !== "submit_registration") {
       sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       sheet = ss.getSheetByName(sheetName);
@@ -248,7 +248,19 @@ function doPost(e) {
     if (action === "submit_registration") {
       try {
         var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
-        var regSheetName = "DangKyLich";
+        
+        // Trích xuất Tháng từ ngày đầu tiên trong mảng selections
+        var month = "X";
+        if (data.selections && data.selections.length > 0) {
+          var firstDateLabel = data.selections[0].label; // VD: "19/06/2026 (Thứ Sáu)"
+          var match = firstDateLabel.match(/\d{2}\/(\d{2})\/\d{4}/);
+          if (match && match[1]) {
+            month = parseInt(match[1], 10).toString(); // "06" -> "6"
+          }
+        }
+        
+        // Tên sheet động: LỊCHT6_22:00-06:00
+        var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "UNKNOWN");
         var regSheet = regSs.getSheetByName(regSheetName);
         
         if (!regSheet) {
@@ -290,6 +302,49 @@ function doPost(e) {
         return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
       } catch(regErr) {
         return ContentService.createTextOutput(JSON.stringify({ error: regErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // ACTION: RESET_REGISTRATIONS (Xóa tất cả các sheet lịch đăng ký cũ)
+    if (action === "reset_registrations") {
+      try {
+        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var allSheets = regSs.getSheets();
+        var deletedCount = 0;
+        
+        for (var s = 0; s < allSheets.length; s++) {
+          var sheet = allSheets[s];
+          var sName = sheet.getName();
+          // Chỉ xóa các sheet có tên bắt đầu bằng LỊCHT hoặc DangKyLich
+          if (sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
+            // Đảm bảo không xóa sheet cuối cùng của file
+            if (regSs.getSheets().length > 1) {
+              regSs.deleteSheet(sheet);
+              deletedCount++;
+            }
+          }
+        }
+        
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã xóa " + deletedCount + " bảng lịch cũ" })).setMimeType(ContentService.MimeType.JSON);
+      } catch(resErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: resErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // ACTION: ADMIN LOGIN (Xác thực Quản trị viên)
+    if (action === "admin_login") {
+      var email = (data.email || "").toLowerCase().trim();
+      var password = data.password || "";
+      
+      var admins = {
+        "tainguyenhr.dev@gmail.com": "016850@admin",
+        "ptbt472@gmail.com": "Tran90111@admin1"
+      };
+      
+      if (admins[email] && admins[email] === password) {
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đăng nhập thành công" })).setMimeType(ContentService.MimeType.JSON);
+      } else {
+        return ContentService.createTextOutput(JSON.stringify({ error: "Email hoặc mật khẩu không đúng" })).setMimeType(ContentService.MimeType.JSON);
       }
     }
 
@@ -383,33 +438,81 @@ function doGet(e) {
       try {
         var empIdSearch = (e.parameter.empId || "").toLowerCase().trim();
         var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
-        var regSheet = regSs.getSheetByName("DangKyLich");
-        if (!regSheet || regSheet.getLastRow() <= 1) {
-          return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
-        }
-        var vals = regSheet.getDataRange().getValues();
-        var headers = vals[0];
+        var allSheets = regSs.getSheets();
         var result = [];
-        // Group rows by shiftId for this empId
-        for (var ri = 1; ri < vals.length; ri++) {
-          var rowId = (vals[ri][1] || "").toString().toLowerCase().trim();
-          if (rowId !== empIdSearch) continue;
-          var selections = [];
-          for (var ci = 6; ci < headers.length; ci++) {
-            selections.push({ label: headers[ci], choice: vals[ri][ci] || "OFF" });
+        
+        // Quét tất cả các sheet bắt đầu bằng "LỊCHT" hoặc "DangKyLich"
+        for (var s = 0; s < allSheets.length; s++) {
+          var sheet = allSheets[s];
+          var sName = sheet.getName();
+          
+          if (sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
+            if (sheet.getLastRow() <= 1) continue;
+            var vals = sheet.getDataRange().getValues();
+            var headers = vals[0];
+            
+            for (var ri = 1; ri < vals.length; ri++) {
+              var rowId = (vals[ri][1] || "").toString().toLowerCase().trim();
+              if (rowId !== empIdSearch) continue;
+              
+              var selections = [];
+              for (var ci = 6; ci < headers.length; ci++) {
+                selections.push({ label: headers[ci], choice: vals[ri][ci] || "OFF" });
+              }
+              
+              result.push({
+                empId: vals[ri][1],
+                empName: vals[ri][2],
+                shiftId: vals[ri][4],
+                shiftLabel: vals[ri][5],
+                selections: selections,
+                timestamp: vals[ri][0]
+              });
+            }
           }
-          result.push({
-            empId: vals[ri][1],
-            empName: vals[ri][2],
-            shiftId: vals[ri][4],
-            shiftLabel: vals[ri][5],
-            selections: selections,
-            timestamp: vals[ri][0]
-          });
         }
+        
         return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
       } catch(getRegErr) {
         return ContentService.createTextOutput(JSON.stringify({ error: getRegErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    if (action === "get_shift_registrations") {
+      try {
+        var shiftSearch = e.parameter.shiftId; 
+        if (!shiftSearch) return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
+        
+        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var allSheets = regSs.getSheets();
+        var result = [];
+        var headersList = [];
+        
+        for (var s = 0; s < allSheets.length; s++) {
+          var sheet = allSheets[s];
+          var sName = sheet.getName();
+          // Tìm sheet của ca tương ứng
+          if (sName.indexOf("LỊCH") === 0 && sName.indexOf("_" + shiftSearch) !== -1) {
+            if (sheet.getLastRow() <= 1) break;
+            var vals = sheet.getDataRange().getValues();
+            headersList = vals[0];
+            for (var ri = 1; ri < vals.length; ri++) {
+              var r = vals[ri];
+              result.push({
+                timestamp: r[0],
+                empId: r[1],
+                name: r[2],
+                phone: r[3],
+                choices: r.slice(6) // mảng các ngày
+              });
+            }
+            break; // Chạy 1 sheet gần nhất
+          }
+        }
+        
+        return ContentService.createTextOutput(JSON.stringify({ headers: headersList.slice(6), data: result })).setMimeType(ContentService.MimeType.JSON);
+      } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
       }
     }
 
