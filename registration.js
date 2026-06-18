@@ -171,6 +171,7 @@ const RegApp = {
     }
     
     // Kiểm tra đã đăng ký chưa trên LocalStorage
+    const currentPeriod = (localStorage.getItem('agr_reg_date_from') || '') + '|' + (localStorage.getItem('agr_reg_date_to') || '');
     const key = 'agr_reg_' + empId.toLowerCase();
     let existing = [];
     try {
@@ -180,8 +181,14 @@ const RegApp = {
     }
     
     if (existing.length > 0) {
-      Utils.showToast('Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!', 'error');
-      return;
+      if (existing[0].period !== currentPeriod) {
+        // Kỳ lịch đã thay đổi, xóa lịch sử cũ của device này
+        existing = [];
+        localStorage.removeItem(key);
+      } else {
+        Utils.showToast('Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!', 'error');
+        return;
+      }
     }
 
     const dates = RegApp.getDateRange();
@@ -215,6 +222,7 @@ const RegApp = {
       shiftId:    RegApp.selectedShift.id,
       shiftLabel: RegApp.selectedShift.label,
       selections: selections,
+      period:     currentPeriod,
       timestamp:  new Date().toISOString()
     };
 
