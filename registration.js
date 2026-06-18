@@ -23,6 +23,9 @@ const EmpNav = {
     if (vsEmpIdInput) vsEmpIdInput.addEventListener('keydown', e => {
       if (e.key === 'Enter') ViewScheduleApp.lookup();
     });
+
+    // Enforce default view explicitly on load
+    EmpNav.show('diemDanh');
   },
 
   show: (tab) => {
