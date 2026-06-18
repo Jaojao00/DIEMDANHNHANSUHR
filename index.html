@@ -73,21 +73,6 @@
     </div>
   </div>
 
-  <!-- BOTTOM NAVIGATION BAR -->
-  <nav class="emp-bottom-nav" id="empBottomNav">
-    <button class="emp-nav-item active" id="navDiemDanh" onclick="EmpNav.show('diemDanh')">
-      <span class="nav-icon">📍</span>
-      <span>Điểm danh</span>
-    </button>
-    <button class="emp-nav-item" id="navDangKy" onclick="EmpNav.show('dangKy')">
-      <span class="nav-icon">📅</span>
-      <span>Đăng ký lịch</span>
-    </button>
-    <button class="emp-nav-item" id="navXemLich" onclick="EmpNav.show('xemLich')">
-      <span class="nav-icon">🔍</span>
-      <span>Xem lịch</span>
-    </button>
-  </nav>
 
   <!-- PHASE 2: ATTENDANCE FORM -->
   <div id="phaseAttendance" class="emp-phase hidden">
@@ -749,6 +734,22 @@
 
 <!-- Toast Notifications -->
 <div class="toast-container" id="toastContainer" aria-live="assertive"></div>
+
+<!-- BOTTOM NAVIGATION BAR -->
+<nav class="emp-bottom-nav" id="empBottomNav">
+  <button class="emp-nav-item active" id="navDiemDanh" onclick="EmpNav.show('diemDanh')">
+    <span class="nav-icon">📍</span>
+    <span>Điểm danh</span>
+  </button>
+  <button class="emp-nav-item" id="navDangKy" onclick="EmpNav.show('dangKy')">
+    <span class="nav-icon">📅</span>
+    <span>Đăng ký lịch</span>
+  </button>
+  <button class="emp-nav-item" id="navXemLich" onclick="EmpNav.show('xemLich')">
+    <span class="nav-icon">🔍</span>
+    <span>Xem lịch</span>
+  </button>
+</nav>
 
 <!-- Scripts -->
 <script src="config.js"></script>
