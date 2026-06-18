@@ -36,10 +36,10 @@ const EmpNav = {
     const vsView  = document.getElementById('empViewScheduleView');
     if (!empView || !regView || !vsView) return;
 
-    // Hide all
+    // Hide all explicitly
     empView.style.display = 'none';
-    regView.classList.remove('active');
-    vsView.classList.remove('active');
+    regView.style.display = 'none';
+    vsView.style.display = 'none';
 
     if (tab === 'diemDanh') {
       const btn = document.getElementById('navDiemDanh');
@@ -48,12 +48,12 @@ const EmpNav = {
     } else if (tab === 'dangKy') {
       const btn = document.getElementById('navDangKy');
       if (btn) btn.classList.add('active');
-      regView.classList.add('active');
+      regView.style.display = 'block';
       RegApp.showStep(1);
     } else if (tab === 'xemLich') {
       const btn = document.getElementById('navXemLich');
       if (btn) btn.classList.add('active');
-      vsView.classList.add('active');
+      vsView.style.display = 'block';
     }
 
     window.scrollTo(0, 0);
