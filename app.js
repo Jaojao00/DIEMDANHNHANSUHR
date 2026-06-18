@@ -1214,6 +1214,7 @@ const AdminApp = {
       }
     } catch (e) {}
     const offIds = new Set((requests || []).filter(r => r && r.type === 'XIN OFF' && r.empId).map(r => r.empId.toLowerCase().trim()));
+    const extraIds = new Set((requests || []).filter(r => r && r.type === 'XIN LÊN CA' && r.empId).map(r => r.empId.toLowerCase().trim()));
 
     const timeStatus = Utils.isWithinTimeWindow(State.selectedShiftId);
     const isTimeOver = timeStatus.isOver;
