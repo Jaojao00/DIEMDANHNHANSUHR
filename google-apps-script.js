@@ -294,13 +294,13 @@ function doPost(e) {
         
         var searchId = (data.empId || "").toLowerCase().trim();
         
-        // Kiểm tra xem đã đăng ký ca khác trong cùng kỳ (tháng) chưa
+        // Kiểm tra xem đã đăng ký ca nào trong cùng kỳ (tháng) chưa
         var allSheets = regSs.getSheets();
         var alreadyRegisteredShift = "";
         
         for (var s = 0; s < allSheets.length; s++) {
           var sName = allSheets[s].getName();
-          if (sName.indexOf("LỊCHT" + month + "_") === 0 && sName !== regSheetName) {
+          if (sName.indexOf("LỊCHT" + month + "_") === 0) {
             var sData = allSheets[s].getDataRange().getValues();
             for (var r = 1; r < sData.length; r++) {
               var rId = (sData[r][1] || "").toString().toLowerCase().trim();
@@ -314,18 +314,7 @@ function doPost(e) {
         }
         
         if (alreadyRegisteredShift) {
-          return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký Ca " + alreadyRegisteredShift + " rồi! Mỗi người chỉ được đăng ký 1 ca." })).setMimeType(ContentService.MimeType.JSON);
-        }
-        
-        // Remove old rows for same empId + shiftId combo in current sheet
-        var searchShift = data.shiftId || "";
-        var lastRow = regSheet.getLastRow();
-        for (var ri = lastRow; ri >= 2; ri--) {
-          var rowId = (regSheet.getRange(ri, 2).getValue() || "").toString().toLowerCase().trim();
-          var rowShift = (regSheet.getRange(ri, 5).getValue() || "").toString().trim();
-          if (rowId === searchId && rowShift === searchShift) {
-            regSheet.deleteRow(ri);
-          }
+          return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!" })).setMimeType(ContentService.MimeType.JSON);
         }
         
         // Append new row
