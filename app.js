@@ -917,6 +917,9 @@ const AdminApp = {
     if (settingsCancelBtn) settingsCancelBtn.addEventListener('click', AdminApp.closeSettings);
     const settingsSaveBtn = document.getElementById('settingsSaveBtn');
     if (settingsSaveBtn) settingsSaveBtn.addEventListener('click', AdminApp.saveSettings);
+    
+    const btnResetRegistrations = document.getElementById('btnResetRegistrations');
+    if (btnResetRegistrations) btnResetRegistrations.addEventListener('click', AdminApp.resetRegistrations);
 
     // Refresh & Search
     const refreshBtn = document.getElementById('refreshBtn');
@@ -1362,6 +1365,33 @@ const AdminApp = {
 
   closeSettings: () => {
     document.getElementById('settingsModal').classList.add('hidden');
+  },
+
+  resetRegistrations: async () => {
+    if (!confirm('Hành động này sẽ XÓA TOÀN BỘ các bảng lịch đăng ký hiện có trên Google Sheets của bạn. Bạn có chắc chắn muốn dọn dẹp để tạo kỳ đăng ký lịch mới không?')) return;
+    
+    const btn = document.getElementById('btnResetRegistrations');
+    if (btn) btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;"></span> Đang xóa...';
+    
+    try {
+      const url = AdminApp.getApiUrl();
+      if (!url) throw new Error('Vui lòng thiết lập API Link trước khi xóa!');
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'reset_registrations' })
+      });
+      
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+      
+      alert('Đã dọn dẹp thành công! ' + (result.message || ''));
+    } catch (err) {
+      console.error(err);
+      alert('Lỗi khi xóa lịch: ' + err.message);
+    } finally {
+      if (btn) btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Xóa toàn bộ đăng ký lịch cũ';
+    }
   },
 
   saveSettings: () => {
