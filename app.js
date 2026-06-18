@@ -94,8 +94,8 @@ const Utils = {
       start.setHours(13, 0, 0);
       end.setHours(14, 30, 0);
     } else if (shiftId === '22:00-06:00') {
-      start.setHours(18, 0, 0);
-      end.setHours(20, 30, 0);
+      start.setHours(14, 0, 0);
+      end.setHours(19, 0, 0);
     } else if (shiftId === '15:00-22:00') {
       start.setHours(10, 0, 0);
       end.setHours(12, 30, 0);
