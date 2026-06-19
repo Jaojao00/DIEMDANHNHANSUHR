@@ -293,65 +293,87 @@ const DataManager = {
   },
 
   updateAttendance: async (shiftId, empId, phone) => {
-    if (CONFIG.DEMO_MODE) {
-      // Logic Local Demo
-      const data = await DataManager.loadSchedule(shiftId);
-      const searchId = empId.toLowerCase().trim();
-      const empIndex = data.findIndex(e => 
-        (e.id && e.id.toString().toLowerCase().trim() === searchId) || 
-        (e.stt && e.stt.toString().toLowerCase().trim() === searchId) ||
-        (e.name && e.name.toString().toLowerCase().trim() === searchId)
-      );
+    const searchId = empId.toLowerCase().trim();
+    
+    // 1. Try to find in local cache first for Instant response
+    const localKey = Utils.getShiftStorageKey(shiftId);
+    let localData = [];
+    try {
+      const stored = localStorage.getItem(localKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        localData = Array.isArray(parsed) ? parsed.map(DataManager.normalizeEmp) : [];
+      }
+    } catch(e) {}
+
+    const empIndex = localData.findIndex(e => 
+      (e.id && e.id.toString().toLowerCase().trim() === searchId) || 
+      (e.stt && e.stt.toString().toLowerCase().trim() === searchId) ||
+      (e.name && e.name.toString().toLowerCase().trim() === searchId)
+    );
+
+    let localEmp = null;
+    let localUnassigned = false;
+
+    if (empIndex >= 0) {
+      if (localData[empIndex].status === 'confirmed') {
+        throw new Error('Nhân viên này đã điểm danh rồi!');
+      }
       
-      if (empIndex >= 0) {
-        if (data[empIndex].status === 'confirmed') {
-          throw new Error('Nhân viên này đã điểm danh rồi!');
-        }
-        
-        data[empIndex].status = 'confirmed';
-        data[empIndex].timestamp = Utils.formatTime();
-        data[empIndex].phone = phone;
-        
-        const emp = DataManager.normalizeEmp(data[empIndex]);
-        const positions = emp.positions || [];
-        const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
-                            
-        await DataManager.saveSchedule(shiftId, data);
-        
-        return {
-          employeeData: emp,
-          isUnassigned: isUnassigned
-        };
-      } else {
-        throw new Error('Không tìm thấy mã nhân viên trong ca này.');
+      localData[empIndex].status = 'confirmed';
+      localData[empIndex].timestamp = Utils.formatTime();
+      localData[empIndex].phone = phone;
+      
+      const emp = DataManager.normalizeEmp(localData[empIndex]);
+      const positions = emp.positions || [];
+      localUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
+      localEmp = emp;
+      
+      // Update cache immediately
+      localStorage.setItem(localKey, JSON.stringify(localData));
+    }
+
+    if (CONFIG.DEMO_MODE) {
+      if (!localEmp) throw new Error('Không tìm thấy mã nhân viên trong ca này.');
+      return { employeeData: localEmp, isUnassigned: localUnassigned };
+    }
+
+    // 2. Prepare background sync to Google Sheets
+    const fetchPromise = fetch(CONFIG.API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'checkin',
+        shiftId: shiftId,
+        empId: empId,
+        phone: phone
+      })
+    }).then(res => res.json());
+
+    // 3. Optimistic UI: Return instantly if found locally
+    if (localEmp) {
+      fetchPromise.catch(err => console.error("Lỗi đồng bộ ngầm điểm danh:", err));
+      return { employeeData: localEmp, isUnassigned: localUnassigned };
+    }
+
+    // 4. Fallback: If not found locally, wait for server response
+    try {
+      const res = await fetchPromise;
+      if (res.error) {
+        throw new Error(res.error);
       }
-    } else {
-      // Gửi API Google Sheets
-      try {
-        const response = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'checkin',
-            shiftId: shiftId,
-            empId: empId,
-            phone: phone
-          })
-        });
-        const res = await response.json();
-        
-        if (res.error) {
-          throw new Error(res.error);
-        }
-        
-        const emp = DataManager.normalizeEmp(res.employee);
-        const positions = emp.positions || [];
-        const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
-                            
-        return { employeeData: emp, isUnassigned: isUnassigned };
-      } catch (error) {
-        console.error("Lỗi điểm danh qua API:", error);
-        throw new Error(error.message || "Lỗi kết nối hệ thống.");
-      }
+      
+      const emp = DataManager.normalizeEmp(res.employee);
+      const positions = emp.positions || [];
+      const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
+                          
+      // Update local cache with this new employee
+      localData.push(emp);
+      localStorage.setItem(localKey, JSON.stringify(localData));
+
+      return { employeeData: emp, isUnassigned: isUnassigned };
+    } catch (error) {
+      console.error("Lỗi điểm danh qua API:", error);
+      throw new Error(error.message || "Lỗi kết nối hệ thống.");
     }
   },
 
@@ -486,6 +508,11 @@ const EmployeeApp = {
       document.getElementById('attShiftLabel').textContent = shift.label;
       document.getElementById('attShiftLabel').style.color = shift.color;
       document.getElementById('attShiftTime').textContent = shift.id;
+      
+      // Preload data in background to enable instant checkin
+      if (!CONFIG.DEMO_MODE) {
+        DataManager.loadSchedule(State.selectedShiftId).catch(e => console.error('Lỗi preload schedule:', e));
+      }
     }
   },
 
