@@ -3,6 +3,19 @@
  * Dán toàn bộ mã này vào Google Apps Script của bạn.
  */
 
+// ==========================================
+// HELPER: Lấy hoặc tạo sheet CONFIG
+// ==========================================
+function getConfigSheet() {
+  var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+  var sheet = ss.getSheetByName("CONFIG");
+  if (!sheet) {
+    sheet = ss.insertSheet("CONFIG");
+    sheet.appendRow(["Key", "Value"]);
+  }
+  return sheet;
+}
+
 // Hàm xử lý POST requests (Lưu lịch, Cập nhật điểm danh)
 function doPost(e) {
   try {
@@ -14,7 +27,7 @@ function doPost(e) {
     var action = data.action;
     var shiftId = data.shiftId;
     
-    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login") {
+    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config") {
       return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -263,7 +276,11 @@ function doPost(e) {
     
     // ACTION: SUBMIT_REGISTRATION (Đăng ký lịch làm việc)
     if (action === "submit_registration") {
+      var lock = LockService.getScriptLock();
       try {
+        // Khóa để tránh race condition khi 2 người gửi cùng lúc
+        lock.waitLock(30000);
+        
         var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
         
         // Trích xuất Tháng từ ngày đầu tiên trong mảng selections
@@ -282,7 +299,6 @@ function doPost(e) {
         
         if (!regSheet) {
           regSheet = regSs.insertSheet(regSheetName);
-          // Build dynamic headers from dates
           var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Ca", "Tên Ca"];
           (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
           regSheet.appendRow(headerRow);
@@ -332,6 +348,8 @@ function doPost(e) {
         return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
       } catch(regErr) {
         return ContentService.createTextOutput(JSON.stringify({ error: regErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      } finally {
+        lock.releaseLock();
       }
     }
 
@@ -358,6 +376,34 @@ function doPost(e) {
         return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã xóa " + deletedCount + " bảng lịch cũ" })).setMimeType(ContentService.MimeType.JSON);
       } catch(resErr) {
         return ContentService.createTextOutput(JSON.stringify({ error: resErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    // ACTION: SAVE_REG_CONFIG (Lưu cấu hình ngày đăng ký lịch)
+    if (action === "save_reg_config") {
+      try {
+        var configSheet = getConfigSheet();
+        
+        var configData = configSheet.getDataRange().getValues();
+        var fromFound = false, toFound = false;
+        
+        for (var i = 1; i < configData.length; i++) {
+          if (configData[i][0] === "reg_date_from") {
+            configSheet.getRange(i + 1, 2).setValue(data.regDateFrom || "");
+            fromFound = true;
+          }
+          if (configData[i][0] === "reg_date_to") {
+            configSheet.getRange(i + 1, 2).setValue(data.regDateTo || "");
+            toFound = true;
+          }
+        }
+        
+        if (!fromFound) configSheet.appendRow(["reg_date_from", data.regDateFrom || ""]);
+        if (!toFound) configSheet.appendRow(["reg_date_to", data.regDateTo || ""]);
+        
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã lưu cấu hình đăng ký" })).setMimeType(ContentService.MimeType.JSON);
+      } catch(cfgErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi lưu cấu hình: " + cfgErr.toString() })).setMimeType(ContentService.MimeType.JSON);
       }
     }
 
@@ -508,6 +554,24 @@ function doGet(e) {
       }
     }
 
+    if (action === "get_reg_config") {
+      try {
+        var configSheet = getConfigSheet();
+        
+        var configData = configSheet.getDataRange().getValues();
+        var result = { regDateFrom: "", regDateTo: "" };
+        
+        for (var i = 1; i < configData.length; i++) {
+          if (configData[i][0] === "reg_date_from") result.regDateFrom = (configData[i][1] || "").toString();
+          if (configData[i][0] === "reg_date_to") result.regDateTo = (configData[i][1] || "").toString();
+        }
+        
+        return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+      } catch(cfgErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: cfgErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     if (action === "get_shift_registrations") {
       try {
         var shiftSearch = e.parameter.shiftId; 
@@ -521,22 +585,29 @@ function doGet(e) {
         for (var s = 0; s < allSheets.length; s++) {
           var sheet = allSheets[s];
           var sName = sheet.getName();
-          // Tìm sheet của ca tương ứng
-          if (sName.indexOf("LỊCH") === 0 && sName.indexOf("_" + shiftSearch) !== -1) {
-            if (sheet.getLastRow() <= 1) break;
-            var vals = sheet.getDataRange().getValues();
-            headersList = vals[0];
-            for (var ri = 1; ri < vals.length; ri++) {
-              var r = vals[ri];
-              result.push({
-                timestamp: r[0],
-                empId: r[1],
-                name: r[2],
-                phone: r[3],
-                choices: r.slice(6) // mảng các ngày
-              });
+          
+          // Tìm sheet của ca tương ứng (So sánh chính xác ShiftId sau dấu '_')
+          if (sName.indexOf("LỊCH") === 0) {
+            var parts = sName.split("_");
+            if (parts.length >= 2) {
+              var sShiftId = parts.slice(1).join("_");
+              if (sShiftId === shiftSearch) {
+                if (sheet.getLastRow() <= 1) break;
+                var vals = sheet.getDataRange().getValues();
+                headersList = vals[0];
+                for (var ri = 1; ri < vals.length; ri++) {
+                  var r = vals[ri];
+                  result.push({
+                    timestamp: r[0],
+                    empId: r[1],
+                    name: r[2],
+                    phone: r[3],
+                    choices: r.slice(6) // mảng các ngày
+                  });
+                }
+                break; // Chạy 1 sheet gần nhất
+              }
             }
-            break; // Chạy 1 sheet gần nhất
           }
         }
         

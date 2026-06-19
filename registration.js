@@ -54,6 +54,7 @@ const EmpNav = {
       const btn = document.getElementById('navDangKy');
       if (btn) btn.classList.add('active');
       regView.style.display = 'block';
+      RegApp.loadConfig(); // Pre-fetch cấu hình ngày đăng ký từ backend
       RegApp.showStep(1);
     } else if (tab === 'xemLich') {
       const btn = document.getElementById('navXemLich');
@@ -70,6 +71,25 @@ const EmpNav = {
 // ==========================================
 const RegApp = {
   selectedShift: null,
+
+  // Tải cấu hình ngày đăng ký từ backend (Google Sheets) và cache vào localStorage
+  loadConfig: async () => {
+    try {
+      if (CONFIG && CONFIG.API_URL) {
+        const url = CONFIG.API_URL + '?action=get_reg_config';
+        const resp = await fetch(url);
+        const data = await resp.json();
+        if (data.regDateFrom) localStorage.setItem('agr_reg_date_from', data.regDateFrom);
+        if (data.regDateTo) localStorage.setItem('agr_reg_date_to', data.regDateTo);
+        // Xóa cache nếu server trả về rỗng (admin đã reset)
+        if (data.regDateFrom === '') localStorage.removeItem('agr_reg_date_from');
+        if (data.regDateTo === '') localStorage.removeItem('agr_reg_date_to');
+      }
+    } catch (e) {
+      console.error('Lỗi tải cấu hình đăng ký từ server:', e);
+      // Fallback: giữ nguyên giá trị localStorage (nếu có)
+    }
+  },
 
   showStep: (step) => {
     const s1 = document.getElementById('regStep1');
@@ -96,7 +116,7 @@ const RegApp = {
     }).join('');
   },
 
-  selectShift: (shiftId) => {
+  selectShift: async (shiftId) => {
     const shift = State.shifts.find(s => s.id === shiftId);
     if (!shift) return;
     RegApp.selectedShift = shift;
@@ -114,6 +134,8 @@ const RegApp = {
     if (labelEl) labelEl.textContent = shift.label + ' — ' + shift.id;
     if (colEl) colEl.textContent = shift.label + ' (' + shift.id + ')';
 
+    // Đảm bảo cấu hình ngày đã được tải từ backend trước khi render bảng ngày
+    await RegApp.loadConfig();
     RegApp.renderDateTable();
     RegApp.showStep(2);
   },
@@ -169,26 +191,15 @@ const RegApp = {
       Utils.showToast('Vui lòng nhập đầy đủ mã NV, họ tên, số điện thoại', 'error');
       return;
     }
-    
-    // Kiểm tra đã đăng ký chưa trên LocalStorage
-    const currentPeriod = (localStorage.getItem('agr_reg_date_from') || '') + '|' + (localStorage.getItem('agr_reg_date_to') || '');
-    const key = 'agr_reg_' + empId.toLowerCase();
-    let existing = [];
-    try {
-      existing = JSON.parse(localStorage.getItem(key) || '[]');
-    } catch(e) {
-      existing = [];
+
+    // Validation format (dùng chung regex với form điểm danh)
+    if (typeof CONFIG !== 'undefined' && CONFIG.EMPLOYEE_ID_REGEX && !CONFIG.EMPLOYEE_ID_REGEX.test(empId)) {
+      Utils.showToast('Mã nhân viên không hợp lệ (Ví dụ: Ops123456)', 'error');
+      return;
     }
-    
-    if (existing.length > 0) {
-      if (existing[0].period !== currentPeriod) {
-        // Kỳ lịch đã thay đổi, xóa lịch sử cũ của device này
-        existing = [];
-        localStorage.removeItem(key);
-      } else {
-        Utils.showToast('Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!', 'error');
-        return;
-      }
+    if (typeof CONFIG !== 'undefined' && CONFIG.PHONE_REGEX && !CONFIG.PHONE_REGEX.test(empPhone)) {
+      Utils.showToast('Số điện thoại không hợp lệ (10 số, bắt đầu 03/05/07/08/09)', 'error');
+      return;
     }
 
     const dates = RegApp.getDateRange();
@@ -222,7 +233,6 @@ const RegApp = {
       shiftId:    RegApp.selectedShift.id,
       shiftLabel: RegApp.selectedShift.label,
       selections: selections,
-      period:     currentPeriod,
       timestamp:  new Date().toISOString()
     };
 
@@ -237,13 +247,14 @@ const RegApp = {
       }
 
       // Save locally for offline view
-      const key = 'agr_reg_' + empId.toLowerCase();
-      const existing = JSON.parse(localStorage.getItem(key) || '[]');
-      const updated = existing.filter(r => r.shiftId !== RegApp.selectedShift.id);
+      const localKey = 'agr_reg_' + empId.toLowerCase();
+      const localExisting = JSON.parse(localStorage.getItem(localKey) || '[]');
+      const updated = localExisting.filter(r => r.shiftId !== RegApp.selectedShift.id);
       updated.push(payload);
-      localStorage.setItem(key, JSON.stringify(updated));
+      localStorage.setItem(localKey, JSON.stringify(updated));
 
       Utils.showToast('✅ Đăng ký lịch thành công!', 'success');
+      if (btn) { btn.disabled = false; btn.textContent = '✅ Gửi Đăng Ký'; }
 
       // Auto-switch to view tab
       setTimeout(() => {

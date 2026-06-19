@@ -1186,7 +1186,7 @@ const AdminApp = {
         State.scheduleData = data;
         AdminApp.renderTable();
       } else {
-        data = await AdminApp.loadRegistrations(State.selectedShiftId);
+        data = await DataManager.loadRegistrations(State.selectedShiftId);
         AdminApp.renderRegistrationTable(data);
       }
       
@@ -1606,7 +1606,7 @@ const AdminApp = {
     }
   },
 
-  saveSettings: () => {
+  saveSettings: async () => {
     const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times')) || {};
     const enableTime = document.getElementById('enableTimeCheck').checked;
     State.enableTimeCheck = enableTime;
@@ -1632,14 +1632,41 @@ const AdminApp = {
       localStorage.setItem('agr_api_url', newApiLink);
     }
     
-    // Save Reg Date Range
+    // Save Reg Date Range — đồng bộ lên backend trước, chỉ lưu local khi thành công
     const regFrom = document.getElementById('regDateFrom');
     const regTo   = document.getElementById('regDateTo');
-    if (regFrom && regFrom.value) localStorage.setItem('agr_reg_date_from', regFrom.value);
-    if (regTo   && regTo.value)   localStorage.setItem('agr_reg_date_to',   regTo.value);
+    const regDateFrom = regFrom ? regFrom.value : '';
+    const regDateTo = regTo ? regTo.value : '';
+
+    if (CONFIG.API_URL && (regDateFrom || regDateTo)) {
+      try {
+        const resp = await fetch(CONFIG.API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'save_reg_config',
+            regDateFrom: regDateFrom,
+            regDateTo: regDateTo
+          })
+        });
+        const json = await resp.json();
+        if (json.error) {
+          Utils.showToast('Lỗi lưu cấu hình đăng ký: ' + json.error, 'error');
+          return; // Giữ modal mở để admin thử lại
+        }
+        // Backend thành công → cập nhật localStorage
+        if (regDateFrom) localStorage.setItem('agr_reg_date_from', regDateFrom);
+        if (regDateTo) localStorage.setItem('agr_reg_date_to', regDateTo);
+      } catch (err) {
+        Utils.showToast('Lỗi kết nối server: ' + err.message, 'error');
+        return; // Giữ modal mở để admin thử lại
+      }
+    } else {
+      // Offline mode — chỉ lưu localStorage
+      if (regFrom && regFrom.value) localStorage.setItem('agr_reg_date_from', regFrom.value);
+      if (regTo   && regTo.value)   localStorage.setItem('agr_reg_date_to',   regTo.value);
+    }
 
     AdminApp.closeSettings();
-    // Reload current tab and data
     AdminApp.loadData();
     Utils.showToast('Đã lưu cài đặt', 'success');
   },
