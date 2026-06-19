@@ -1738,8 +1738,8 @@ const AdminApp = {
     if (btn) btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;"></span> Đang xóa...';
     
     try {
-      const url = AdminApp.getApiUrl();
-      if (!url) throw new Error('Vui lòng thiết lập API Link trước khi xóa!');
+      const url = CONFIG.API_URL;
+      if (!url) throw new Error('Vui lòng thiết lập cấu hình CONFIG.API_URL trước khi xóa!');
       
       const response = await fetch(url, {
         method: 'POST',
