@@ -10,31 +10,26 @@ const State = {
   shifts: [
     { 
       id: '06:00-10:00', label: 'Ca Sáng', icon: '🌅', color: '#4facf7',
-      allowStart: '06:00', allowEnd: '10:00',
       colHeaders: ['Vị Trí Đầu Ca', 'Vị Trí 2', 'Vị Trí 3', 'Vị Trí 4', 'Vị Trí 5'],
       noteColIndex: 9
     },
     { 
-      id: '06:00-15:00', label: 'Ca OS Sáng', icon: '🌄', color: '#43e97b',
-      allowStart: '06:00', allowEnd: '15:00',
+      id: '06:00-15:00', label: 'Ca OS Sáng', icon: '🚀', color: '#43e97b',
       colHeaders: ['6h-7h (1)', '6h-7h (2)', '12h-13h (1)', '12h-13h (2)', '13h-15h'],
       noteColIndex: 9
     },
     { 
-      id: '15:00-22:00', label: 'Ca Chiều', icon: '☀️', color: '#ffbd3a',
-      allowStart: '15:00', allowEnd: '22:00',
+      id: '15:00-22:00', label: 'Ca Chiều', icon: '🌇', color: '#ffbd3a',
       colHeaders: ['13h-15h', '15h-17h', '17h-17h30', '17h30-18h', '18h-19h', '19h-20h', '21h-22h'],
       noteColIndex: 11
     },
     { 
-      id: '18:00-22:00', label: 'Ca Tối', icon: '🌆', color: '#ff8c42',
-      allowStart: '18:00', allowEnd: '20:30',
+      id: '18:00-22:00', label: 'Ca Tối', icon: '🌃', color: '#ff8c42',
       colHeaders: ['13h-15h', '15h-17h', '17h-17h30', '17h30-18h', '18h-19h', '19h-20h', '21h-22h'],
       noteColIndex: 11
     },
     { 
       id: '22:00-06:00', label: 'Ca Đêm', icon: '🌙', color: '#b980f0',
-      allowStart: '22:00', allowEnd: '06:00',
       colHeaders: ['Vị Trí Cố Định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'],
       noteColIndex: 8
     }
@@ -47,8 +42,7 @@ const State = {
   isScanning: false,
   refreshTimer: null,
   apiLink: localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : ''),
-  clockTimer: null,
-  enableTimeCheck: false
+  clockTimer: null
 };
 
 // ==========================================
@@ -91,19 +85,23 @@ const Utils = {
     let end = new Date(scheduleDate);
 
     if (shiftId === '18:00-22:00') {
+      // Ca Tối: 13h - 14h cùng ngày
       start.setHours(13, 0, 0);
-      end.setHours(14, 30, 0);
+      end.setHours(14, 0, 0);
     } else if (shiftId === '22:00-06:00') {
+      // Ca Đêm: 14h - 18h cùng ngày
       start.setHours(14, 0, 0);
       end.setHours(18, 0, 0);
     } else if (shiftId === '15:00-22:00') {
-      start.setHours(10, 0, 0);
-      end.setHours(12, 30, 0);
+      // Ca Chiều: 9h - 12h cùng ngày
+      start.setHours(9, 0, 0);
+      end.setHours(12, 0, 0);
     } else if (shiftId === '06:00-10:00' || shiftId === '06:00-15:00') {
+      // Ca Sáng & OS Sáng: trước 19h ngày hôm trước
       start.setDate(start.getDate() - 1);
       start.setHours(0, 0, 0);
       end.setDate(end.getDate() - 1);
-      end.setHours(21, 0, 0);
+      end.setHours(19, 0, 0);
     } else {
       start.setHours(0, 0, 0);
       end.setHours(23, 59, 59);
@@ -421,22 +419,14 @@ const EmployeeApp = {
     } catch (e) {
       console.error("Lỗi đọc agr_shift_times:", e);
     }
-    if (savedTimes) {
-      State.shifts.forEach(s => {
-        if (savedTimes[s.id]) {
-          s.allowStart = savedTimes[s.id].allowStart;
-          s.allowEnd = savedTimes[s.id].allowEnd;
-        }
-      });
-    }
-
     try {
-      const enableTime = localStorage.getItem('agr_enable_time_check');
-      if (enableTime !== null) {
-        State.enableTimeCheck = enableTime === 'true';
+      const savedDate = localStorage.getItem('agr_schedule_date');
+      if (savedDate) {
+        const d = new Date(savedDate);
+        if (!isNaN(d.getTime())) State.scheduleDate = d;
       }
     } catch (e) {
-      console.error("Lỗi đọc agr_enable_time_check:", e);
+      console.error(e);
     }
   },
 
@@ -1222,21 +1212,7 @@ const AdminApp = {
     const thead = document.getElementById('scheduleHead');
     if (!tbody) return;
     
-    // Đổi header cho chế độ Đăng Ký
-    if (thead) {
-      thead.innerHTML = `
-        <tr>
-          <th>STT</th>
-          <th>Mã NV</th>
-          <th>Họ Tên</th>
-          <th colspan="5" style="text-align:left">Thời gian gửi</th>
-        </tr>
-      `;
-    }
-    
-    tbody.innerHTML = '';
-    
-    // update counters
+    // Update counters
     const totalCount = dataList.length;
     const statTotal = document.getElementById('totalEmployees');
     const statPresent = document.getElementById('confirmedCount');
@@ -1249,22 +1225,132 @@ const AdminApp = {
     if (statOff) statOff.innerText = '0';
 
     if (dataList.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="padding:24px; color:var(--text-secondary)">Chưa có ai đăng ký ca này</td></tr>`;
+      if (thead) {
+        thead.innerHTML = `<tr><th>STT</th><th>Mã NV</th><th>Họ Tên</th><th>Thời gian gửi</th></tr>`;
+      }
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="padding:24px; color:var(--text-secondary)">Chưa có ai đăng ký ca này</td></tr>`;
       return;
     }
 
+    // Extract dynamic dates from the first record's selections
+    let dateHeaders = [];
+    if (dataList[0].selections && Array.isArray(dataList[0].selections)) {
+      dateHeaders = dataList[0].selections.map(s => s.label);
+    }
+
+    // Đổi header cho chế độ Đăng Ký
+    if (thead) {
+      let html = `
+        <tr>
+          <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllReg" style="cursor: pointer;"></th>
+          <th>STT</th>
+          <th>Mã NV</th>
+          <th>Họ Tên</th>
+          <th>Số ĐT</th>
+          <th>Tên Ca</th>
+      `;
+      dateHeaders.forEach(date => {
+        html += `<th style="text-align:center">${date}</th>`;
+      });
+      html += `<th>Thời gian gửi</th></tr>`;
+      thead.innerHTML = html;
+
+      // Add delete button if it doesn't exist in toolbar
+      let toolbar = document.querySelector('.admin-toolbar');
+      if (toolbar && !document.getElementById('btnDeleteSelectedReg')) {
+        const btnHtml = `<button id="btnDeleteSelectedReg" class="btn" style="background:var(--danger); color:white; border:none; margin-left:10px; display:none; padding:8px 16px;">Xóa đã chọn</button>`;
+        toolbar.insertAdjacentHTML('beforeend', btnHtml);
+        
+        document.getElementById('btnDeleteSelectedReg').addEventListener('click', async () => {
+          const checked = document.querySelectorAll('.reg-checkbox:checked');
+          if (checked.length === 0) return;
+          if (!confirm(`Bạn có chắc chắn muốn xóa ${checked.length} đăng ký đã chọn trên hệ thống (không ảnh hưởng Google Sheets)?`)) return;
+          
+          try {
+            const db = window.FirebaseDB?.db;
+            if (db) {
+              const { collection, query, where, getDocs, deleteDoc } = window.FirebaseDB;
+              const regRef = collection(db, "registrations");
+              
+              for (const cb of checked) {
+                const empId = cb.value;
+                const shiftId = cb.dataset.shift;
+                // Delete from Firebase
+                const q = query(regRef, where("empId", "==", empId), where("shiftId", "==", shiftId));
+                const snap = await getDocs(q);
+                const deletePromises = snap.docs.map(doc => deleteDoc(doc.ref));
+                await Promise.all(deletePromises);
+              }
+              Utils.showToast(`Đã xóa thành công ${checked.length} bản ghi trên hệ thống.`, 'success');
+              AdminApp.loadData(); // Tải lại bảng
+            } else {
+              Utils.showToast('Không thể kết nối tới Firebase để xóa', 'error');
+            }
+          } catch (e) {
+            Utils.showToast('Lỗi khi xóa: ' + e.message, 'error');
+          }
+        });
+      }
+
+      // Handle Select All
+      document.getElementById('selectAllReg').addEventListener('change', (e) => {
+        const cbs = document.querySelectorAll('.reg-checkbox');
+        cbs.forEach(cb => cb.checked = e.target.checked);
+        AdminApp.toggleDeleteBtn();
+      });
+    }
+    
+    tbody.innerHTML = '';
+    
     dataList.forEach((r, idx) => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
+      let html = `
+        <td style="text-align:center"><input type="checkbox" class="reg-checkbox" value="${r.empId}" data-shift="${r.shiftId}" style="cursor: pointer;"></td>
         <td style="text-align:center">${idx + 1}</td>
         <td><span class="emp-id-badge">${r.empId}</span></td>
-        <td style="font-weight:600; color:var(--text-main); white-space:nowrap">${r.name}</td>
-        <td colspan="5" style="color:var(--text-secondary); text-align:left;">
-          <span style="display:inline-block; margin-right:8px; padding:2px 6px; background:rgba(255,255,255,0.1); border-radius:4px; font-size:11px;">Gửi lúc: ${r.timestamp}</span>
+        <td style="font-weight:600; color:var(--text-main); white-space:nowrap">${r.name || r.empName || ''}</td>
+        <td>${r.empPhone || ''}</td>
+        <td>${r.shiftLabel || ''}</td>
+      `;
+      
+      // Render selection cells
+      if (r.selections && Array.isArray(r.selections)) {
+        r.selections.forEach(sel => {
+          const isOff = sel.choice === 'OFF';
+          const style = isOff ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success);';
+          html += `<td style="text-align:center; ${style}">${sel.choice}</td>`;
+        });
+      } else {
+        // If somehow no selections exist for this row, fill with empty cells
+        dateHeaders.forEach(() => {
+          html += `<td></td>`;
+        });
+      }
+
+      // Add timestamp
+      html += `
+        <td style="color:var(--text-secondary); text-align:left;">
+          <span style="display:inline-block; padding:2px 6px; background:rgba(255,255,255,0.1); border-radius:4px; font-size:11px;">${r.timestamp}</span>
         </td>
       `;
+      
+      tr.innerHTML = html;
       tbody.appendChild(tr);
     });
+
+    // Handle individual checkbox change
+    document.querySelectorAll('.reg-checkbox').forEach(cb => {
+      cb.addEventListener('change', AdminApp.toggleDeleteBtn);
+    });
+  },
+
+  toggleDeleteBtn: () => {
+    const checked = document.querySelectorAll('.reg-checkbox:checked').length;
+    const btn = document.getElementById('btnDeleteSelectedReg');
+    if (btn) {
+      btn.style.display = checked > 0 ? 'inline-block' : 'none';
+      btn.innerText = `Xóa đã chọn (${checked})`;
+    }
   },
 
   renderTable: () => {
@@ -1544,35 +1630,10 @@ const AdminApp = {
   // ---- Settings Modal Logic ----
   openSettingsModal: () => {
     document.getElementById('apiLinkInput').value = State.apiLink;
-    document.getElementById('enableTimeCheck').checked = State.enableTimeCheck;
     const dfEl = document.getElementById('regDateFrom');
     const dtEl = document.getElementById('regDateTo');
     if (dfEl) dfEl.value = localStorage.getItem('agr_reg_date_from') || '';
     if (dtEl) dtEl.value = localStorage.getItem('agr_reg_date_to') || '';
-    const container = document.getElementById('settingsShiftList');
-    
-    // Load from localStorage if available
-    const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times')) || {};
-
-    container.innerHTML = State.shifts.map(s => {
-      const currentStart = savedTimes[s.id]?.allowStart || s.allowStart || '';
-      const currentEnd = savedTimes[s.id]?.allowEnd || s.allowEnd || '';
-      const safeId = s.id.replace(/:/g, '');
-      
-      return `
-        <div class="settings-shift-item">
-          <div class="ssi-info">
-            <strong>${s.label}</strong>
-            <span style="font-size:11px;color:var(--text-muted)">(${s.id})</span>
-          </div>
-          <div class="ssi-inputs">
-            <input type="time" id="start_${safeId}" value="${currentStart}" />
-            <span> - </span>
-            <input type="time" id="end_${safeId}" value="${currentEnd}" />
-          </div>
-        </div>
-      `;
-    }).join('');
     document.getElementById('settingsModal').classList.remove('hidden');
   },
 
@@ -1608,24 +1669,6 @@ const AdminApp = {
   },
 
   saveSettings: async () => {
-    const savedTimes = JSON.parse(localStorage.getItem('agr_shift_times')) || {};
-    const enableTime = document.getElementById('enableTimeCheck').checked;
-    State.enableTimeCheck = enableTime;
-    localStorage.setItem('agr_enable_time_check', enableTime);
-
-    State.shifts.forEach(s => {
-      const safeId = s.id.replace(/:/g, '');
-      const start = document.getElementById(`start_${safeId}`).value;
-      const end = document.getElementById(`end_${safeId}`).value;
-      savedTimes[s.id] = { allowStart: start, allowEnd: end };
-      
-      // Update state
-      s.allowStart = start;
-      s.allowEnd = end;
-    });
-    
-    localStorage.setItem('agr_shift_times', JSON.stringify(savedTimes));
-
     // Save API Link
     const newApiLink = document.getElementById('apiLinkInput').value.trim();
     if (newApiLink !== State.apiLink) {
