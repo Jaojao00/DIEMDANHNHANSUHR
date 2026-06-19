@@ -187,17 +187,34 @@ const DataManager = {
           resolve(demo.map(DataManager.normalizeEmp));
         }
       } else {
-        // Tải từ Google Sheets
+        // Tải từ Firebase hoặc Google Sheets
         try {
-          const url = `${CONFIG.API_URL}?action=load&shiftId=${shiftId}`;
-          const response = await fetch(url);
-          const data = await response.json();
-          const normalized = Array.isArray(data) ? data.map(DataManager.normalizeEmp) : [];
-          // Cập nhật lại local cache để dự phòng
-          localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(normalized));
-          resolve(normalized);
+          const db = window.FirebaseDB?.db;
+          let data = null;
+          if (db) {
+            const { doc, getDoc } = window.FirebaseDB;
+            const shiftSnap = await getDoc(doc(db, "shifts", shiftId));
+            if (shiftSnap.exists()) {
+              data = shiftSnap.data().data;
+            }
+          }
+          
+          if (!data && CONFIG.API_URL) {
+            const url = `${CONFIG.API_URL}?action=load&shiftId=${shiftId}`;
+            const response = await fetch(url);
+            data = await response.json();
+          }
+          
+          if (data) {
+            const normalized = Array.isArray(data) ? data.map(DataManager.normalizeEmp) : [];
+            // Cập nhật lại local cache để dự phòng
+            localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(normalized));
+            resolve(normalized);
+          } else {
+            resolve([]);
+          }
         } catch (error) {
-          console.error("Lỗi tải lịch từ Google Sheets:", error);
+          console.error("Lỗi tải lịch:", error);
           // Fallback
           try {
             const stored = localStorage.getItem(Utils.getShiftStorageKey(shiftId));
@@ -220,11 +237,22 @@ const DataManager = {
   loadRegistrations: async (shiftId) => {
     return new Promise(async (resolve) => {
       try {
-        const url = `${CONFIG.API_URL}?action=get_shift_registrations&shiftId=${shiftId}`;
-        const response = await fetch(url);
-        const json = await response.json();
-        if (json.data && Array.isArray(json.data)) {
-          resolve(json.data);
+        const db = window.FirebaseDB?.db;
+        if (db) {
+          const { collection, query, where, getDocs } = window.FirebaseDB;
+          const q = query(collection(db, "registrations"), where("shiftId", "==", shiftId));
+          const qSnap = await getDocs(q);
+          const data = qSnap.docs.map(doc => doc.data());
+          resolve(data);
+        } else if (CONFIG.API_URL) {
+          const url = `${CONFIG.API_URL}?action=get_shift_registrations&shiftId=${shiftId}`;
+          const response = await fetch(url);
+          const json = await response.json();
+          if (json.data && Array.isArray(json.data)) {
+            resolve(json.data);
+          } else {
+            resolve([]);
+          }
         } else {
           resolve([]);
         }
@@ -240,12 +268,20 @@ const DataManager = {
       return JSON.parse(localStorage.getItem('agr_requests') || '[]');
     }
     try {
-      const url = `${CONFIG.API_URL}?action=load_requests`;
-      const response = await fetch(url);
-      const data = await response.json();
+      const db = window.FirebaseDB?.db;
+      let data = null;
+      if (db) {
+        const { collection, getDocs } = window.FirebaseDB;
+        const qSnap = await getDocs(collection(db, "requests"));
+        data = qSnap.docs.map(doc => doc.data());
+      } else if (CONFIG.API_URL) {
+        const url = `${CONFIG.API_URL}?action=load_requests`;
+        const response = await fetch(url);
+        data = await response.json();
+      }
+      
       if (Array.isArray(data)) {
         // Cập nhật lại localStorage để dự phòng offline và để renderTable dùng chung logic
-        // Ta có thể merge hoặc ghi đè. Tốt nhất là merge theo empId và timestamp hoặc cứ ghi đè.
         // Ghi đè bằng dữ liệu server là an toàn nhất.
         localStorage.setItem('agr_requests', JSON.stringify(data));
         return data;
@@ -269,25 +305,35 @@ const DataManager = {
       if (CONFIG.DEMO_MODE) {
         resolve({ success: true });
       } else {
-        // Gửi lên Google Sheets
+        // Gửi lên Firebase hoặc Google Sheets
         try {
-          const shift = State.shifts.find(s => s.id === shiftId);
-          const headers = shift ? [...shift.colHeaders] : [];
-
-          const response = await fetch(CONFIG.API_URL, {
-            method: 'POST',
-            body: JSON.stringify({
-              action: 'save',
-              shiftId: shiftId,
-              headers: headers,
-              schedule: data
-            })
-          });
-          const res = await response.json();
-          if (res.error) reject(new Error(res.error));
-          else resolve(res);
+          const db = window.FirebaseDB?.db;
+          if (db) {
+            const { doc, setDoc } = window.FirebaseDB;
+            const shiftRef = doc(db, "shifts", shiftId);
+            await setDoc(shiftRef, { data: data, timestamp: new Date().toISOString() });
+            resolve({ success: true });
+          } else if (CONFIG.API_URL) {
+            const shift = State.shifts.find(s => s.id === shiftId);
+            const headers = shift ? [...shift.colHeaders] : [];
+  
+            const response = await fetch(CONFIG.API_URL, {
+              method: 'POST',
+              body: JSON.stringify({
+                action: 'save',
+                shiftId: shiftId,
+                headers: headers,
+                schedule: data
+              })
+            });
+            const res = await response.json();
+            if (res.error) reject(new Error(res.error));
+            else resolve(res);
+          } else {
+             resolve({ success: true });
+          }
         } catch (error) {
-          console.error("Lỗi lưu lịch lên Google Sheets:", error);
+          console.error("Lỗi lưu lịch lên server:", error);
           reject(new Error("Lỗi kết nối đến máy chủ."));
         }
       }
@@ -328,28 +374,60 @@ const DataManager = {
         throw new Error('Không tìm thấy mã nhân viên trong ca này.');
       }
     } else {
-      // Gửi API Google Sheets
+      // Gửi lên Firebase hoặc Google Sheets
       try {
-        const response = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'checkin',
-            shiftId: shiftId,
-            empId: empId,
-            phone: phone
-          })
-        });
-        const res = await response.json();
-        
-        if (res.error) {
-          throw new Error(res.error);
+        const db = window.FirebaseDB?.db;
+        if (db) {
+           // For Firebase, we just update local data and save it using saveSchedule
+           const data = await DataManager.loadSchedule(shiftId);
+           const searchId = empId.toLowerCase().trim();
+           const empIndex = data.findIndex(e => 
+             (e.id && e.id.toString().toLowerCase().trim() === searchId) || 
+             (e.stt && e.stt.toString().toLowerCase().trim() === searchId) ||
+             (e.name && e.name.toString().toLowerCase().trim() === searchId)
+           );
+           
+           if (empIndex >= 0) {
+             if (data[empIndex].status === 'confirmed') {
+               throw new Error('Nhân viên này đã điểm danh rồi!');
+             }
+             
+             data[empIndex].status = 'confirmed';
+             data[empIndex].timestamp = Utils.formatTime();
+             data[empIndex].phone = phone;
+             
+             const emp = DataManager.normalizeEmp(data[empIndex]);
+             const positions = emp.positions || [];
+             const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
+                                 
+             await DataManager.saveSchedule(shiftId, data);
+             
+             return { employeeData: emp, isUnassigned: isUnassigned };
+           } else {
+             throw new Error('Không tìm thấy mã nhân viên trong ca này.');
+           }
+        } else if (CONFIG.API_URL) {
+          const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'checkin',
+              shiftId: shiftId,
+              empId: empId,
+              phone: phone
+            })
+          });
+          const res = await response.json();
+          
+          if (res.error) {
+            throw new Error(res.error);
+          }
+          
+          const emp = DataManager.normalizeEmp(res.employee);
+          const positions = emp.positions || [];
+          const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
+                              
+          return { employeeData: emp, isUnassigned: isUnassigned };
         }
-        
-        const emp = DataManager.normalizeEmp(res.employee);
-        const positions = emp.positions || [];
-        const isUnassigned = positions.length === 0 || positions.every(p => !p || p.toLowerCase().includes('chưa'));
-                            
-        return { employeeData: emp, isUnassigned: isUnassigned };
       } catch (error) {
         console.error("Lỗi điểm danh qua API:", error);
         throw new Error(error.message || "Lỗi kết nối hệ thống.");
@@ -366,16 +444,24 @@ const DataManager = {
 
     if (!CONFIG.DEMO_MODE) {
       try {
-        const response = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'request',
-            ...payload
-          })
-        });
-        const res = await response.json();
-        if (res.error) throw new Error(res.error);
-        return res;
+        const db = window.FirebaseDB?.db;
+        if (db) {
+          const { collection, addDoc } = window.FirebaseDB;
+          const reqRef = collection(db, "requests");
+          await addDoc(reqRef, { ...payload, timestamp: new Date().toISOString() });
+          return { success: true };
+        } else if (CONFIG.API_URL) {
+          const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'request',
+              ...payload
+            })
+          });
+          const res = await response.json();
+          if (res.error) throw new Error(res.error);
+          return res;
+        }
       } catch (error) {
         console.error("Lỗi gửi yêu cầu:", error);
         throw new Error(error.message || "Lỗi kết nối hệ thống.");
@@ -1587,18 +1673,27 @@ const AdminApp = {
     if (btn) btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;"></span> Đang xóa...';
     
     try {
-      const url = AdminApp.getApiUrl();
-      if (!url) throw new Error('Vui lòng thiết lập API Link trước khi xóa!');
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'reset_registrations' })
-      });
-      
-      const result = await response.json();
-      if (result.error) throw new Error(result.error);
-      
-      alert('Đã dọn dẹp thành công! ' + (result.message || ''));
+      const db = window.FirebaseDB?.db;
+      if (db) {
+         const { collection, getDocs, deleteDoc } = window.FirebaseDB;
+         const qSnap = await getDocs(collection(db, "registrations"));
+         const deletePromises = qSnap.docs.map(doc => deleteDoc(doc.ref));
+         await Promise.all(deletePromises);
+         alert('Đã dọn dẹp thành công trên Firebase!');
+      } else {
+        const url = AdminApp.getApiUrl();
+        if (!url) throw new Error('Vui lòng thiết lập API Link trước khi xóa!');
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'reset_registrations' })
+        });
+        
+        const result = await response.json();
+        if (result.error) throw new Error(result.error);
+        
+        alert('Đã dọn dẹp thành công! ' + (result.message || ''));
+      }
     } catch (err) {
       console.error(err);
       alert('Lỗi khi xóa lịch: ' + err.message);
@@ -1639,24 +1734,32 @@ const AdminApp = {
     const regDateFrom = regFrom ? regFrom.value : '';
     const regDateTo = regTo ? regTo.value : '';
 
-    if (CONFIG.API_URL && (regDateFrom || regDateTo)) {
+    if (regDateFrom || regDateTo) {
       try {
-        const resp = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          body: JSON.stringify({
-            action: 'save_reg_config',
-            regDateFrom: regDateFrom,
-            regDateTo: regDateTo
-          })
-        });
-        const json = await resp.json();
-        if (json.error) {
-          Utils.showToast('Lỗi lưu cấu hình đăng ký: ' + json.error, 'error');
-          return; // Giữ modal mở để admin thử lại
+        const db = window.FirebaseDB?.db;
+        if (db) {
+          const { doc, setDoc } = window.FirebaseDB;
+          await setDoc(doc(db, "config", "admin"), { regDateFrom, regDateTo });
+          if (regDateFrom) localStorage.setItem('agr_reg_date_from', regDateFrom);
+          if (regDateTo) localStorage.setItem('agr_reg_date_to', regDateTo);
+        } else if (CONFIG.API_URL) {
+          const resp = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              action: 'save_reg_config',
+              regDateFrom: regDateFrom,
+              regDateTo: regDateTo
+            })
+          });
+          const json = await resp.json();
+          if (json.error) {
+            Utils.showToast('Lỗi lưu cấu hình đăng ký: ' + json.error, 'error');
+            return; // Giữ modal mở để admin thử lại
+          }
+          // Backend thành công → cập nhật localStorage
+          if (regDateFrom) localStorage.setItem('agr_reg_date_from', regDateFrom);
+          if (regDateTo) localStorage.setItem('agr_reg_date_to', regDateTo);
         }
-        // Backend thành công → cập nhật localStorage
-        if (regDateFrom) localStorage.setItem('agr_reg_date_from', regDateFrom);
-        if (regDateTo) localStorage.setItem('agr_reg_date_to', regDateTo);
       } catch (err) {
         Utils.showToast('Lỗi kết nối server: ' + err.message, 'error');
         return; // Giữ modal mở để admin thử lại

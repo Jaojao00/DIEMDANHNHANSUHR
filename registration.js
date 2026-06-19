@@ -75,15 +75,18 @@ const RegApp = {
   // Tải cấu hình ngày đăng ký từ backend (Google Sheets) và cache vào localStorage
   loadConfig: async () => {
     try {
-      if (CONFIG && CONFIG.API_URL) {
-        const url = CONFIG.API_URL + '?action=get_reg_config';
-        const resp = await fetch(url);
-        const data = await resp.json();
-        if (data.regDateFrom) localStorage.setItem('agr_reg_date_from', data.regDateFrom);
-        if (data.regDateTo) localStorage.setItem('agr_reg_date_to', data.regDateTo);
-        // Xóa cache nếu server trả về rỗng (admin đã reset)
-        if (data.regDateFrom === '') localStorage.removeItem('agr_reg_date_from');
-        if (data.regDateTo === '') localStorage.removeItem('agr_reg_date_to');
+      const db = window.FirebaseDB?.db;
+      if (db) {
+        const { doc, getDoc } = window.FirebaseDB;
+        const configSnap = await getDoc(doc(db, "config", "admin"));
+        if (configSnap.exists()) {
+          const data = configSnap.data();
+          if (data.regDateFrom) localStorage.setItem('agr_reg_date_from', data.regDateFrom);
+          if (data.regDateTo) localStorage.setItem('agr_reg_date_to', data.regDateTo);
+          // Xóa cache nếu server trả về rỗng (admin đã reset)
+          if (data.regDateFrom === '') localStorage.removeItem('agr_reg_date_from');
+          if (data.regDateTo === '') localStorage.removeItem('agr_reg_date_to');
+        }
       }
     } catch (e) {
       console.error('Lỗi tải cấu hình đăng ký từ server:', e);
@@ -225,6 +228,8 @@ const RegApp = {
     const btn = document.getElementById('regSubmitBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang gửi...'; }
 
+    const currentPeriod = dates.length > 0 ? `${dates[0].iso}_${dates[dates.length-1].iso}` : 'unknown';
+
     const payload = {
       action:     'submit_registration',
       empId:      empId,
@@ -233,11 +238,25 @@ const RegApp = {
       shiftId:    RegApp.selectedShift.id,
       shiftLabel: RegApp.selectedShift.label,
       selections: selections,
+      period:     currentPeriod,
       timestamp:  new Date().toISOString()
     };
 
     try {
-      if (CONFIG && CONFIG.API_URL) {
+      const db = window.FirebaseDB?.db;
+      if (db) {
+        const { collection, addDoc, query, where, getDocs } = window.FirebaseDB;
+        const regRef = collection(db, "registrations");
+        
+        // Double check on server to prevent cross-device duplicate
+        const q = query(regRef, where("empId", "==", empId), where("period", "==", currentPeriod));
+        const qSnap = await getDocs(q);
+        if (!qSnap.empty) {
+          throw new Error('Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!');
+        }
+        
+        await addDoc(regRef, payload);
+      } else if (typeof CONFIG !== 'undefined' && CONFIG.API_URL) {
         const resp = await fetch(CONFIG.API_URL, {
           method:  'POST',
           body:    JSON.stringify(payload)
@@ -291,8 +310,16 @@ const ViewScheduleApp = {
     let allRegs = [];
 
     // Try backend
+    // Try backend
     try {
-      if (CONFIG && CONFIG.API_URL) {
+      const db = window.FirebaseDB?.db;
+      if (db) {
+        const { collection, query, where, getDocs } = window.FirebaseDB;
+        const q = query(collection(db, "registrations"), where("empId", "==", empId));
+        const qSnap = await getDocs(q);
+        const data = qSnap.docs.map(d => d.data());
+        if (data.length > 0) allRegs = data;
+      } else if (typeof CONFIG !== 'undefined' && CONFIG.API_URL) {
         const url = CONFIG.API_URL + '?action=get_registration&empId=' + encodeURIComponent(empId);
         const resp = await fetch(url);
         const data = await resp.json();
