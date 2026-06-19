@@ -248,15 +248,19 @@ const RegApp = {
         const { collection, addDoc, query, where, getDocs } = window.FirebaseDB;
         const regRef = collection(db, "registrations");
         
-        // Double check on server to prevent cross-device duplicate
+        // Double check on Firebase to prevent cross-device duplicate quickly
         const q = query(regRef, where("empId", "==", empId), where("period", "==", currentPeriod));
         const qSnap = await getDocs(q);
         if (!qSnap.empty) {
           throw new Error('Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!');
         }
         
+        // Save to Firebase as a "lock" to prevent duplicates in the same period
         await addDoc(regRef, payload);
-      } else if (typeof CONFIG !== 'undefined' && CONFIG.API_URL) {
+      }
+      
+      // ALWAYS send to Google Sheets for data storage (so Admin can copy/edit)
+      if (typeof CONFIG !== 'undefined' && CONFIG.API_URL) {
         const resp = await fetch(CONFIG.API_URL, {
           method:  'POST',
           body:    JSON.stringify(payload)
