@@ -405,7 +405,8 @@ const EmployeeApp = {
       const oldUrl2 = 'https://script.google.com/macros/s/AKfycbxsQNg5OhchJ3P9MuWJF1wctPDfgRlhh2t-fWw_KNwUXyvpbCrpiTqdEMEaFsZi51kc/exec';
       const oldUrl3 = 'https://script.google.com/macros/s/AKfycbyI46Xny1nRIe8EDiBk79yq2ot-7PafmrWKU3dkLIh6lUoF7b0qS08J9RF6iJeHU6tq/exec';
       const oldUrl4 = 'https://script.google.com/macros/s/AKfycbzhLm9d6ewMZ4n4QYdMrx1NpUHTwBNgw1Ji0wmK5MwKcRt8KTNnem9-9pRpY__q0qZl/exec';
-      if (currentLocalUrl && (currentLocalUrl.trim() === oldUrl1 || currentLocalUrl.trim() === oldUrl2 || currentLocalUrl.trim() === oldUrl3 || currentLocalUrl.trim() === oldUrl4)) {
+      const oldUrl5 = 'https://script.google.com/macros/s/AKfycbwsmUIhLTtsRscpeBIxBCuA5Rt3emjY1wcHyKTQ-Ju_0gd7vZHCjYs50JSGAM91AF08/exec';
+      if (currentLocalUrl && (currentLocalUrl.trim() === oldUrl1 || currentLocalUrl.trim() === oldUrl2 || currentLocalUrl.trim() === oldUrl3 || currentLocalUrl.trim() === oldUrl4 || currentLocalUrl.trim() === oldUrl5)) {
         localStorage.removeItem('agr_api_url');
       }
       State.apiLink = localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
