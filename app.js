@@ -222,13 +222,13 @@ const DataManager = {
         const response = await fetch(url);
         const json = await response.json();
         if (json.data && Array.isArray(json.data)) {
-          resolve(json.data);
+          resolve({ headers: json.headers || [], data: json.data });
         } else {
-          resolve([]);
+          resolve({ headers: [], data: [] });
         }
       } catch (error) {
         console.error("Lỗi tải danh sách đăng ký:", error);
-        resolve([]);
+        resolve({ headers: [], data: [] });
       }
     });
   },
@@ -1177,8 +1177,8 @@ const AdminApp = {
         State.scheduleData = data;
         AdminApp.renderTable();
       } else {
-        data = await DataManager.loadRegistrations(State.selectedShiftId);
-        AdminApp.renderRegistrationTable(data);
+        const regRes = await DataManager.loadRegistrations(State.selectedShiftId);
+        AdminApp.renderRegistrationTable(regRes);
       }
       
       // Update filter UI based on current view mode
@@ -1207,7 +1207,10 @@ const AdminApp = {
     }
   },
 
-  renderRegistrationTable: (dataList) => {
+  renderRegistrationTable: (payload) => {
+    const dataList = payload.data || [];
+    let dateHeaders = payload.headers || [];
+    
     const tbody = document.getElementById('scheduleBody');
     const thead = document.getElementById('scheduleHead');
     if (!tbody) return;
@@ -1232,9 +1235,8 @@ const AdminApp = {
       return;
     }
 
-    // Extract dynamic dates from the first record's selections
-    let dateHeaders = [];
-    if (dataList[0].selections && Array.isArray(dataList[0].selections)) {
+    // Fallback if API doesn't provide headers
+    if (dateHeaders.length === 0 && dataList[0].selections && Array.isArray(dataList[0].selections)) {
       dateHeaders = dataList[0].selections.map(s => s.label);
     }
 
@@ -1305,20 +1307,26 @@ const AdminApp = {
     dataList.forEach((r, idx) => {
       const tr = document.createElement('tr');
       let html = `
-        <td style="text-align:center"><input type="checkbox" class="reg-checkbox" value="${r.empId}" data-shift="${r.shiftId}" style="cursor: pointer;"></td>
+        <td style="text-align:center"><input type="checkbox" class="reg-checkbox" value="${r.empId}" data-shift="${r.shiftId || State.selectedShiftId}" style="cursor: pointer;"></td>
         <td style="text-align:center">${idx + 1}</td>
         <td><span class="emp-id-badge">${r.empId}</span></td>
         <td style="font-weight:600; color:var(--text-main); white-space:nowrap">${r.name || r.empName || ''}</td>
-        <td>${r.empPhone || ''}</td>
-        <td>${r.shiftLabel || ''}</td>
+        <td>${r.empPhone || r.phone || ''}</td>
+        <td>${r.shiftLabel || State.shifts.find(s => s.id === (r.shiftId || State.selectedShiftId))?.label || ''}</td>
       `;
       
-      // Render selection cells
-      if (r.selections && Array.isArray(r.selections)) {
+      // Render selection cells (supporting both .choices and .selections API responses)
+      if (r.choices && Array.isArray(r.choices)) {
+        r.choices.forEach(choice => {
+          const isOff = choice === 'OFF';
+          const style = isOff ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success);';
+          html += `<td style="text-align:center; ${style}">${choice || ''}</td>`;
+        });
+      } else if (r.selections && Array.isArray(r.selections)) {
         r.selections.forEach(sel => {
           const isOff = sel.choice === 'OFF';
           const style = isOff ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success);';
-          html += `<td style="text-align:center; ${style}">${sel.choice}</td>`;
+          html += `<td style="text-align:center; ${style}">${sel.choice || ''}</td>`;
         });
       } else {
         // If somehow no selections exist for this row, fill with empty cells
