@@ -1790,6 +1790,14 @@ const AdminApp = {
         // Backend thành công → cập nhật localStorage
         if (regDateFrom) localStorage.setItem('agr_reg_date_from', regDateFrom);
         if (regDateTo) localStorage.setItem('agr_reg_date_to', regDateTo);
+        
+        // Save to Firebase for employee registration screen sync
+        if (window.FirebaseDB?.db) {
+          const { doc, setDoc } = window.FirebaseDB;
+          const configRef = doc(window.FirebaseDB.db, "config", "admin");
+          setDoc(configRef, { regDateFrom, regDateTo }, { merge: true }).catch(e => console.error("Firebase config save error:", e));
+        }
+
       } catch (err) {
         Utils.showToast('Lỗi kết nối server: ' + err.message, 'error');
         return; // Giữ modal mở để admin thử lại
@@ -1798,6 +1806,16 @@ const AdminApp = {
       // Offline mode — chỉ lưu localStorage
       if (regFrom && regFrom.value) localStorage.setItem('agr_reg_date_from', regFrom.value);
       if (regTo   && regTo.value)   localStorage.setItem('agr_reg_date_to',   regTo.value);
+      
+      // Save to Firebase for employee registration screen sync
+      if (window.FirebaseDB?.db) {
+        const { doc, setDoc } = window.FirebaseDB;
+        const configRef = doc(window.FirebaseDB.db, "config", "admin");
+        setDoc(configRef, { 
+          regDateFrom: regFrom ? regFrom.value : '', 
+          regDateTo: regTo ? regTo.value : '' 
+        }, { merge: true }).catch(e => console.error("Firebase config save error:", e));
+      }
     }
 
     AdminApp.closeSettings();
