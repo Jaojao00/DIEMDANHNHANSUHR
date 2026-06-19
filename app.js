@@ -1290,6 +1290,7 @@ const AdminApp = {
   },
 
   renderRegistrationTable: (payload) => {
+    AdminApp.currentRegPayload = payload;
     const dataList = payload.data || [];
     let dateHeaders = payload.headers || [];
     
@@ -1334,7 +1335,17 @@ const AdminApp = {
           <th>Tên Ca</th>
       `;
       dateHeaders.forEach(date => {
-        html += `<th style="text-align:center">${date}</th>`;
+        const filterVal = AdminApp.regDateFilters?.[date] || '';
+        html += `
+          <th style="text-align:center; min-width: 100px;">
+            <div style="margin-bottom: 4px;">${date}</div>
+            <select class="reg-date-filter" data-date="${date}" style="font-size: 11px; padding: 2px 4px; width: 100%; border-radius: 4px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">
+              <option value="" style="color: black">Tất cả</option>
+              <option value="WORK" style="color: black" ${filterVal === 'WORK' ? 'selected' : ''}>WORK</option>
+              <option value="OFF" style="color: black" ${filterVal === 'OFF' ? 'selected' : ''}>OFF</option>
+            </select>
+          </th>
+        `;
       });
       html += `<th>Thời gian gửi</th></tr>`;
       thead.innerHTML = html;
@@ -1382,11 +1393,45 @@ const AdminApp = {
         cbs.forEach(cb => cb.checked = e.target.checked);
         AdminApp.toggleDeleteBtn();
       });
+      
+      // Handle Date Filters
+      document.querySelectorAll('.reg-date-filter').forEach(sel => {
+        sel.addEventListener('change', (e) => {
+          if (!AdminApp.regDateFilters) AdminApp.regDateFilters = {};
+          AdminApp.regDateFilters[e.target.dataset.date] = e.target.value;
+          AdminApp.renderRegistrationTable(AdminApp.currentRegPayload);
+        });
+      });
     }
     
     tbody.innerHTML = '';
     
-    dataList.forEach((r, idx) => {
+    // Filter data based on regDateFilters
+    const filteredDataList = dataList.filter(r => {
+      let pass = true;
+      if (!AdminApp.regDateFilters) return true;
+      
+      dateHeaders.forEach((date, i) => {
+        const filterVal = AdminApp.regDateFilters[date];
+        if (!filterVal) return; // if 'Tất cả' or no filter
+        
+        let choice = '';
+        if (r.choices && Array.isArray(r.choices)) {
+          choice = r.choices[i];
+        } else if (r.selections && Array.isArray(r.selections)) {
+          choice = r.selections[i]?.choice;
+        }
+        
+        if (choice !== filterVal) pass = false;
+      });
+      return pass;
+    });
+
+    if (filteredDataList.length === 0 && dataList.length > 0) {
+      tbody.innerHTML = `<tr><td colspan="${dateHeaders.length + 7}" class="text-center" style="padding:24px; color:var(--text-secondary)">Không có nhân sự nào khớp với bộ lọc</td></tr>`;
+    }
+
+    filteredDataList.forEach((r, idx) => {
       const tr = document.createElement('tr');
       let html = `
         <td style="text-align:center"><input type="checkbox" class="reg-checkbox" value="${r.empId}" data-shift="${r.shiftId || State.selectedShiftId}" style="cursor: pointer;"></td>
@@ -1401,13 +1446,13 @@ const AdminApp = {
       if (r.choices && Array.isArray(r.choices)) {
         r.choices.forEach(choice => {
           const isOff = choice === 'OFF';
-          const style = isOff ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success);';
+          const style = isOff ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success); font-weight:600;';
           html += `<td style="text-align:center; ${style}">${choice || ''}</td>`;
         });
       } else if (r.selections && Array.isArray(r.selections)) {
         r.selections.forEach(sel => {
           const isOff = sel.choice === 'OFF';
-          const style = isOff ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success);';
+          const style = isOff ? 'color:var(--danger); font-weight:bold;' : 'color:var(--success); font-weight:600;';
           html += `<td style="text-align:center; ${style}">${sel.choice || ''}</td>`;
         });
       } else {
@@ -1427,6 +1472,34 @@ const AdminApp = {
       tr.innerHTML = html;
       tbody.appendChild(tr);
     });
+
+    // BÁO CÁO TỔNG NHÂN SỰ ĐI LÀM TRONG CA THEO TỪNG NGÀY
+    if (filteredDataList.length > 0) {
+      const summaryTr = document.createElement('tr');
+      summaryTr.style.background = 'rgba(255, 255, 255, 0.05)';
+      
+      let summaryHtml = `
+        <td colspan="6" style="text-align: right; padding-right: 16px; font-weight: bold; color: var(--text-main);">TỔNG SỐ LƯỢNG (WORK):</td>
+      `;
+      
+      dateHeaders.forEach((date, i) => {
+        let workCount = 0;
+        filteredDataList.forEach(r => {
+          let choice = '';
+          if (r.choices && Array.isArray(r.choices)) {
+            choice = r.choices[i];
+          } else if (r.selections && Array.isArray(r.selections)) {
+            choice = r.selections[i]?.choice;
+          }
+          if (choice === 'WORK') workCount++;
+        });
+        summaryHtml += `<td style="text-align:center; color:var(--success); font-size: 16px; font-weight: bold;">${workCount}</td>`;
+      });
+      
+      summaryHtml += `<td></td>`;
+      summaryTr.innerHTML = summaryHtml;
+      tbody.appendChild(summaryTr);
+    }
 
     // Handle individual checkbox change
     document.querySelectorAll('.reg-checkbox').forEach(cb => {
