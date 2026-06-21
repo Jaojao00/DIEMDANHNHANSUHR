@@ -618,6 +618,16 @@ function doGet(e) {
       }
     }
 
+    if (action === "sync_roster") {
+      try {
+        autoGenerateRoster();
+        autoSyncPositions();
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã đồng bộ lịch và vị trí thành công!" })).setMimeType(ContentService.MimeType.JSON);
+      } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi đồng bộ: " + err.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     // Pre-flight check (CORS ping)
     return ContentService.createTextOutput(JSON.stringify({ status: "AGR API is running" })).setMimeType(ContentService.MimeType.JSON);
     

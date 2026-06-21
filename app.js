@@ -1159,6 +1159,39 @@ const AdminApp = {
         AdminApp.openManagerModal();
       });
     }
+
+    const syncRegistrationBtn = document.getElementById('syncRegistrationBtn');
+    if (syncRegistrationBtn) {
+      syncRegistrationBtn.addEventListener('click', async () => {
+        if (!confirm('Hệ thống sẽ tự động tổng hợp tất cả những người đăng ký WORK vào Lịch làm việc. Bạn có chắc chắn muốn chạy ngay bây giờ?')) return;
+        
+        const originalText = syncRegistrationBtn.innerHTML;
+        syncRegistrationBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;margin-right:6px"></span> Đang đồng bộ...';
+        syncRegistrationBtn.disabled = true;
+        
+        try {
+          const res = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'sync_roster' })
+          });
+          const result = await res.json();
+          if (result.success) {
+            alert(result.message || 'Đã đồng bộ lịch thành công!');
+            // Reload data
+            if (AdminApp.currentViewMode === 'final') {
+              AdminApp.loadScheduleData(State.selectedShiftId);
+            }
+          } else {
+            alert('Lỗi: ' + result.error);
+          }
+        } catch (err) {
+          alert('Lỗi kết nối: ' + err.message);
+        } finally {
+          syncRegistrationBtn.innerHTML = originalText;
+          syncRegistrationBtn.disabled = false;
+        }
+      });
+    }
     const managerCloseBtn = document.getElementById('managerCloseBtn');
     if (managerCloseBtn) {
       managerCloseBtn.addEventListener('click', () => {
