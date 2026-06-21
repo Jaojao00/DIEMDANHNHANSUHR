@@ -166,37 +166,69 @@ function doPost(e) {
         
         // AUTO-APPEND "XIN LÊN CA" TO TARGET SHIFT SHEET
         if (data.type === "XIN LÊN CA" && data.targetShift) {
-          var targetSheet = reqSs.getSheetByName(data.targetShift);
+          var targetSheetName = "Ca_" + data.targetShift.replace(":", "").replace("-", "_");
+          var targetSheet = reqSs.getSheetByName(targetSheetName);
           if (targetSheet) {
             var dataRange = targetSheet.getDataRange();
             var values = dataRange.getValues();
             if (values.length > 0) {
               var headers = values[0];
-              var newRow = new Array(headers.length);
-              for (var k = 0; k < newRow.length; k++) newRow[k] = "";
+              var searchId = (data.empId || "").toString().toLowerCase().trim();
+              var foundIndex = -1;
               
-              newRow[0] = values.length; // STT
-              newRow[1] = data.empId || "";
-              newRow[2] = data.name || "";
-              newRow[3] = "A-OS"; // Định danh mặc định
+              for (var r = 1; r < values.length; r++) {
+                var rId = (values[r][1] || "").toString().toLowerCase().trim();
+                var rStt = (values[r][0] || "").toString().toLowerCase().trim();
+                var rName = (values[r][2] || "").toString().toLowerCase().trim();
+                if (rId === searchId || rStt === searchId || rName === searchId) {
+                  foundIndex = r;
+                  break;
+                }
+              }
               
               var noteIndex = headers.length - 4; // 0-based
               var statusIndex = headers.length - 3; // 0-based
               var timeIndex = headers.length - 2; // 0-based
               var phoneIndex = headers.length - 1; // 0-based
+              var reqTime = data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
               
-              for (var p = 4; p < noteIndex; p++) {
-                newRow[p] = "Chưa sắp lịch";
+              if (foundIndex > -1) {
+                // Update existing row
+                if (statusIndex >= 0) {
+                  var currentStatus = values[foundIndex][statusIndex];
+                  if (currentStatus !== "confirmed") {
+                    targetSheet.getRange(foundIndex + 1, statusIndex + 1).setValue("pending");
+                    targetSheet.getRange(foundIndex + 1, timeIndex + 1).setValue(reqTime);
+                    if (data.note || data.reason) {
+                      targetSheet.getRange(foundIndex + 1, noteIndex + 1).setValue(data.note || data.reason);
+                    }
+                    if (data.phone) {
+                      targetSheet.getRange(foundIndex + 1, phoneIndex + 1).setValue(data.phone);
+                    }
+                  }
+                }
+              } else {
+                // Append new row
+                var newRow = new Array(headers.length);
+                for (var k = 0; k < newRow.length; k++) newRow[k] = "";
+                
+                newRow[0] = values.length; // STT
+                newRow[1] = data.empId || "";
+                newRow[2] = data.name || "";
+                newRow[3] = "A-OS"; // Định danh mặc định
+                
+                for (var p = 4; p < noteIndex; p++) {
+                  newRow[p] = "Chưa sắp lịch";
+                }
+                
+                if (noteIndex >= 4) {
+                  newRow[noteIndex] = data.note || data.reason || "";
+                  newRow[statusIndex] = "pending";
+                  newRow[timeIndex] = reqTime;
+                  newRow[phoneIndex] = data.phone || "";
+                }
+                targetSheet.appendRow(newRow);
               }
-              
-              if (noteIndex >= 4) {
-                newRow[noteIndex] = data.note || data.reason || "";
-                newRow[statusIndex] = "pending";
-                newRow[timeIndex] = data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
-                newRow[phoneIndex] = data.phone || "";
-              }
-              
-              targetSheet.appendRow(newRow);
             }
           }
         }
