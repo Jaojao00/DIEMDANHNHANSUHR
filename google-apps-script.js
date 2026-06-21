@@ -299,11 +299,11 @@ function doPost(e) {
         
         if (!regSheet) {
           regSheet = regSs.insertSheet(regSheetName);
-          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Ca", "Tên Ca"];
+          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
           (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
           regSheet.appendRow(headerRow);
         } else if (regSheet.getLastRow() === 0) {
-          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Ca", "Tên Ca"];
+          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
           (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
           regSheet.appendRow(headerRow);
         }
@@ -339,6 +339,7 @@ function doPost(e) {
           data.empId || "",
           data.empName || "",
           data.empPhone || "",
+          data.osGender || "",
           data.shiftId || "",
           data.shiftLabel || ""
         ];
@@ -624,3 +625,159 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify({ error: "Server Error: " + e.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
 }
+
+// ==========================================
+// TỰ ĐỘNG HÓA 00:00 (Auto-Scheduler)
+// Chạy hàm này qua Trigger vào 00:00 - 01:00 hàng ngày
+// ==========================================
+function autoGenerateRoster() {
+  var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+  var targetShifts = ["18:00-22:00", "22:00-06:00"];
+  
+  var todayStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy");
+  
+  for (var k = 0; k < targetShifts.length; k++) {
+    var shiftId = targetShifts[k];
+    
+    // Tìm sheet DANG_KY_LICH chứa shiftId
+    var allSheets = ss.getSheets();
+    var regSheet = null;
+    for (var s = 0; s < allSheets.length; s++) {
+      var sName = allSheets[s].getName();
+      if (sName.indexOf("LỊCH") === 0 && sName.indexOf(shiftId) !== -1) {
+        regSheet = allSheets[s];
+        break;
+      }
+    }
+    
+    if (!regSheet) continue;
+    
+    var regData = regSheet.getDataRange().getValues();
+    if (regData.length <= 1) continue;
+    
+    var headers = regData[0];
+    var todayColIndex = -1;
+    for (var i = 0; i < headers.length; i++) {
+      if (headers[i].toString().indexOf(todayStr) !== -1) {
+        todayColIndex = i;
+        break;
+      }
+    }
+    
+    if (todayColIndex === -1) continue;
+    
+    var workersForToday = [];
+    for (var r = 1; r < regData.length; r++) {
+      var row = regData[r];
+      if (row[todayColIndex] === "WORK") {
+        workersForToday.push({
+          empId: row[1] || "",
+          name: row[2] || "",
+          phone: row[3] || ""
+        });
+      }
+    }
+    
+    var destSheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
+    var destSheet = ss.getSheetByName(destSheetName);
+    
+    if (!destSheet) {
+      destSheet = ss.insertSheet(destSheetName);
+      destSheet.appendRow(["STT", "Mã NV", "Họ Tên", "Định Danh", "Ghi Chú", "Trạng Thái", "Thời Gian", "SDT"]);
+    }
+    
+    var currentDestData = destSheet.getDataRange().getValues();
+    var destHeaders = currentDestData[0] || ["STT", "Mã NV", "Họ Tên", "Định Danh", "Ghi Chú", "Trạng Thái", "Thời Gian", "SDT"];
+    
+    destSheet.clear();
+    destSheet.appendRow(destHeaders);
+    
+    var N = destHeaders.length - 8;
+    if (N < 0) N = 0;
+    
+    var rowsToWrite = [];
+    for (var w = 0; w < workersForToday.length; w++) {
+      var worker = workersForToday[w];
+      var newRow = [
+        w + 1,
+        worker.empId,
+        worker.name,
+        "" // Định Danh
+      ];
+      
+      for (var pos = 0; pos < N; pos++) {
+        newRow.push("");
+      }
+      
+      newRow.push(""); // Ghi chú
+      newRow.push("pending"); // Trạng Thái
+      newRow.push(""); // Thời gian
+      newRow.push(worker.phone); // SDT
+      
+      rowsToWrite.push(newRow);
+    }
+    
+    if (rowsToWrite.length > 0) {
+      destSheet.getRange(2, 1, rowsToWrite.length, rowsToWrite[0].length).setValues(rowsToWrite);
+    }
+  }
+}
+
+// ==========================================
+// TỰ ĐỘNG HÓA 06:00 (Auto-Sync Positions)
+// Chạy hàm này qua Trigger vào 06:00 - 07:00 hàng ngày
+// ==========================================
+function autoSyncPositions() {
+  var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+  var vitriSheet = ss.getSheetByName("Sheet_ViTri");
+  if (!vitriSheet) return;
+  
+  var vitriData = vitriSheet.getDataRange().getValues();
+  
+  var posDict = {};
+  for (var r = 1; r < vitriData.length; r++) {
+    var empId = (vitriData[r][1] || "").toString().toLowerCase().trim();
+    if (!empId) continue;
+    
+    var positions = [];
+    // Vị trí nằm ở cột E đến J (tức là index 4 đến 9)
+    for (var c = 4; c <= 9; c++) {
+      positions.push(vitriData[r][c] || "");
+    }
+    posDict[empId] = positions;
+  }
+  
+  var targetShifts = ["18:00-22:00", "22:00-06:00"];
+  for (var k = 0; k < targetShifts.length; k++) {
+    var shiftId = targetShifts[k];
+    var destSheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
+    var destSheet = ss.getSheetByName(destSheetName);
+    
+    if (!destSheet) continue;
+    
+    var destData = destSheet.getDataRange().getValues();
+    if (destData.length <= 1) continue;
+    
+    var destHeaders = destData[0];
+    var N = destHeaders.length - 8;
+    if (N < 0) N = 0;
+    
+    var updatedRows = [];
+    for (var r = 1; r < destData.length; r++) {
+      var row = destData[r];
+      var empId = (row[1] || "").toString().toLowerCase().trim();
+      
+      if (posDict[empId]) {
+        for (var p = 0; p < Math.min(N, posDict[empId].length); p++) {
+          row[4 + p] = posDict[empId][p];
+        }
+      }
+      updatedRows.push(row);
+    }
+    
+    if (updatedRows.length > 0) {
+      destSheet.getRange(2, 1, updatedRows.length, destHeaders.length).setValues(updatedRows);
+    }
+  }
+}
+

@@ -189,9 +189,18 @@ const RegApp = {
     const empId   = (document.getElementById('regEmpId')   ? document.getElementById('regEmpId').value   : '').trim();
     const empName = (document.getElementById('regEmpName') ? document.getElementById('regEmpName').value : '').trim();
     const empPhone= (document.getElementById('regEmpPhone')? document.getElementById('regEmpPhone').value: '').trim();
+    
+    let osGender = '';
+    const osGenderRadios = document.getElementsByName('regOsGender');
+    for (const radio of osGenderRadios) {
+      if (radio.checked) {
+        osGender = radio.value;
+        break;
+      }
+    }
 
-    if (!empId || !empName || !empPhone) {
-      Utils.showToast('Vui lòng nhập đầy đủ mã NV, họ tên, số điện thoại', 'error');
+    if (!empId || !empName || !empPhone || !osGender) {
+      Utils.showToast('Vui lòng nhập đầy đủ mã NV, họ tên, số điện thoại và giới tính OS', 'error');
       return;
     }
 
@@ -235,6 +244,7 @@ const RegApp = {
       empId:      empId,
       empName:    empName,
       empPhone:   empPhone,
+      osGender:   osGender,
       shiftId:    RegApp.selectedShift.id,
       shiftLabel: RegApp.selectedShift.label,
       selections: selections,
