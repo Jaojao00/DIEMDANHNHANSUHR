@@ -221,14 +221,16 @@ const DataManager = {
         const url = `${CONFIG.API_URL}?action=get_shift_registrations&shiftId=${shiftId}`;
         const response = await fetch(url);
         const json = await response.json();
-        if (json.data && Array.isArray(json.data)) {
-          resolve({ headers: json.headers || [], data: json.data });
+        if (json.periods && Array.isArray(json.periods)) {
+          resolve(json);
+        } else if (json.data && Array.isArray(json.data)) {
+          resolve({ periods: [{ id: 'current', name: 'Kỳ hiện tại', headers: json.headers || [], data: json.data }] });
         } else {
-          resolve({ headers: [], data: [] });
+          resolve({ periods: [] });
         }
       } catch (error) {
         console.error("Lỗi tải danh sách đăng ký:", error);
-        resolve({ headers: [], data: [] });
+        resolve({ periods: [] });
       }
     });
   },
@@ -1166,6 +1168,18 @@ const AdminApp = {
     const filterSelect = document.getElementById('statusFilter');
     if (filterSelect) {
       filterSelect.addEventListener('change', AdminApp.filterScheduleTable);
+    }
+
+    const regPeriodSelect = document.getElementById('regPeriodSelect');
+    if (regPeriodSelect) {
+      regPeriodSelect.addEventListener('change', () => {
+        if (AdminApp.allRegistrationPeriods && AdminApp.allRegistrationPeriods.length > 0) {
+          const idx = parseInt(regPeriodSelect.value, 10);
+          if (!isNaN(idx) && AdminApp.allRegistrationPeriods[idx]) {
+            AdminApp.renderRegistrationTable(AdminApp.allRegistrationPeriods[idx]);
+          }
+        }
+      });
     }
 
     // Manager Panel (Update Schedule)
