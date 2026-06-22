@@ -699,11 +699,19 @@ function doGet(e) {
         
         var configData = configSheet.getDataRange().getValues();
         var result = { regDateFrom: "", regDateTo: "" };
-        
-        for (var i = 1; i < configData.length; i++) {
-          if (configData[i][0] === "reg_date_from") result.regDateFrom = (configData[i][1] || "").toString();
-          if (configData[i][0] === "reg_date_to") result.regDateTo = (configData[i][1] || "").toString();
-        }
+                for (var i = 1; i < configData.length; i++) {
+            var val = configData[i][1];
+            var strVal = "";
+            if (val) {
+              if (val instanceof Date) {
+                strVal = Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd");
+              } else {
+                strVal = val.toString();
+              }
+            }
+            if (configData[i][0] === "reg_date_from") result.regDateFrom = strVal;
+            if (configData[i][0] === "reg_date_to") result.regDateTo = strVal;
+          }
         
         return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
       } catch(cfgErr) {
