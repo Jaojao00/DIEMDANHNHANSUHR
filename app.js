@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AGR - Hệ Thống Điểm Danh v3.0
  * app.js - Xử lý logic nghiệp vụ cho 2 luồng: Nhân viên (Mobile) và Admin (Desktop)
  */
@@ -1202,7 +1202,7 @@ const AdminApp = {
         try {
           const res = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'sync_roster' })
+            body: JSON.stringify({ action: 'sync_roster', shiftId: State.selectedShiftId })
           });
           const result = await res.json();
           if (result.success) {
