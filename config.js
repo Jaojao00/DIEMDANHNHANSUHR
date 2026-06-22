@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AGR - Hệ Thống Điểm Danh & Lịch Làm Việc
  * File cấu hình - Chỉnh sửa các giá trị này trước khi deploy
  */
@@ -9,7 +9,7 @@ const CONFIG = {
   // =============================================
   // Dán URL Google Apps Script Web App vào đây sau khi deploy
   // Xem hướng dẫn trong README.md
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyfdB5mIwlj-TD1MdANUkFoE12owhuz229mH7xMaQD6SwawLrJBV-GBlDFn2KrkowfX/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzUZhu-Dfk64sZk4KwvZH07tsmALNzx5wrJqSGCZzin8I-XmrHzNmrc1wYz5Uqywus4/exec',
 
   // Tự động BẬT realtime nếu APPS_SCRIPT_URL đã được cài đặt
   get DEMO_MODE() {
