@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AGR - Hệ Thống Điểm Danh v3.0
  * app.js - Xử lý logic nghiệp vụ cho 2 luồng: Nhân viên (Mobile) và Admin (Desktop)
  */

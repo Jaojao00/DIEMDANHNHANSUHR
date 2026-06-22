@@ -619,22 +619,24 @@ function doGet(e) {
         
         var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
         var allSheets = regSs.getSheets();
-        var result = [];
-        var headersList = [];
+        var periods = [];
         
         for (var s = 0; s < allSheets.length; s++) {
           var sheet = allSheets[s];
           var sName = sheet.getName();
           
-          // Tìm sheet của ca tương ứng (So sánh chính xác ShiftId sau dấu '_')
           if (sName.indexOf("LỊCH") === 0) {
             var parts = sName.split("_");
             if (parts.length >= 2) {
               var sShiftId = parts.slice(1).join("_");
               if (sShiftId === shiftSearch) {
-                if (sheet.getLastRow() <= 1) break;
+                var periodMatch = sName.match(/LỊCHT(\w+)_/);
+                var periodName = periodMatch ? ("Kỳ " + periodMatch[1]) : sName;
+                if (sheet.getLastRow() <= 1) continue;
+                
                 var vals = sheet.getDataRange().getValues();
-                headersList = vals[0];
+                var headersList = vals[0];
+                var result = [];
                 for (var ri = 1; ri < vals.length; ri++) {
                   var r = vals[ri];
                   result.push({
@@ -642,16 +644,21 @@ function doGet(e) {
                     empId: r[1],
                     name: r[2],
                     phone: r[3],
-                    choices: r.slice(6) // mảng các ngày
+                    choices: r.slice(6)
                   });
                 }
-                break; // Chạy 1 sheet gần nhất
+                periods.push({
+                  id: sName,
+                  name: periodName,
+                  headers: headersList.slice(6),
+                  data: result
+                });
               }
             }
           }
         }
         
-        return ContentService.createTextOutput(JSON.stringify({ headers: headersList.slice(6), data: result })).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ periods: periods })).setMimeType(ContentService.MimeType.JSON);
       } catch (err) {
         return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
       }
