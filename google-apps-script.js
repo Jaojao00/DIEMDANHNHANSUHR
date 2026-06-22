@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AGR - HỆ THỐNG ĐIỂM DANH - BACKEND (Google Apps Script)
  * Dán toàn bộ mã này vào Google Apps Script của bạn.
  */
@@ -665,8 +665,9 @@ function doGet(e) {
 
     if (action === "sync_roster") {
       try {
-        autoGenerateRoster();
-        autoSyncPositions();
+        var targetShifts = req.shiftId ? [req.shiftId] : null;
+        autoGenerateRoster(targetShifts);
+        autoSyncPositions(targetShifts);
         return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã đồng bộ lịch và vị trí thành công!" })).setMimeType(ContentService.MimeType.JSON);
       } catch (err) {
         return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi đồng bộ: " + err.toString() })).setMimeType(ContentService.MimeType.JSON);
@@ -687,7 +688,7 @@ function doGet(e) {
 // ==========================================
 function autoGenerateRoster() {
   var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
-  var targetShifts = ["18:00-22:00", "22:00-06:00"];
+  
   
   var todayStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy");
   
@@ -782,7 +783,8 @@ function autoGenerateRoster() {
 // TỰ ĐỘNG HÓA 06:00 (Auto-Sync Positions)
 // Chạy hàm này qua Trigger vào 06:00 - 07:00 hàng ngày
 // ==========================================
-function autoSyncPositions() {
+function autoSyncPositions(targetShifts) {
+  if (!targetShifts) targetShifts = ["18:00-22:00", "22:00-06:00"];
   var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
   var vitriSheet = ss.getSheetByName("Sheet_ViTri");
   if (!vitriSheet) return;
@@ -802,7 +804,7 @@ function autoSyncPositions() {
     posDict[empId] = positions;
   }
   
-  var targetShifts = ["18:00-22:00", "22:00-06:00"];
+  
   for (var k = 0; k < targetShifts.length; k++) {
     var shiftId = targetShifts[k];
     var destSheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
@@ -836,3 +838,25 @@ function autoSyncPositions() {
   }
 }
 
+
+// ==========================================
+// TRIGGER CHO CA 18:00 - 22:00
+// ==========================================
+function trigger_autoGenerateRoster_Ca18h() {
+  autoGenerateRoster(["18:00-22:00"]);
+}
+
+function trigger_autoSyncPositions_Ca18h() {
+  autoSyncPositions(["18:00-22:00"]);
+}
+
+// ==========================================
+// TRIGGER CHO CA 22:00 - 06:00
+// ==========================================
+function trigger_autoGenerateRoster_Ca22h() {
+  autoGenerateRoster(["22:00-06:00"]);
+}
+
+function trigger_autoSyncPositions_Ca22h() {
+  autoSyncPositions(["22:00-06:00"]);
+}
