@@ -75,22 +75,26 @@ const RegApp = {
   // Tải cấu hình ngày đăng ký từ backend (Google Sheets) và cache vào localStorage
   loadConfig: async () => {
     try {
-      const db = window.FirebaseDB?.db;
-      if (db) {
-        const { doc, getDoc } = window.FirebaseDB;
-        const configSnap = await getDoc(doc(db, "config", "admin"));
-        if (configSnap.exists()) {
-          const data = configSnap.data();
+      const API_LINK = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
+      if (!API_LINK) return;
+
+      const res = await fetch(API_LINK, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'get_reg_config' })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data && !data.error) {
           if (data.regDateFrom) localStorage.setItem('agr_reg_date_from', data.regDateFrom);
+          else localStorage.removeItem('agr_reg_date_from');
+          
           if (data.regDateTo) localStorage.setItem('agr_reg_date_to', data.regDateTo);
-          // Xóa cache nếu server trả về rỗng (admin đã reset)
-          if (data.regDateFrom === '') localStorage.removeItem('agr_reg_date_from');
-          if (data.regDateTo === '') localStorage.removeItem('agr_reg_date_to');
+          else localStorage.removeItem('agr_reg_date_to');
         }
       }
     } catch (e) {
       console.error('Lỗi tải cấu hình đăng ký từ server:', e);
-      // Fallback: giữ nguyên giá trị localStorage (nếu có)
     }
   },
 
