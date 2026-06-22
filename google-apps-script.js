@@ -246,6 +246,55 @@ function doPost(e) {
       }
     }
     
+    // ACTION: SUBMIT_REGISTRATION (Đăng ký lịch làm việc)
+    if (action === "submit_registration") {
+      try {
+        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var regSheetName = "DangKyLich";
+        var regSheet = regSs.getSheetByName(regSheetName);
+        
+        if (!regSheet) {
+          regSheet = regSs.insertSheet(regSheetName);
+          // Build dynamic headers from dates
+          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Ca", "Tên Ca"];
+          (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
+          regSheet.appendRow(headerRow);
+        } else if (regSheet.getLastRow() === 0) {
+          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Ca", "Tên Ca"];
+          (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
+          regSheet.appendRow(headerRow);
+        }
+        
+        // Remove old rows for same empId + shiftId combo
+        var searchId = (data.empId || "").toLowerCase().trim();
+        var searchShift = data.shiftId || "";
+        var lastRow = regSheet.getLastRow();
+        for (var ri = lastRow; ri >= 2; ri--) {
+          var rowId = (regSheet.getRange(ri, 2).getValue() || "").toString().toLowerCase().trim();
+          var rowShift = (regSheet.getRange(ri, 5).getValue() || "").toString().trim();
+          if (rowId === searchId && rowShift === searchShift) {
+            regSheet.deleteRow(ri);
+          }
+        }
+        
+        // Append new row
+        var newRow = [
+          Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"),
+          data.empId || "",
+          data.empName || "",
+          data.empPhone || "",
+          data.shiftId || "",
+          data.shiftLabel || ""
+        ];
+        (data.selections || []).forEach(function(sel) { newRow.push(sel.choice); });
+        regSheet.appendRow(newRow);
+        
+        return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+      } catch(regErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: regErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
     // ACTION: CHECKIN (Nhân viên điểm danh)
     if (action === "checkin") {
       var searchId = (data.empId || "").toString().toLowerCase().trim();
