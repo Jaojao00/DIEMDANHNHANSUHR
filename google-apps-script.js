@@ -860,3 +860,32 @@ function trigger_autoGenerateRoster_Ca22h() {
 function trigger_autoSyncPositions_Ca22h() {
   autoSyncPositions(["22:00-06:00"]);
 }
+
+// ==========================================
+// HÀM TẠO TRIGGER TỰ ĐỘNG (CHỈ CẦN CHẠY 1 LẦN)
+// ==========================================
+function setupAutoTriggers() {
+  // Xóa các trigger cũ để tránh bị trùng lặp
+  var existingTriggers = ScriptApp.getProjectTriggers();
+  for (var i = 0; i < existingTriggers.length; i++) {
+    ScriptApp.deleteTrigger(existingTriggers[i]);
+  }
+  
+  // -- CA 18:00 - 22:00 --
+  // 1. Đúng 18:00 hằng ngày: Tự động đưa người đăng ký WORK vào lịch
+  ScriptApp.newTrigger("trigger_autoGenerateRoster_Ca18h")
+           .timeBased().atHour(18).nearMinute(0).everyDays(1).create();
+           
+  // 2. Đúng 22:00 hằng ngày: Tự động cập nhật vị trí
+  ScriptApp.newTrigger("trigger_autoSyncPositions_Ca18h")
+           .timeBased().atHour(22).nearMinute(0).everyDays(1).create();
+           
+  // -- CA 22:00 - 06:00 --
+  // 3. Đúng 22:00 hằng ngày: Tự động đưa người đăng ký WORK vào lịch
+  ScriptApp.newTrigger("trigger_autoGenerateRoster_Ca22h")
+           .timeBased().atHour(22).nearMinute(0).everyDays(1).create();
+           
+  // 4. Đúng 06:00 hằng ngày: Tự động cập nhật vị trí (sau khi ca đêm kết thúc)
+  ScriptApp.newTrigger("trigger_autoSyncPositions_Ca22h")
+           .timeBased().atHour(6).nearMinute(0).everyDays(1).create();
+}
