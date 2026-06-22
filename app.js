@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AGR - Hệ Thống Điểm Danh v3.0
  * app.js - Xử lý logic nghiệp vụ cho 2 luồng: Nhân viên (Mobile) và Admin (Desktop)
  */
@@ -1303,19 +1303,40 @@ const AdminApp = {
       const requestsData = await DataManager.loadRequests();
       
       let data = [];
+      const filterSelect = document.getElementById('statusFilter');
+      const regPeriodSelect = document.getElementById('regPeriodSelect');
+      
       if (AdminApp.currentViewMode === 'final') {
         data = await DataManager.loadSchedule(State.selectedShiftId);
         State.scheduleData = data;
         AdminApp.renderTable();
+        if (filterSelect) filterSelect.style.display = 'inline-block';
+        if (regPeriodSelect) regPeriodSelect.style.display = 'none';
       } else {
         const regRes = await DataManager.loadRegistrations(State.selectedShiftId);
-        AdminApp.renderRegistrationTable(regRes);
-      }
-      
-      // Update filter UI based on current view mode
-      const filterSelect = document.getElementById('statusFilter');
-      if (filterSelect) {
-        filterSelect.style.display = AdminApp.currentViewMode === 'final' ? 'inline-block' : 'none';
+        if (filterSelect) filterSelect.style.display = 'none';
+        
+        AdminApp.allRegistrationPeriods = regRes.periods || [];
+        if (regPeriodSelect) {
+           regPeriodSelect.innerHTML = '';
+           if (AdminApp.allRegistrationPeriods.length > 0) {
+              regPeriodSelect.style.display = 'inline-block';
+              AdminApp.allRegistrationPeriods.forEach((p, idx) => {
+                 const opt = document.createElement('option');
+                 opt.value = idx;
+                 opt.textContent = p.name || p.id;
+                 regPeriodSelect.appendChild(opt);
+              });
+              const defaultIdx = AdminApp.allRegistrationPeriods.length - 1;
+              regPeriodSelect.value = defaultIdx;
+              AdminApp.renderRegistrationTable(AdminApp.allRegistrationPeriods[defaultIdx]);
+           } else {
+              regPeriodSelect.style.display = 'none';
+              AdminApp.renderRegistrationTable({ headers: [], data: [] });
+           }
+        } else {
+           AdminApp.renderRegistrationTable(AdminApp.allRegistrationPeriods[AdminApp.allRegistrationPeriods.length - 1] || { headers: [], data: [] });
+        }
       }
       
       const adminSearch = document.getElementById('adminQuerySearch');
