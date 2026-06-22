@@ -271,8 +271,9 @@ const RegApp = {
       }
       
       // ALWAYS send to Google Sheets for data storage (so Admin can copy/edit)
-      if (typeof CONFIG !== 'undefined' && CONFIG.API_URL) {
-        const resp = await fetch(CONFIG.API_URL, {
+      const apiLink = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
+      if (apiLink) {
+        const resp = await fetch(apiLink, {
           method:  'POST',
           body:    JSON.stringify(payload)
         });
@@ -334,9 +335,11 @@ const ViewScheduleApp = {
         const qSnap = await getDocs(q);
         const data = qSnap.docs.map(d => d.data());
         if (data.length > 0) allRegs = data;
-      } else if (typeof CONFIG !== 'undefined' && CONFIG.API_URL) {
-        const url = CONFIG.API_URL + '?action=get_registration&empId=' + encodeURIComponent(empId);
-        const resp = await fetch(url);
+      } else {
+        const apiLink = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
+        if (apiLink) {
+          const url = apiLink + '?action=get_registration&empId=' + encodeURIComponent(empId);
+          const resp = await fetch(url);
         const data = await resp.json();
         if (Array.isArray(data)) allRegs = data;
       }
