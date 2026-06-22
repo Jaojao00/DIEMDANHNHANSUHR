@@ -880,7 +880,7 @@ function setupAutoTriggers() {
   ScriptApp.newTrigger("trigger_Generate_CaToi").timeBased().atHour(18).nearMinute(0).everyDays(1).create();
   ScriptApp.newTrigger("trigger_Sync_CaToi").timeBased().atHour(22).nearMinute(0).everyDays(1).create();
 
-  // 4. Ca Đêm (22h-06h): Chốt 22:00 hôm trước, Cập nhật vị trí 22:00 (vị trí cập nhật cho hôm nay, chốt lịch cho ngày mai)
+  // 4. Ca Đêm (22h-06h): Chốt 22:00 hôm trước, Cập nhật vị trí 06:00 sáng hôm sau
   ScriptApp.newTrigger("trigger_Generate_CaDem").timeBased().atHour(22).nearMinute(0).everyDays(1).create();
-  ScriptApp.newTrigger("trigger_Sync_CaDem").timeBased().atHour(22).nearMinute(0).everyDays(1).create();
+  ScriptApp.newTrigger("trigger_Sync_CaDem").timeBased().atHour(6).nearMinute(0).everyDays(1).create();
 }
