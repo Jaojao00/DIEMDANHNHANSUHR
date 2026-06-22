@@ -632,10 +632,9 @@ function doGet(e) {
               if (sShiftId === shiftSearch) {
                 var periodMatch = sName.match(/LỊCHT(\w+)_/);
                 var periodName = periodMatch ? ("Kỳ " + periodMatch[1]) : sName;
-                if (sheet.getLastRow() <= 1) continue;
                 
                 var vals = sheet.getDataRange().getValues();
-                var headersList = vals[0];
+                var headersList = vals.length > 0 ? vals[0] : [];
                 var result = [];
                 for (var ri = 1; ri < vals.length; ri++) {
                   var r = vals[ri];
