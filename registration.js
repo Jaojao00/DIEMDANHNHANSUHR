@@ -78,9 +78,8 @@ const RegApp = {
       const API_LINK = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
       if (!API_LINK) return;
 
-      const res = await fetch(API_LINK, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'get_reg_config' })
+      const res = await fetch(`${API_LINK}?action=get_reg_config`, {
+        method: 'GET'
       });
       
       if (res.ok) {
