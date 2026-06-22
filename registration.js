@@ -122,7 +122,7 @@ const RegApp = {
     }).join('');
   },
 
-  selectShift: async (shiftId) => {
+  selectShift: (shiftId) => {
     const shift = State.shifts.find(s => s.id === shiftId);
     if (!shift) return;
     RegApp.selectedShift = shift;
@@ -137,11 +137,9 @@ const RegApp = {
     if (iconEl) { iconEl.textContent = shift.icon; iconEl.style.background = shift.color + '22'; }
     if (nameEl) nameEl.textContent = shift.label;
     if (timeEl) timeEl.textContent = shift.id;
-    if (labelEl) labelEl.textContent = shift.label + ' — ' + shift.id;
+    if (labelEl) labelEl.textContent = shift.label + ' – ' + shift.id;
     if (colEl) colEl.textContent = shift.label + ' (' + shift.id + ')';
 
-    // Đảm bảo cấu hình ngày đã được tải từ backend trước khi render bảng ngày
-    await RegApp.loadConfig();
     RegApp.renderDateTable();
     RegApp.showStep(2);
   },
