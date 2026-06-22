@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AGR - HỆ THỐNG ĐIỂM DANH - BACKEND (Google Apps Script)
  * Dán toàn bộ mã này vào Google Apps Script của bạn.
  */
@@ -313,14 +313,17 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ success: true, employee: empObj })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // ACTION: SUBMIT_REGISTRATION (Đăng ký lịch làm việc)
-    if (action === "submit_registration") {
+    // ACTION: REGISTER
+    if (action === "register") {
       var lock = LockService.getScriptLock();
       try {
-        // Khóa để tránh race condition khi 2 người gửi cùng lúc
         lock.waitLock(30000);
-        
         var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        
+        var searchId = (data.empId || "").toString().toLowerCase().trim();
+        if (!searchId) {
+          return ContentService.createTextOutput(JSON.stringify({ error: "Mã nhân viên không hợp lệ" })).setMimeType(ContentService.MimeType.JSON);
+        }
         
         // Trích xuất Tháng từ ngày đầu tiên trong mảng selections
         var month = "X";
@@ -332,8 +335,7 @@ function doPost(e) {
           }
         }
         
-        // Tên sheet động: LỊCHT6_22:00-06:00
-        var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "UNKNOWN");
+        var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "");
         var regSheet = regSs.getSheetByName(regSheetName);
         
         if (!regSheet) {
@@ -347,32 +349,111 @@ function doPost(e) {
           regSheet.appendRow(headerRow);
         }
         
-        var searchId = (data.empId || "").toLowerCase().trim();
+        // ==== LOGIC KIỂM TRA CHỐNG TRÙNG CA VÀ GIỚI HẠN 12H ====
+        var targetShiftId = data.shiftId || "";
         
-        // Kiểm tra xem đã đăng ký ca nào trong cùng kỳ (tháng) chưa
+        // Định nghĩa số giờ của các ca
+        var shiftHours = {
+          "06:00-15:00": 8,
+          "15:00-22:00": 8,
+          "22:00-06:00": 8,
+          "06:00-10:00": 4,
+          "18:00-22:00": 4
+        };
+        
+        // Định nghĩa các cặp ca BỊ TRÙNG GIỜ (Overlap) KHÔNG ĐƯỢC PHÉP ĐI CHUNG
+        var overlapRules = {
+          "06:00-15:00": ["06:00-10:00"],
+          "06:00-10:00": ["06:00-15:00"],
+          "15:00-22:00": ["18:00-22:00"],
+          "18:00-22:00": ["15:00-22:00"]
+        };
+        
+        var targetHours = shiftHours[targetShiftId] || 8;
+        var targetOverlaps = overlapRules[targetShiftId] || [];
+        
         var allSheets = regSs.getSheets();
-        var alreadyRegisteredShift = "";
+        var userHoursPerDay = {};
+        var userOverlapPerDay = {}; // Lưu các ca hiện tại của từng ngày
+        
+        var existingRowIndex = -1; // Dùng để xác định nếu user cập nhật lại chính ca này
         
         for (var s = 0; s < allSheets.length; s++) {
           var sName = allSheets[s].getName();
           if (sName.indexOf("LỊCHT" + month + "_") === 0) {
+            var sShiftId = sName.replace("LỊCHT" + month + "_", "");
+            var sHours = shiftHours[sShiftId] || 8;
+            
             var sData = allSheets[s].getDataRange().getValues();
+            if (sData.length <= 1) continue;
+            var headers = sData[0];
+            
+            // Tìm dòng của user
+            var rIndex = -1;
             for (var r = 1; r < sData.length; r++) {
-              var rId = (sData[r][1] || "").toString().toLowerCase().trim();
-              if (rId === searchId) {
-                alreadyRegisteredShift = sName.replace("LỊCHT" + month + "_", "");
+              if ((sData[r][1] || "").toString().toLowerCase().trim() === searchId) {
+                rIndex = r;
                 break;
               }
             }
+            
+            if (rIndex !== -1) {
+              if (sShiftId === targetShiftId) {
+                // User đã có trong sheet của ca này -> Ghi nhớ dòng để lát đè lên (cập nhật)
+                existingRowIndex = rIndex + 1; // getRange thì index từ 1
+              } else {
+                // User có trong sheet của ca KHÁC -> Cộng dồn số giờ và lưu ca
+                for (var c = 7; c < headers.length; c++) {
+                  if (sData[rIndex][c] === "WORK") {
+                    var dateLabel = headers[c];
+                    var dateStrMatch = dateLabel.match(/\d{2}\/\d{2}\/\d{4}/);
+                    if (dateStrMatch) {
+                      var dateStr = dateStrMatch[0];
+                      if (!userHoursPerDay[dateStr]) {
+                        userHoursPerDay[dateStr] = 0;
+                        userOverlapPerDay[dateStr] = [];
+                      }
+                      userHoursPerDay[dateStr] += sHours;
+                      userOverlapPerDay[dateStr].push(sShiftId);
+                    }
+                  }
+                }
+              }
+            }
           }
-          if (alreadyRegisteredShift) break;
         }
         
-        if (alreadyRegisteredShift) {
-          return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!" })).setMimeType(ContentService.MimeType.JSON);
+        // Sau khi tổng hợp, tiến hành kiểm tra cho những ngày người dùng chọn WORK trong đợt đăng ký NÀY
+        for (var i = 0; i < (data.selections || []).length; i++) {
+          var sel = data.selections[i];
+          if (sel.choice === "WORK") {
+            var dateStrMatch = sel.label.match(/\d{2}\/\d{2}\/\d{4}/);
+            if (dateStrMatch) {
+              var dateStr = dateStrMatch[0];
+              var currentHours = userHoursPerDay[dateStr] || 0;
+              
+              // 1. Kiểm tra giới hạn 12h
+              if (currentHours + targetHours > 12) {
+                return ContentService.createTextOutput(JSON.stringify({ 
+                  error: "Lỗi: Bạn đã đăng ký vượt quá 12 tiếng vào ngày " + dateStr + ".\nBạn hiện đang có " + currentHours + " tiếng và định đăng ký thêm " + targetHours + " tiếng của ca " + (data.shiftLabel || targetShiftId) + "." 
+                })).setMimeType(ContentService.MimeType.JSON);
+              }
+              
+              // 2. Kiểm tra trùng giờ
+              var currentShifts = userOverlapPerDay[dateStr] || [];
+              for (var j = 0; j < currentShifts.length; j++) {
+                if (targetOverlaps.indexOf(currentShifts[j]) !== -1) {
+                  return ContentService.createTextOutput(JSON.stringify({ 
+                    error: "Lỗi: Xung đột trùng giờ vào ngày " + dateStr + ".\nBạn KHÔNG THỂ đăng ký chung ca [" + targetShiftId + "] với ca [" + currentShifts[j] + "] trong cùng 1 ngày." 
+                  })).setMimeType(ContentService.MimeType.JSON);
+                }
+              }
+            }
+          }
         }
+        // ==== KẾT THÚC LOGIC KIỂM TRA ====
         
-        // Append new row
+        // Chuẩn bị dữ liệu dòng mới
         var newRow = [
           Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"),
           data.empId || "",
@@ -383,7 +464,14 @@ function doPost(e) {
           data.shiftLabel || ""
         ];
         (data.selections || []).forEach(function(sel) { newRow.push(sel.choice); });
-        regSheet.appendRow(newRow);
+        
+        if (existingRowIndex !== -1) {
+          // CẬP NHẬT DÒNG HIỆN TẠI
+          regSheet.getRange(existingRowIndex, 1, 1, newRow.length).setValues([newRow]);
+        } else {
+          // THÊM DÒNG MỚI
+          regSheet.appendRow(newRow);
+        }
         
         return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
       } catch(regErr) {
