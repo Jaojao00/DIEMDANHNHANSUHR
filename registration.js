@@ -340,8 +340,9 @@ const ViewScheduleApp = {
         if (apiLink) {
           const url = apiLink + '?action=get_registration&empId=' + encodeURIComponent(empId);
           const resp = await fetch(url);
-        const data = await resp.json();
-        if (Array.isArray(data)) allRegs = data;
+          const data = await resp.json();
+          if (Array.isArray(data)) allRegs = data;
+        }
       }
     } catch (e) { /* fallback to local */ }
 
