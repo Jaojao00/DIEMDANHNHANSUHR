@@ -27,7 +27,7 @@ function doPost(e) {
     var action = data.action;
     var shiftId = data.shiftId;
     
-    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config") {
+    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config" && action !== "sync_roster") {
       return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -552,6 +552,17 @@ function doPost(e) {
       }
     }
 
+    if (action === "sync_roster") {
+      try {
+        var targetShifts = data.shiftId ? [data.shiftId] : null;
+        autoGenerateRoster(targetShifts);
+        autoSyncPositions(targetShifts);
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã đồng bộ lịch và vị trí thành công!" })).setMimeType(ContentService.MimeType.JSON);
+      } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi đồng bộ: " + err.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     return ContentService.createTextOutput(JSON.stringify({ error: "Invalid POST action" })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (e) {
@@ -751,16 +762,7 @@ function doGet(e) {
       }
     }
 
-    if (action === "sync_roster") {
-      try {
-        var targetShifts = req.shiftId ? [req.shiftId] : null;
-        autoGenerateRoster(targetShifts);
-        autoSyncPositions(targetShifts);
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã đồng bộ lịch và vị trí thành công!" })).setMimeType(ContentService.MimeType.JSON);
-      } catch (err) {
-        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi đồng bộ: " + err.toString() })).setMimeType(ContentService.MimeType.JSON);
-      }
-    }
+
 
     // Pre-flight check (CORS ping)
     return ContentService.createTextOutput(JSON.stringify({ status: "AGR API is running" })).setMimeType(ContentService.MimeType.JSON);
