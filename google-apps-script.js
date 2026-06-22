@@ -130,7 +130,14 @@ function doPost(e) {
           
           for (var s = 0; s < allSheets.length; s++) {
             var sName = allSheets[s].getName();
-            if (sName.indexOf("Ca_") === 0) {
+            var isTargetMatch = true;
+            if (data.targetShift && data.targetShift !== "ALL") {
+               var expectedSheetName = "Ca_" + data.targetShift.replace(":", "").replace("-", "_");
+               if (sName !== expectedSheetName) {
+                  isTargetMatch = false;
+               }
+            }
+            if (sName.indexOf("Ca_") === 0 && isTargetMatch) {
               var dataRange = allSheets[s].getDataRange();
               var values = dataRange.getValues();
               if (values.length > 1) {

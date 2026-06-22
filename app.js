@@ -634,6 +634,8 @@ const EmployeeApp = {
         const modalEl = document.getElementById('requestModal');
         const dateEl = document.getElementById('req_date');
         const shiftGroup = document.getElementById('req_target_shift_group');
+        const shiftLabel = document.getElementById('req_target_shift_label');
+        const shiftSelect = document.getElementById('req_target_shift');
         if (typeEl) typeEl.value = 'XIN OFF';
         if (titleEl) titleEl.textContent = '⏱️ Xin Nghỉ / Xin Off';
         if (modalEl) modalEl.classList.remove('hidden');
@@ -642,7 +644,12 @@ const EmployeeApp = {
           if (savedDate) dateEl.value = savedDate;
           else dateEl.valueAsDate = new Date();
         }
-        if (shiftGroup) shiftGroup.style.display = 'none';
+        if (shiftGroup) shiftGroup.style.display = 'block';
+        if (shiftLabel) shiftLabel.innerHTML = 'Chọn Ca Xin Off <span style="color:#ff5c5c">*</span>';
+        if (shiftSelect && shiftSelect.options.length > 0) {
+          shiftSelect.options[0].style.display = 'block';
+          shiftSelect.value = 'ALL';
+        }
         
         const reasonLabel = document.getElementById('req_reason_label');
         if (reasonLabel) reasonLabel.innerHTML = 'Lý Do <span style="color:#ff5c5c">*</span>';
@@ -657,8 +664,10 @@ const EmployeeApp = {
         const modalEl = document.getElementById('requestModal');
         const dateEl = document.getElementById('req_date');
         const shiftGroup = document.getElementById('req_target_shift_group');
+        const shiftLabel = document.getElementById('req_target_shift_label');
+        const shiftSelect = document.getElementById('req_target_shift');
         if (typeEl) typeEl.value = 'XIN LÊN CA';
-        if (titleEl) titleEl.textContent = '🚀 Xin Lên Ca';
+        if (titleEl) titleEl.textContent = '⬆️ Xin Lên Ca';
         if (modalEl) modalEl.classList.remove('hidden');
         if (dateEl) {
           const savedDate = localStorage.getItem('agr_schedule_date');
@@ -666,6 +675,11 @@ const EmployeeApp = {
           else dateEl.valueAsDate = new Date();
         }
         if (shiftGroup) shiftGroup.style.display = 'block';
+        if (shiftLabel) shiftLabel.innerHTML = 'Chọn Ca Xin Lên <span style="color:#ff5c5c">*</span>';
+        if (shiftSelect && shiftSelect.options.length > 0) {
+          shiftSelect.options[0].style.display = 'none';
+          shiftSelect.value = '06:00-10:00';
+        }
         
         const reasonLabel = document.getElementById('req_reason_label');
         if (reasonLabel) reasonLabel.innerHTML = 'Lý Do (Tùy chọn)';
@@ -715,9 +729,11 @@ const EmployeeApp = {
           }
         }
 
-        if (type === 'XIN LÊN CA' && targetShiftEl) {
+        if ((type === 'XIN LÊN CA' || type === 'XIN OFF') && targetShiftEl) {
            targetShift = targetShiftEl.value;
-           note = `[Xin ca: ${targetShiftEl.options[targetShiftEl.selectedIndex].text}] ` + note;
+           let shiftName = targetShiftEl.options[targetShiftEl.selectedIndex].text;
+           if (targetShift === 'ALL') shiftName = 'Tất cả các ca';
+           note = `[${type === 'XIN OFF' ? 'Xin Off' : 'Xin ca'}: ${shiftName}] ` + note;
         }
 
         if (!empId || !name || !phone || !date || (type === 'XIN OFF' && !reason)) {
