@@ -5,11 +5,11 @@
 
 const CONFIG = {
   // =============================================
-  // GOOGLE SHEETS / APPS SCRIPT
+  // CẤU HÌNH API
   // =============================================
   // Dán URL Google Apps Script Web App vào đây sau khi deploy
   // Xem hướng dẫn trong README.md
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxInRfgszFgFJvb6t00T4cWKS7KXH-KXLx7myTdmfNSLusnrcyOi1S40jV1dTWr8kud/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyZo_ixPELJvb4tJYJN1M0z5rYh_xW1YM-mekVzu-a2WyYBoQHtUmbYHG4mtGghSz5d/exec',
 
   // Tự động BẬT realtime nếu APPS_SCRIPT_URL đã được cài đặt
   get DEMO_MODE() {
