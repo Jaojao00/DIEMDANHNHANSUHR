@@ -9,7 +9,7 @@
 // ==========================================
 var CONFIG = {
   SPREADSHEET_ID: "1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI",
-  TIMEZONE: CONFIG.TIMEZONE
+  TIMEZONE: "Asia/Ho_Chi_Minh"
 };
 
 // HELPER: Lấy hoặc tạo sheet CONFIG
