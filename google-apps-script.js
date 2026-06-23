@@ -4,10 +4,18 @@
  */
 
 // ==========================================
+// ==========================================
+// CẤU HÌNH HỆ THỐNG
+// ==========================================
+var CONFIG = {
+  SPREADSHEET_ID: "1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI",
+  TIMEZONE: CONFIG.TIMEZONE
+};
+
 // HELPER: Lấy hoặc tạo sheet CONFIG
 // ==========================================
 function getConfigSheet() {
-  var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   var sheet = ss.getSheetByName("CONFIG");
   if (!sheet) {
     sheet = ss.insertSheet("CONFIG");
@@ -81,7 +89,7 @@ function doPost(e) {
     // ACTION: REQUEST (Xin Nghỉ / Xin Lên Ca)
     if (action === "request") {
       try {
-        var reqSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var reqSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         var reqSheet = reqSs.getSheetByName("XIN_OFF");
         
         // Tạo sheet nếu chưa có
@@ -112,7 +120,7 @@ function doPost(e) {
         }
         
         reqSheet.appendRow([
-          data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"),
+          data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
           data.empId || "",
           data.name || "",
           data.phone || "",
@@ -126,7 +134,7 @@ function doPost(e) {
         if (data.type === "XIN OFF") {
           var allSheets = reqSs.getSheets();
           var searchId = (data.empId || "").toString().toLowerCase().trim();
-          var reqTime = data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
+          var reqTime = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
           
           for (var s = 0; s < allSheets.length; s++) {
             var sName = allSheets[s].getName();
@@ -197,7 +205,7 @@ function doPost(e) {
               var statusIndex = headers.length - 3; // 0-based
               var timeIndex = headers.length - 2; // 0-based
               var phoneIndex = headers.length - 1; // 0-based
-              var reqTime = data.timestamp || Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss");
+              var reqTime = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
               
               if (foundIndex > -1) {
                 // Update existing row
@@ -248,69 +256,79 @@ function doPost(e) {
     
     // ACTION: CHECKIN (Nhân viên điểm danh)
     if (action === "checkin") {
-      var searchId = (data.empId || "").toString().toLowerCase().trim();
-      var phone = data.phone || "";
-      
-      var dataRange = sheet.getDataRange();
-      var values = dataRange.getValues();
-      var headers = values[0];
-      var N = headers.length - 8; // Số cột vị trí động
-      
-      var empIndex = -1;
-      // Duyệt qua các dòng để tìm kiếm thông minh
-      for (var i = 1; i < values.length; i++) {
-        var rowId = (values[i][1] || "").toString().toLowerCase().trim();
-        var rowStt = (values[i][0] || "").toString().toLowerCase().trim();
-        var rowName = (values[i][2] || "").toString().toLowerCase().trim();
+      var lock = LockService.getScriptLock();
+      try {
+        lock.waitLock(10000); // Wait up to 10 seconds
         
-        if (rowId === searchId || rowStt === searchId || rowName === searchId) {
-          empIndex = i;
-          break;
+        var searchId = (data.empId || "").toString().toLowerCase().trim();
+        var phone = data.phone || "";
+        
+        var dataRange = sheet.getDataRange();
+        var values = dataRange.getValues();
+        var headers = values[0];
+        var N = headers.length - 8;
+        if (N < 0) N = 0;
+        
+        var empIndex = -1;
+        for (var i = 1; i < values.length; i++) {
+          var rowId = (values[i][1] || "").toString().toLowerCase().trim();
+          var rowStt = (values[i][0] || "").toString().toLowerCase().trim();
+          var rowName = (values[i][2] || "").toString().toLowerCase().trim();
+          
+          if (rowId === searchId || rowStt === searchId || rowName === searchId) {
+            empIndex = i;
+            break;
+          }
         }
+        
+        if (empIndex === -1) {
+          lock.releaseLock();
+          return ContentService.createTextOutput(JSON.stringify({ error: "Không tìm thấy mã nhân viên " + data.empId + " trong ca này." })).setMimeType(ContentService.MimeType.JSON);
+        }
+        
+        var statusIndex = 4 + N + 1;
+        var timeIndex = 4 + N + 2;
+        var phoneIndex = 4 + N + 3;
+        
+        var currentStatus = values[empIndex][statusIndex];
+        if (currentStatus === "confirmed") {
+          lock.releaseLock();
+          return ContentService.createTextOutput(JSON.stringify({ error: "Nhân viên này đã điểm danh rồi!" })).setMimeType(ContentService.MimeType.JSON);
+        }
+        
+        var now = new Date();
+        var timeString = Utilities.formatDate(now, CONFIG.TIMEZONE, "HH:mm:ss");
+        
+        // Cập nhật mảng trong bộ nhớ rồi setValues để tránh race condition giữa các ô
+        values[empIndex][statusIndex] = "confirmed";
+        values[empIndex][timeIndex] = timeString;
+        values[empIndex][phoneIndex] = phone;
+        
+        dataRange.setValues(values);
+        
+        var rowData = values[empIndex];
+        var positions = [];
+        for (var j = 0; j < N; j++) {
+          positions.push(rowData[4 + j] || "");
+        }
+        
+        var empObj = {
+          stt: rowData[0],
+          id: rowData[1],
+          name: rowData[2],
+          dinhDanh: rowData[3],
+          positions: positions,
+          note: rowData[4 + N],
+          status: rowData[statusIndex],
+          timestamp: rowData[timeIndex],
+          phone: rowData[phoneIndex]
+        };
+        
+        lock.releaseLock();
+        return ContentService.createTextOutput(JSON.stringify({ success: true, employee: empObj })).setMimeType(ContentService.MimeType.JSON);
+      } catch (lockErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: "Hệ thống đang bận, vui lòng thử lại sau vài giây!" })).setMimeType(ContentService.MimeType.JSON);
       }
-      
-      if (empIndex === -1) {
-        return ContentService.createTextOutput(JSON.stringify({ error: "Không tìm thấy mã nhân viên " + data.empId + " trong ca này." })).setMimeType(ContentService.MimeType.JSON);
-      }
-      
-      var statusIndex = 4 + N + 1; // Trạng Thái
-      var timeIndex = 4 + N + 2;  // Thời Gian
-      var phoneIndex = 4 + N + 3; // SĐT
-      
-      var currentStatus = values[empIndex][statusIndex];
-      if (currentStatus === "confirmed") {
-        return ContentService.createTextOutput(JSON.stringify({ error: "Nhân viên này đã điểm danh rồi!" })).setMimeType(ContentService.MimeType.JSON);
-      }
-      
-      // Lấy ngày giờ hiện tại theo múi giờ Việt Nam
-      var now = new Date();
-      var timeString = Utilities.formatDate(now, "Asia/Ho_Chi_Minh", "HH:mm:ss");
-      
-      // Ghi kết quả điểm danh vào sheet
-      sheet.getRange(empIndex + 1, statusIndex + 1).setValue("confirmed");
-      sheet.getRange(empIndex + 1, timeIndex + 1).setValue(timeString);
-      sheet.getRange(empIndex + 1, phoneIndex + 1).setValue(phone);
-      
-      // Lấy thông tin đầy đủ để trả về frontend
-      var rowData = sheet.getRange(empIndex + 1, 1, 1, headers.length).getValues()[0];
-      var positions = [];
-      for (var j = 0; j < N; j++) {
-        positions.push(rowData[4 + j] || "");
-      }
-      
-      var empObj = {
-        stt: rowData[0],
-        id: rowData[1],
-        name: rowData[2],
-        dinhDanh: rowData[3],
-        positions: positions,
-        note: rowData[4 + N],
-        status: rowData[4 + N + 1],
-        timestamp: rowData[4 + N + 2],
-        phone: rowData[4 + N + 3]
-      };
-      
-      return ContentService.createTextOutput(JSON.stringify({ success: true, employee: empObj })).setMimeType(ContentService.MimeType.JSON);
     }
     
     // ACTION: SUBMIT_REGISTRATION (Đăng ký lịch làm việc)
@@ -320,7 +338,7 @@ function doPost(e) {
         // Khóa để tránh race condition khi 2 người gửi cùng lúc
         lock.waitLock(30000);
         
-        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         
         // Trích xuất Tháng từ ngày đầu tiên trong mảng selections
         var month = "X";
@@ -374,7 +392,7 @@ function doPost(e) {
         
         // Append new row
         var newRow = [
-          Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy HH:mm:ss"),
+          Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
           data.empId || "",
           data.empName || "",
           data.empPhone || "",
@@ -396,7 +414,7 @@ function doPost(e) {
     // ACTION: RESET_REGISTRATIONS (Xóa tất cả các sheet lịch đăng ký cũ)
     if (action === "reset_registrations") {
       try {
-        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         var allSheets = regSs.getSheets();
         var deletedCount = 0;
         
@@ -563,7 +581,7 @@ function doGet(e) {
     
     if (action === "load_requests") {
       try {
-        var reqSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var reqSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         var reqSheet = reqSs.getSheetByName("XIN_OFF");
         
         if (!reqSheet || reqSheet.getLastRow() <= 1) {
@@ -593,7 +611,7 @@ function doGet(e) {
     if (action === "get_registration") {
       try {
         var empIdSearch = (e.parameter.empId || "").toLowerCase().trim();
-        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         var allSheets = regSs.getSheets();
         var result = [];
         
@@ -646,7 +664,7 @@ function doGet(e) {
           var strVal = "";
           if (val) {
             if (val instanceof Date) {
-              strVal = Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd");
+              strVal = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM-dd");
             } else {
               strVal = val.toString();
             }
@@ -666,7 +684,7 @@ function doGet(e) {
         var shiftSearch = e.parameter.shiftId; 
         if (!shiftSearch) return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
         
-        var regSs = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         var allSheets = regSs.getSheets();
         var periods = [];
         
@@ -727,10 +745,10 @@ function doGet(e) {
 // Chạy hàm này qua Trigger vào 00:00 - 01:00 hàng ngày
 // ==========================================
 function autoGenerateRoster() {
-  var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   
   
-  var todayStr = Utilities.formatDate(new Date(), "Asia/Ho_Chi_Minh", "dd/MM/yyyy");
+  var todayStr = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy");
   
   for (var k = 0; k < targetShifts.length; k++) {
     var shiftId = targetShifts[k];
@@ -825,7 +843,7 @@ function autoGenerateRoster() {
 // ==========================================
 function autoSyncPositions(targetShifts) {
   if (!targetShifts) targetShifts = ["18:00-22:00", "22:00-06:00"];
-  var ss = SpreadsheetApp.openById("1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI");
+  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   var vitriSheet = ss.getSheetByName("Sheet_ViTri");
   if (!vitriSheet) return;
   

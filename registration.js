@@ -1,3 +1,13 @@
+
+window.escapeHTML = function(str) {
+  if (!str) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 /**
  * AGR - registration.js
  * Modules: EmpNav (Bottom Nav), RegApp (Schedule Registration), ViewScheduleApp (View Schedule)

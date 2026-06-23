@@ -1,3 +1,13 @@
+
+window.escapeHTML = function(str) {
+  if (!str) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 ﻿/**
  * AGR - Hệ Thống Điểm Danh v3.0
  * app.js - Xử lý logic nghiệp vụ cho 2 luồng: Nhân viên (Mobile) và Admin (Desktop)
@@ -41,7 +51,7 @@ const State = {
   scanner: null,
   isScanning: false,
   refreshTimer: null,
-  apiLink: localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : ''),
+  apiLink: localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? State.apiLink : ''),
   clockTimer: null
 };
 
@@ -187,7 +197,7 @@ const DataManager = {
       } else {
         // Tải từ Google Sheets
         try {
-          const url = `${CONFIG.API_URL}?action=load&shiftId=${shiftId}`;
+          const url = `${State.apiLink}?action=load&shiftId=${shiftId}`;
           const response = await fetch(url);
           const data = await response.json();
           const normalized = Array.isArray(data) ? data.map(DataManager.normalizeEmp) : [];
@@ -218,7 +228,7 @@ const DataManager = {
   loadRegistrations: async (shiftId) => {
     return new Promise(async (resolve) => {
       try {
-        const url = `${CONFIG.API_URL}?action=get_shift_registrations&shiftId=${shiftId}`;
+        const url = `${State.apiLink}?action=get_shift_registrations&shiftId=${shiftId}`;
         const response = await fetch(url);
         const json = await response.json();
         if (json.periods && Array.isArray(json.periods)) {
@@ -240,7 +250,7 @@ const DataManager = {
       return JSON.parse(localStorage.getItem('agr_requests') || '[]');
     }
     try {
-      const url = `${CONFIG.API_URL}?action=load_requests`;
+      const url = `${State.apiLink}?action=load_requests`;
       const response = await fetch(url);
       const data = await response.json();
       if (Array.isArray(data)) {
@@ -274,7 +284,7 @@ const DataManager = {
           const shift = State.shifts.find(s => s.id === shiftId);
           const headers = shift ? [...shift.colHeaders] : [];
 
-          const response = await fetch(CONFIG.API_URL, {
+          const response = await fetch(State.apiLink, {
             method: 'POST',
             body: JSON.stringify({
               action: 'save',
@@ -354,7 +364,7 @@ const DataManager = {
     }
 
     // 2. Prepare background sync to Google Sheets
-    const fetchPromise = fetch(CONFIG.API_URL, {
+    const fetchPromise = fetch(State.apiLink, {
       method: 'POST',
       body: JSON.stringify({
         action: 'checkin',
@@ -401,7 +411,7 @@ const DataManager = {
 
     if (!CONFIG.DEMO_MODE) {
       try {
-        const response = await fetch(CONFIG.API_URL, {
+        const response = await fetch(State.apiLink, {
           method: 'POST',
           body: JSON.stringify({
             action: 'request',
@@ -444,7 +454,7 @@ const EmployeeApp = {
       if (currentLocalUrl && (currentLocalUrl.trim() === oldUrl1 || currentLocalUrl.trim() === oldUrl2 || currentLocalUrl.trim() === oldUrl3 || currentLocalUrl.trim() === oldUrl4 || currentLocalUrl.trim() === oldUrl5)) {
         localStorage.removeItem('agr_api_url');
       }
-      State.apiLink = localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
+      State.apiLink = localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? State.apiLink : '');
     } catch (e) {
       console.error("Lỗi dọn dẹp url cũ:", e);
     }
@@ -1067,7 +1077,7 @@ const AdminApp = {
         loginSubmitBtn.innerHTML = '<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;margin-right:8px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;border-radius:50%;animation:spin 1s linear infinite;"></span> Đang xử lý...';
         if (errorEl) errorEl.classList.add('hidden');
 
-        fetch(CONFIG.APPS_SCRIPT_URL, {
+        fetch(State.apiLink, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: "admin_login", email: email, password: pass })
@@ -1200,7 +1210,7 @@ const AdminApp = {
         syncRegistrationBtn.disabled = true;
         
         try {
-          const res = await fetch(CONFIG.API_URL, {
+          const res = await fetch(State.apiLink, {
             method: 'POST',
             body: JSON.stringify({ action: 'sync_roster', shiftId: State.selectedShiftId })
           });
@@ -1363,7 +1373,7 @@ const AdminApp = {
       const statusDot = document.getElementById('connectionStatus');
       const statusText = document.getElementById('connectionText');
       if (statusDot) statusDot.className = 'status-dot online';
-      if (statusText) statusText.textContent = CONFIG.API_URL ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
+      if (statusText) statusText.textContent = State.apiLink ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
     } catch (err) {
       if(!isSilent) Utils.showToast('Lỗi tải dữ liệu', 'error');
       const statusDot = document.getElementById('connectionStatus');
@@ -1676,8 +1686,8 @@ const AdminApp = {
       return `
       <tr class="${rowClass}">
         <td>${emp.stt}</td>
-        <td><span class="employee-code">${emp.id}</span></td>
-        <td style="font-weight:500">${emp.name}</td>
+        <td><span class="employee-code">${escapeHTML(emp.id)}</span></td>
+        <td style="font-weight:500">${escapeHTML(emp.name)}</td>
         <td><span class="dinhDanh-badge">${emp.dinhDanh || ''}</span></td>
         ${posCells}
         <td><span style="font-size:12px; color:var(--text-muted)">${emp.note || ''}</span></td>
@@ -1895,8 +1905,8 @@ const AdminApp = {
     if (btn) btn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;"></span> Đang xóa...';
     
     try {
-      const url = CONFIG.API_URL;
-      if (!url) throw new Error('Vui lòng thiết lập cấu hình CONFIG.API_URL trước khi xóa!');
+      const url = State.apiLink;
+      if (!url) throw new Error('Vui lòng thiết lập cấu hình State.apiLink trước khi xóa!');
       
       const response = await fetch(url, {
         method: 'POST',
@@ -1929,9 +1939,9 @@ const AdminApp = {
     const regDateFrom = regFrom ? regFrom.value : '';
     const regDateTo = regTo ? regTo.value : '';
 
-    if (CONFIG.API_URL && (regDateFrom || regDateTo)) {
+    if (State.apiLink && (regDateFrom || regDateTo)) {
       try {
-        const resp = await fetch(CONFIG.API_URL, {
+        const resp = await fetch(State.apiLink, {
           method: 'POST',
           body: JSON.stringify({
             action: 'save_reg_config',
@@ -2036,7 +2046,7 @@ const AdminApp = {
     const thead = `<tr>${previewCols.map(h => `<th>${h}</th>`).join('')}</tr>`;
     const tbody = parsedData.slice(0, 5).map(r => {
       const pos = r.positions || [];
-      return `<tr><td>${r.stt}</td><td>${r.id}</td><td>${r.name}</td>${pos.slice(0,3).map(p=>`<td>${p}</td>`).join('')}<td>${r.note}</td></tr>`;
+      return `<tr><td>${r.stt}</td><td>${escapeHTML(r.id)}</td><td>${escapeHTML(r.name)}</td>${pos.slice(0,3).map(p=>`<td>${p}</td>`).join('')}<td>${escapeHTML(r.note)}</td></tr>`;
     }).join('');
     
     document.getElementById('previewTableWrap').innerHTML = `
