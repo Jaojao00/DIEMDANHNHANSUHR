@@ -1350,7 +1350,7 @@ textarea.form-input { min-height: 72px; }
 /* Nút sửa chữa / Clear Cache */
 .floating-repair-btn {
   position: fixed;
-  top: 15px;
+  top: 85px;
   left: 15px;
   width: 44px;
   height: 44px;
