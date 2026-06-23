@@ -842,58 +842,78 @@ function autoGenerateRoster() {
 // Chạy hàm này qua Trigger vào 06:00 - 07:00 hàng ngày
 // ==========================================
 function autoSyncPositions(targetShifts) {
-  if (!targetShifts) targetShifts = ["18:00-22:00", "22:00-06:00"];
-  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  var vitriSheet = ss.getSheetByName("Sheet_ViTri");
-  if (!vitriSheet) return;
-  
-  var vitriData = vitriSheet.getDataRange().getValues();
-  
-  var posDict = {};
-  for (var r = 1; r < vitriData.length; r++) {
-    var empId = (vitriData[r][1] || "").toString().toLowerCase().trim();
-    if (!empId) continue;
+    if (!targetShifts) targetShifts = ["18:00-22:00", "22:00-06:00"];
+    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var vitriSheet = ss.getSheetByName("Sheet_ViTri");
+    if (!vitriSheet) return;
     
-    var positions = [];
-    // Vị trí nằm ở cột E đến J (tức là index 4 đến 9)
-    for (var c = 4; c <= 9; c++) {
-      positions.push(vitriData[r][c] || "");
-    }
-    posDict[empId] = positions;
-  }
-  
-  
-  for (var k = 0; k < targetShifts.length; k++) {
-    var shiftId = targetShifts[k];
-    var destSheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
-    var destSheet = ss.getSheetByName(destSheetName);
+    var vitriData = vitriSheet.getDataRange().getValues();
     
-    if (!destSheet) continue;
+    // Khai báo giới hạn dòng cho từng ca
+    var rowMapping = {
+      "06:00-15:00": { start: 22, end: 72 },
+      "06:00-10:00": { start: 76, end: 117 },
+      "15:00-22:00": { start: 149, end: 200 },
+      "18:00-22:00": { start: 203, end: 258 },
+      "22:00-06:00": { start: 296, end: 430 }
+    };
     
-    var destData = destSheet.getDataRange().getValues();
-    if (destData.length <= 1) continue;
-    
-    var destHeaders = destData[0];
-    var N = destHeaders.length - 8;
-    if (N < 0) N = 0;
-    
-    var updatedRows = [];
-    for (var r = 1; r < destData.length; r++) {
-      var row = destData[r];
-      var empId = (row[1] || "").toString().toLowerCase().trim();
+    for (var k = 0; k < targetShifts.length; k++) {
+      var shiftId = targetShifts[k];
       
-      if (posDict[empId]) {
-        for (var p = 0; p < Math.min(N, posDict[empId].length); p++) {
-          row[4 + p] = posDict[empId][p];
+      // Tạo từ điển vị trí (posDict) DÀNH RIÊNG cho ca này dựa trên số dòng đã cấp
+      var posDict = {};
+      var mapping = rowMapping[shiftId];
+      if (mapping) {
+        // Trừ 1 vì index trong mảng bắt đầu từ 0
+        var startIdx = mapping.start - 1;
+        var endIdx = mapping.end - 1;
+        
+        for (var r = startIdx; r <= endIdx && r < vitriData.length; r++) {
+          var empId = (vitriData[r][1] || "").toString().toLowerCase().trim();
+          if (!empId) continue;
+          
+          var positions = [];
+          // Vị trí nằm ở cột E đến J (tức là index 4 đến 9)
+          for (var c = 4; c <= 9; c++) {
+            positions.push(vitriData[r][c] || "");
+          }
+          posDict[empId] = positions;
         }
+      } else {
+        // Nếu không có thông số dòng thì bỏ qua ca này
+        continue;
       }
-      updatedRows.push(row);
+      
+      var destSheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
+      var destSheet = ss.getSheetByName(destSheetName);
+      
+      if (!destSheet) continue;
+      
+      var destData = destSheet.getDataRange().getValues();
+      if (destData.length <= 1) continue;
+      
+      var destHeaders = destData[0];
+      var N = destHeaders.length - 8;
+      if (N < 0) N = 0;
+      
+      var updatedRows = [];
+      for (var r = 1; r < destData.length; r++) {
+        var row = destData[r];
+        var empId = (row[1] || "").toString().toLowerCase().trim();
+        
+        if (posDict[empId]) {
+          for (var p = 0; p < Math.min(N, posDict[empId].length); p++) {
+            row[4 + p] = posDict[empId][p];
+          }
+        }
+        updatedRows.push(row);
+      }
+      
+      if (updatedRows.length > 0) {
+        destSheet.getRange(2, 1, updatedRows.length, destHeaders.length).setValues(updatedRows);
+      }
     }
-    
-    if (updatedRows.length > 0) {
-      destSheet.getRange(2, 1, updatedRows.length, destHeaders.length).setValues(updatedRows);
-    }
-  }
 }
 
 
