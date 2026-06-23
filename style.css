@@ -1346,3 +1346,31 @@ textarea.form-input { min-height: 72px; }
 }
 .reg-date-row input[type=date]:focus { outline: none; border-color: var(--agr-red); }
 .reg-date-row span { color: var(--text-muted); font-size: 12px; }
+
+/* Nút sửa chữa / Clear Cache */
+.floating-repair-btn {
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.floating-repair-btn:hover, .floating-repair-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--primary);
+  transform: rotate(180deg);
+  border-color: rgba(255, 255, 255, 0.2);
+}

@@ -2097,3 +2097,16 @@ document.addEventListener('DOMContentLoaded', () => {
   AdminApp.init();
   EmpNav.init();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const repairBtn = document.getElementById('repairBtn');
+  if (repairBtn) {
+    repairBtn.addEventListener('click', () => {
+      if (confirm('Bạn có chắc chắn muốn dọn dẹp bộ nhớ tạm (xóa cache) và tải lại trang để sửa lỗi? Mọi dữ liệu lưu nháp hoặc thao tác đang làm dở sẽ bị xóa.')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload(true);
+      }
+    });
+  }
+});
