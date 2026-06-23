@@ -112,7 +112,7 @@ const Utils = {
       start.setHours(0, 0, 0);
       end.setDate(end.getDate() - 1);
       end.setHours(19, 0, 0);
-    } else {
+    } {
       start.setHours(0, 0, 0);
       end.setHours(23, 59, 59);
     }
@@ -1133,12 +1133,6 @@ const AdminApp = {
             document.getElementById('viewModeReg').style.color = 'var(--text-secondary)';
             document.getElementById('viewModeReg').classList.add('btn-ghost');
           }
-          if (document.getElementById('viewModeBooking')) {
-            document.getElementById('viewModeBooking').style.background = 'transparent';
-            document.getElementById('viewModeBooking').style.color = 'var(--text-secondary)';
-            document.getElementById('viewModeBooking').classList.add('btn-ghost');
-          }
-          if (document.getElementById('bookingDateFilter')) document.getElementById('bookingDateFilter').style.display = 'none';
           AdminApp.loadData();
         });
         btnViewModeReg.addEventListener('click', () => {
@@ -1151,26 +1145,8 @@ const AdminApp = {
             btnViewModeFinal.style.color = 'var(--text-secondary)';
             btnViewModeFinal.classList.add('btn-ghost');
           }
-          if (document.getElementById('viewModeBooking')) {
-            document.getElementById('viewModeBooking').style.background = 'transparent';
-            document.getElementById('viewModeBooking').style.color = 'var(--text-secondary)';
-            document.getElementById('viewModeBooking').classList.add('btn-ghost');
-          }
-          if (document.getElementById('bookingDateFilter')) document.getElementById('bookingDateFilter').style.display = 'none';
           AdminApp.loadData();
         });
-        const btnViewModeBooking = document.getElementById('viewModeBooking');
-        if (btnViewModeBooking) {
-          btnViewModeBooking.addEventListener('click', () => {
-            AdminApp.currentViewMode = 'booking';
-            btnViewModeBooking.style.background = 'var(--primary)';
-            btnViewModeBooking.style.color = 'white';
-            btnViewModeBooking.classList.remove('btn-ghost');
-            if (btnViewModeFinal) {
-               btnViewModeFinal.style.background = 'transparent';
-               btnViewModeFinal.style.color = 'var(--text-secondary)';
-               btnViewModeFinal.classList.add('btn-ghost');
-            }
             if (btnViewModeReg) {
                btnViewModeReg.style.background = 'transparent';
                btnViewModeReg.style.color = 'var(--text-secondary)';
@@ -1186,13 +1162,6 @@ const AdminApp = {
             }
             AdminApp.loadBookingData();
           });
-        }
-        
-        const bookingDp = document.getElementById('bookingDateFilter');
-        if (bookingDp) {
-           bookingDp.addEventListener('change', () => {
-              if (AdminApp.currentViewMode === 'booking') AdminApp.loadBookingData();
-           });
         }
     }
 
@@ -1678,62 +1647,7 @@ const AdminApp = {
     if (AdminApp.currentViewMode === 'registration') {
       AdminApp.renderRegistrationTable([]); // Should not reach here normally, but just in case
       return;
-    }
-      if (AdminApp.currentViewMode === 'booking') {
-        return;
-      }
-
-    if (!State.scheduleData || State.scheduleData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu lịch ca này. Vui lòng thêm bằng tính năng Quản lý.</td></tr>`;
-      return;
-    }
-
-    // Lấy danh sách ID đã xin nghỉ/lên ca từ localStorage
-    let requests = [];
-    try {
-      const stored = localStorage.getItem('agr_requests');
-      if (stored) requests = JSON.parse(stored);
-      
-      const scheduleDate = localStorage.getItem('agr_schedule_date');
-      if (scheduleDate) {
-        requests = requests.filter(r => {
-          if (!r || !r.date) return false;
-          let rDateStr = r.date.toString();
-          if (rDateStr.includes('T')) {
-            const d = new Date(rDateStr);
-            rDateStr = `${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
-          }
-          return rDateStr === scheduleDate || rDateStr.startsWith(scheduleDate);
-        });
-      }
-    } catch (e) {
-      console.error("Lỗi đọc dự án:", e);
-    }
-    const offIds = new Set((requests || []).filter(r => r && r.type === 'XIN OFF' && r.empId).map(r => r.empId.toLowerCase().trim()));
-    const extraIds = new Set((requests || []).filter(r => r && r.type === 'XIN LÊN CA' && r.empId).map(r => r.empId.toLowerCase().trim()));
-
-    const timeStatus = Utils.isWithinTimeWindow(State.selectedShiftId);
-    const isTimeOver = timeStatus.isOver;
-
-    tbody.innerHTML = State.scheduleData.map(emp => {
-      const empIdLower = (emp.id || '').toLowerCase().trim();
-      const isOff = offIds.has(empIdLower) || emp.status === 'xin off';
-      const isExtra = extraIds.has(empIdLower);
-      const isAutoOff = !isOff && !isExtra && emp.status !== 'confirmed' && isTimeOver;
-      
-      let rowClass = isOff ? 'xin-off-row' : (emp.status === 'confirmed' ? 'attended' : '');
-      if (isAutoOff) rowClass = 'auto-off-row';
-
-      let confirmCell = '';
-      if (isOff) {
-        confirmCell = `<span class="xin-off-badge">📋 Xin Off</span>`;
-      } else if (isAutoOff) {
-        confirmCell = `<span class="auto-off-badge">OFF CHƯA ĐIỂM DANH</span>`;
-      } else if (isExtra) {
-        confirmCell = `<span class="xin-len-ca-badge">⬆️ Xin Lên Ca</span>`;
-      } else if (emp.status === 'confirmed') {
-        confirmCell = `<div class="confirm-badge confirmed" title="Đã điểm danh lúc ${emp.timestamp}">✓</div>`;
-      } else {
+    } else {
         confirmCell = `<div class="confirm-badge pending"></div>`;
       }
 
