@@ -744,7 +744,8 @@ function doGet(e) {
 // TỰ ĐỘNG HÓA 00:00 (Auto-Scheduler)
 // Chạy hàm này qua Trigger vào 00:00 - 01:00 hàng ngày
 // ==========================================
-function autoGenerateRoster() {
+function autoGenerateRoster(targetShifts) {
+  if (!targetShifts) targetShifts = ["06:00-15:00", "06:00-10:00", "15:00-22:00", "18:00-22:00", "22:00-06:00"];
   var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   
   
