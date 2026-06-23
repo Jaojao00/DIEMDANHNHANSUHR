@@ -127,7 +127,8 @@ function doPost(e) {
           data.type || "XIN OFF",
           data.reason || "",
           data.date || "",
-          data.note || ""
+          data.note || "",
+          data.targetShift || "" // Lưu ca đích để autoGenerateRoster biết
         ]);
         
         // AUTO-UPDATE "XIN OFF" IN SHIFT SHEETS
@@ -811,6 +812,7 @@ function autoGenerateRoster(targetShifts) {
     if (N < 0) N = 0;
     
     var rowsToWrite = [];
+    var empIndexMap = {};
     for (var w = 0; w < workersForToday.length; w++) {
       var worker = workersForToday[w];
       var newRow = [
@@ -830,6 +832,68 @@ function autoGenerateRoster(targetShifts) {
       newRow.push(worker.phone); // SDT
       
       rowsToWrite.push(newRow);
+      empIndexMap[worker.empId.toString().toLowerCase().trim()] = rowsToWrite.length - 1;
+    }
+    
+    // Đọc XIN_OFF để áp dụng các đơn của NGÀY HÔM NAY
+    var reqSheet = ss.getSheetByName("XIN_OFF");
+    if (reqSheet && reqSheet.getLastRow() > 1) {
+      var reqData = reqSheet.getDataRange().getValues();
+      for (var r = 1; r < reqData.length; r++) {
+        var rowType = (reqData[r][4] || "").toString().trim();
+        var rowDate = (reqData[r][6] || "").toString().trim();
+        var rowTargetShift = (reqData[r][8] || "").toString().trim(); // Cột I chứa targetShift
+        
+        if (rowDate === todayStr) {
+          var rEmpId = (reqData[r][1] || "").toString().toLowerCase().trim();
+          var rReason = (reqData[r][5] || "") + " " + (reqData[r][7] || "");
+          var rPhone = reqData[r][3] || "";
+          var rTime = reqData[r][0] || "";
+          
+          if (rowType === "XIN OFF") {
+            // Xin Off: nếu có targetShift thì phải khớp, không thì áp dụng hết
+            var applyOff = true;
+            if (rowTargetShift && rowTargetShift !== "ALL" && rowTargetShift !== shiftId) {
+              applyOff = false;
+            }
+            if (applyOff && empIndexMap.hasOwnProperty(rEmpId)) {
+              var tIdx = empIndexMap[rEmpId];
+              rowsToWrite[tIdx][4 + N + 1] = "XIN OFF"; // Trạng Thái
+              rowsToWrite[tIdx][4 + N + 2] = rTime; // Thời gian
+              rowsToWrite[tIdx][4 + N] = rReason.trim(); // Ghi chú
+              if (rPhone) rowsToWrite[tIdx][4 + N + 3] = rPhone;
+            }
+          } else if (rowType === "XIN LÊN CA") {
+            // Xin Lên Ca: chỉ áp dụng nếu đúng ca đích
+            if (rowTargetShift === shiftId) {
+              if (empIndexMap.hasOwnProperty(rEmpId)) {
+                // Đã có trong lịch, update status nếu cần
+                var tIdx = empIndexMap[rEmpId];
+                rowsToWrite[tIdx][4 + N] = rReason.trim();
+              } else {
+                // Thêm người mới vào cuối danh sách
+                var rName = reqData[r][2] || "";
+                var newRow = [
+                  rowsToWrite.length + 1,
+                  rEmpId,
+                  rName,
+                  "A-OS" // Định danh
+                ];
+                for (var pos = 0; pos < N; pos++) {
+                  newRow.push("");
+                }
+                newRow.push(rReason.trim()); // Ghi chú
+                newRow.push("pending"); // Trạng Thái
+                newRow.push(rTime); // Thời gian
+                newRow.push(rPhone); // SDT
+                
+                rowsToWrite.push(newRow);
+                empIndexMap[rEmpId] = rowsToWrite.length - 1;
+              }
+            }
+          }
+        }
+      }
     }
     
     if (rowsToWrite.length > 0) {
