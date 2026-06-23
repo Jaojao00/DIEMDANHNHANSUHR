@@ -753,6 +753,11 @@ const EmployeeApp = {
           return;
         }
 
+        if (typeof CONFIG !== 'undefined' && CONFIG.EMPLOYEE_ID_REGEX && !CONFIG.EMPLOYEE_ID_REGEX.test(empId)) {
+          Utils.showToast('Mã nhân viên không hợp lệ! Vui lòng nhập đúng định dạng (VD: Ops123456)', 'error');
+          return;
+        }
+
         const btn = document.getElementById('requestSubmitBtn');
         try {
           if (btn) {
