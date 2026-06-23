@@ -1,4 +1,4 @@
-
+﻿
 window.escapeHTML = function(str) {
   if (!str) return '';
   return str.toString()
@@ -8,7 +8,7 @@ window.escapeHTML = function(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 };
-﻿/**
+/**
  * AGR - Hệ Thống Điểm Danh v3.0
  * app.js - Xử lý logic nghiệp vụ cho 2 luồng: Nhân viên (Mobile) và Admin (Desktop)
  */
@@ -51,7 +51,7 @@ const State = {
   scanner: null,
   isScanning: false,
   refreshTimer: null,
-  apiLink: localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? State.apiLink : ''),
+  apiLink: localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : ''),
   clockTimer: null
 };
 
@@ -454,7 +454,7 @@ const EmployeeApp = {
       if (currentLocalUrl && (currentLocalUrl.trim() === oldUrl1 || currentLocalUrl.trim() === oldUrl2 || currentLocalUrl.trim() === oldUrl3 || currentLocalUrl.trim() === oldUrl4 || currentLocalUrl.trim() === oldUrl5)) {
         localStorage.removeItem('agr_api_url');
       }
-      State.apiLink = localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? State.apiLink : '');
+      State.apiLink = localStorage.getItem('agr_api_url') || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
     } catch (e) {
       console.error("Lỗi dọn dẹp url cũ:", e);
     }
@@ -1077,7 +1077,7 @@ const AdminApp = {
         loginSubmitBtn.innerHTML = '<span class="loading-spinner" style="width:14px;height:14px;border-width:2px;margin-right:8px;border-color:rgba(255,255,255,0.3);border-top-color:#fff;display:inline-block;border-radius:50%;animation:spin 1s linear infinite;"></span> Đang xử lý...';
         if (errorEl) errorEl.classList.add('hidden');
 
-        fetch(State.apiLink, {
+        fetch(CONFIG.APPS_SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: "admin_login", email: email, password: pass })
@@ -1373,7 +1373,7 @@ const AdminApp = {
       const statusDot = document.getElementById('connectionStatus');
       const statusText = document.getElementById('connectionText');
       if (statusDot) statusDot.className = 'status-dot online';
-      if (statusText) statusText.textContent = State.apiLink ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
+      if (statusText) statusText.textContent = CONFIG.API_URL ? '⚡ Realtime (Google Sheets)' : '⭕ Offline (Local)';
     } catch (err) {
       if(!isSilent) Utils.showToast('Lỗi tải dữ liệu', 'error');
       const statusDot = document.getElementById('connectionStatus');
@@ -1906,7 +1906,7 @@ const AdminApp = {
     
     try {
       const url = State.apiLink;
-      if (!url) throw new Error('Vui lòng thiết lập cấu hình State.apiLink trước khi xóa!');
+      if (!url) throw new Error('Vui lòng thiết lập cấu hình CONFIG.API_URL trước khi xóa!');
       
       const response = await fetch(url, {
         method: 'POST',
