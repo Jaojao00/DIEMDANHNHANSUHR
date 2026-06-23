@@ -521,6 +521,164 @@ function doPost(e) {
       }
     }
 
+    // Pre-flight check (CORS ping)
+    return ContentService.createTextOutput(JSON.stringify({ status: "AGR API is running" })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (e) {
+    return ContentService.createTextOutput(JSON.stringify({ error: "Server Error: " + e.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Hàm xử lý GET requests (Tải lịch làm việc)
+function doGet(e) {
+  try {
+    var action = e.parameter.action;
+    var shiftId = e.parameter.shiftId;
+    
+    if (action === "load" && shiftId) {
+      var sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
+      var ss = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = ss.getSheetByName(sheetName);
+      
+      if (!sheet) {
+        return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      var dataRange = sheet.getDataRange();
+      var values = dataRange.getValues();
+      var headers = values[0] || [];
+      var N = headers.length - 8; // Số cột vị trí động
+      
+      if (values.length <= 1) {
+        return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+      }
+      
+      var result = [];
+      for (var i = 1; i < values.length; i++) {
+        var r = values[i];
+        if (r[0] === "" && r[1] === "" && r[2] === "") continue;
+        
+        var positions = [];
+        for (var j = 0; j < N; j++) {
+          positions.push(r[4 + j] || "");
+        }
+        
+        result.push({
+          stt: r[0] || "",
+          id: r[1] || "",
+          name: r[2] || "",
+          dinhDanh: r[3] || "",
+          positions: positions,
+          note: r[4 + N] || "",
+          status: r[4 + N + 1] || "pending",
+          timestamp: r[4 + N + 2] || "",
+          phone: r[4 + N + 3] || ""
+        });
+      }
+      
+      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    if (action === "load_requests") {
+      try {
+        var reqSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+        var reqSheet = reqSs.getSheetByName("XIN_OFF");
+        
+        if (!reqSheet || reqSheet.getLastRow() <= 1) {
+          return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+        }
+        var values = reqSheet.getDataRange().getValues();
+        var result = [];
+        for (var i = 1; i < values.length; i++) {
+          var r = values[i];
+          result.push({
+            ts: r[0],
+            empId: (r[1] || "").toString().toLowerCase().trim(),
+            name: r[2],
+            phone: r[3],
+            type: r[4],
+            reason: r[5],
+            date: r[6],
+            note: r[7]
+          });
+        }
+        return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+      } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
+    if (action === "get_registration") {
+      try {
+        var empIdSearch = (e.parameter.empId || "").toLowerCase().trim();
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+        var allSheets = regSs.getSheets();
+        var result = [];
+        
+        // Quét tất cả các sheet bắt đầu bằng "LỊCHT" hoặc "DangKyLich"
+        for (var s = 0; s < allSheets.length; s++) {
+          var sheet = allSheets[s];
+          var sName = sheet.getName();
+          
+          if (sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
+            if (sheet.getLastRow() <= 1) continue;
+            var vals = sheet.getDataRange().getValues();
+            var headers = vals[0];
+            
+            for (var ri = 1; ri < vals.length; ri++) {
+              var rowId = (vals[ri][1] || "").toString().toLowerCase().trim();
+              if (rowId !== empIdSearch) continue;
+              
+              var selections = [];
+              for (var ci = 6; ci < headers.length; ci++) {
+                selections.push({ label: headers[ci], choice: vals[ri][ci] || "OFF" });
+              }
+              
+              result.push({
+                empId: vals[ri][1],
+                empName: vals[ri][2],
+                shiftId: vals[ri][4],
+                shiftLabel: vals[ri][5],
+                selections: selections,
+                timestamp: vals[ri][0]
+              });
+            }
+          }
+        }
+        
+        return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+      } catch(getRegErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: getRegErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
+    if (action === "get_reg_config") {
+      try {
+        var configSheet = getConfigSheet();
+        
+        var configData = configSheet.getDataRange().getValues();
+        var result = { regDateFrom: "", regDateTo: "" };
+        
+        for (var i = 1; i < configData.length; i++) {
+          var val = configData[i][1];
+          var strVal = "";
+          if (val) {
+            if (val instanceof Date) {
+              strVal = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM-dd");
+            } else {
+              strVal = val.toString();
+            }
+          }
+          if (configData[i][0] === "reg_date_from") result.regDateFrom = strVal;
+          if (configData[i][0] === "reg_date_to") result.regDateTo = strVal;
+        }
+        
+        return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+      } catch(cfgErr) {
+        return ContentService.createTextOutput(JSON.stringify({ error: cfgErr.toString() })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     if (action === "get_shift_registrations") {
       try {
         var shiftSearch = e.parameter.shiftId; 
