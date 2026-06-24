@@ -100,14 +100,14 @@ const Utils = {
     let shiftDate = new Date(scheduleDate);
     
     if (shiftId === '18:00-22:00') {
-      let d1Start = new Date(shiftDate); d1Start.setHours(13, 0, 0);
+      let d1Start = new Date(shiftDate); d1Start.setHours(10, 0, 0);
       let d1End = new Date(shiftDate); d1End.setHours(14, 0, 0);
       let d2Start = new Date(shiftDate); d2Start.setHours(22, 0, 0);
       let d2End = new Date(shiftDate); d2End.setHours(23, 59, 59);
       
       isAllowed = (now >= d1Start && now <= d1End) || (now >= d2Start && now <= d2End);
       isOver = (now > d2End);
-      startStr = "13h-14h"; endStr = "Sau 22:00";
+      startStr = "10h-14h"; endStr = "Sau 22:00";
     } else if (shiftId === '22:00-06:00') {
       let d1Start = new Date(shiftDate); d1Start.setHours(14, 0, 0);
       let d1End = new Date(shiftDate); d1End.setHours(18, 0, 0);
