@@ -2099,7 +2099,14 @@ const AdminApp = {
     if (datePicker && datePicker.value) {
       localStorage.setItem('agr_schedule_date', datePicker.value);
       const mainDateInput = document.getElementById('mainScheduleDateInput');
-      if (mainDateInput) mainDateInput.value = datePicker.value;
+      if (mainDateInput) {
+        const parts = datePicker.value.split('-');
+        if (parts.length === 3) {
+          mainDateInput.textContent = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } else {
+          mainDateInput.textContent = datePicker.value;
+        }
+      }
     }
     
     try {
@@ -2126,26 +2133,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mainDateInput) {
     const savedDate = localStorage.getItem('agr_schedule_date');
     if (savedDate) {
-      mainDateInput.value = savedDate;
+      const parts = savedDate.split('-');
+      if (parts.length === 3) {
+        mainDateInput.textContent = `${parts[2]}/${parts[1]}/${parts[0]}`;
+      } else {
+        mainDateInput.textContent = savedDate;
+      }
     } else {
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const dd = String(today.getDate()).padStart(2, '0');
-      mainDateInput.value = `${yyyy}-${mm}-${dd}`;
+      mainDateInput.textContent = `${dd}/${mm}/${yyyy}`;
     }
-    
-    mainDateInput.addEventListener('change', (e) => {
-      if (e.target.value) {
-        localStorage.setItem('agr_schedule_date', e.target.value);
-        // Sync with modal
-        const datePicker = document.getElementById('scheduleDatePicker');
-        if (datePicker) datePicker.value = e.target.value;
-        
-        // Reload data
-        AdminApp.loadData();
-      }
-    });
   }
 });
 
