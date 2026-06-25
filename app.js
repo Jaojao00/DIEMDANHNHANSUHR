@@ -1629,11 +1629,18 @@ const AdminApp = {
   },
 
   toggleDeleteBtn: () => {
-    const checked = document.querySelectorAll('.reg-checkbox:checked').length;
+    const checkedBoxes = document.querySelectorAll('.reg-checkbox:checked');
+    const checked = checkedBoxes.length;
     const btn = document.getElementById('btnDeleteSelectedReg');
     if (btn) {
       btn.style.display = checked > 0 ? 'inline-block' : 'none';
       btn.innerText = `Xóa đã chọn (${checked})`;
+    }
+    const copyBtn = document.getElementById('btnCopySelected');
+    if (copyBtn) {
+      copyBtn.style.display = checked > 0 ? 'flex' : 'none';
+      const copyCount = document.getElementById('copySelectedCount');
+      if (copyCount) copyCount.innerText = checked;
     }
   },
 
@@ -2158,6 +2165,33 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.clear();
         window.location.reload(true);
       }
+    });
+  }
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  const btnCopySelected = document.getElementById('btnCopySelected');
+  if (btnCopySelected) {
+    btnCopySelected.addEventListener('click', () => {
+      const checkedBoxes = document.querySelectorAll('.reg-checkbox:checked');
+      if (checkedBoxes.length === 0) return;
+      
+      let copyText = "";
+      checkedBoxes.forEach(cb => {
+        const tr = cb.closest('tr');
+        if (tr) {
+          const maNV = tr.cells[2] ? tr.cells[2].innerText.trim() : "";
+          const hoTen = tr.cells[3] ? tr.cells[3].innerText.trim() : "";
+          copyText += maNV + "\t" + hoTen + "\n";
+        }
+      });
+      
+      navigator.clipboard.writeText(copyText).then(() => {
+        Utils.showToast(`Đã copy ${checkedBoxes.length} nhân viên vào bộ nhớ tạm!`, 'success');
+      }).catch(err => {
+        Utils.showToast('Lỗi khi copy: ' + err, 'error');
+      });
     });
   }
 });
