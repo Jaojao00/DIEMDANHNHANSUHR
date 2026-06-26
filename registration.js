@@ -370,7 +370,6 @@ const RegApp = {
     RegApp.crSelectedShift = shiftId;
     RegApp.crSelectedShiftName = element.getAttribute('data-name') || shiftId;
     
-    // Reset all cards in the change request modal
     const cards = document.querySelectorAll('.cr-shift-cards .reg-shift-card');
     cards.forEach(c => {
       c.classList.remove('selected');
@@ -381,7 +380,6 @@ const RegApp = {
       if (arrow) arrow.style.display = 'block';
     });
     
-    // Select the clicked card
     element.classList.add('selected');
     element.style.borderColor = 'var(--primary)';
     const checkmark = element.querySelector('.checkmark');
@@ -389,7 +387,7 @@ const RegApp = {
     const arrow = element.querySelector('.arrow-icon');
     if (arrow) arrow.style.display = 'none';
   },
-
+  
   openChangeRequestModal: () => {
     document.getElementById('regStep1').style.display = 'none';
     document.getElementById('regChangeRequest').style.display = 'block';
@@ -411,40 +409,77 @@ const RegApp = {
     if (!empId) return alert('Vui lòng nhập Mã nhân viên!');
     
     try {
-      const db = window.FirebaseDB?.db;
-      if (!db) return alert('Lỗi kết nối CSDL.');
-      const { collection, query, where, getDocs } = window.FirebaseDB;
-      const q = query(collection(db, "registrations"), where("empId", "==", empId), where("shiftId", "==", shiftId));
-      const qSnap = await getDocs(q);
+      const API_LINK = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
+      if (!API_LINK) return alert('Lỗi kết nối máy chủ!');
+
+      // Fetch the schedule for the selected shift to get the user's registrations
+      document.getElementById('crResultArea').style.display = 'none';
+      const res = await fetch(`${API_LINK}?action=load&shiftId=${shiftId}`);
+      const dataArr = await res.json();
       
-      if (qSnap.empty) {
-        return alert('Không tìm thấy dữ liệu đăng ký cũ của bạn cho ca này trên hệ thống!');
+      if (!dataArr || dataArr.length === 0 || dataArr.error) {
+        return alert(dataArr.error || 'Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
       }
       
-      const docs = qSnap.docs.map(d => Object.assign({ id: d.id }, d.data()));
-      docs.sort((a,b) => b.timestamp - a.timestamp);
-      const data = docs[0];
+      const empData = dataArr.find(r => (r.id || '').toLowerCase() === empId);
+      if (!empData) {
+        return alert('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
+      }
       
-      RegApp.crOriginalData = data;
-      RegApp.crFirebaseId = data.id;
-      RegApp.crCurrentSelections = JSON.parse(JSON.stringify(data.selections || []));
+      // Build crCurrentSelections from positions array
+      RegApp.crCurrentSelections = [];
+      if (empData.positions && Array.isArray(empData.positions) && RegApp.dates) {
+        empData.positions.forEach((pos, idx) => {
+          if (pos && pos.trim() !== "" && RegApp.dates[idx]) {
+            RegApp.crCurrentSelections.push({
+              id: RegApp.dates[idx].id,
+              label: RegApp.dates[idx].label,
+              value: pos
+            });
+          }
+        });
+      }
       
-      document.getElementById('crEmpName').textContent = (data.empName || '').toUpperCase();
+      RegApp.crOriginalData = {
+        empId: empData.id,
+        empName: empData.name,
+        shiftId: shiftId,
+        selections: JSON.parse(JSON.stringify(RegApp.crCurrentSelections))
+      };
+      RegApp.crFirebaseId = null; // No longer using Firebase
+      
+      document.getElementById('crEmpName').textContent = (empData.name || '').toUpperCase();
       document.getElementById('crShiftName').textContent = RegApp.crSelectedShiftName;
       
       RegApp.renderChangeTable();
       document.getElementById('crResultArea').style.display = 'block';
-      const btn = document.getElementById('crSubmitBtn');
-      btn.disabled = true;
-      btn.style.background = 'var(--text-muted)';
-      btn.style.cursor = 'not-allowed';
       
-    } catch(e) {
+      // Now check if they already have a pending request
+      const resReq = await fetch(API_LINK, { method: 'POST', body: JSON.stringify({ action: 'get_change_requests' }) });
+      const reqData = await resReq.json();
+      
+      if (reqData && reqData.data) {
+        const pendingForEmp = reqData.data.filter(r => r.empId.toLowerCase() === empId.toLowerCase());
+        if (pendingForEmp.length > 0) {
+          const matchedReq = pendingForEmp.find(r => r.shiftId === shiftId);
+          if (matchedReq) {
+            RegApp.crFirebaseId = matchedReq.id; // Store reqId here
+            // Update selections from pending request
+            if (matchedReq.selections) {
+              RegApp.crCurrentSelections = JSON.parse(JSON.stringify(matchedReq.selections));
+            }
+            alert('Bạn đang có một yêu cầu sửa lịch CHƯA ĐƯỢC DUYỆT cho ca này. Bạn có thể tiếp tục chỉnh sửa và gửi lại.');
+            RegApp.renderChangeTable();
+          }
+        }
+      }
+      
+    } catch (e) {
       console.error(e);
-      alert('Đã xảy ra lỗi khi tra cứu.');
+      alert('Lỗi tra cứu: ' + e.message);
     }
   },
-
+  
   renderChangeTable: () => {
     const thead = document.getElementById('crTable').querySelector('thead');
     const tbody = document.getElementById('crTableBody');
