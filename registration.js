@@ -389,13 +389,7 @@ const RegApp = {
   },
   
   openChangeRequestModal: () => {
-    document.getElementById('regStep1').style.display = 'none';
-    document.getElementById('regChangeRequest').style.display = 'block';
-    document.getElementById('crResultArea').style.display = 'none';
-    document.getElementById('crEmpId').value = '';
-    // Reset shift selection to CA_NGAY by default
-    const defaultCard = document.querySelector('.cr-shift-cards .reg-shift-card[data-shift="CA_NGAY"]');
-    if (defaultCard) RegApp.selectCRShift('CA_NGAY', defaultCard);
+    alert('Chức năng này đang phát triển, vui lòng chờ');
   },
 
   closeChangeRequestModal: () => {
