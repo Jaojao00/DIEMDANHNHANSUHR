@@ -1249,7 +1249,8 @@ textarea.form-input { min-height: 72px; }
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-bottom: 20px;
 }
 .reg-table { width: 100%; border-collapse: collapse; }
