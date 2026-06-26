@@ -359,89 +359,6 @@ const RegApp = {
       if (btn) { btn.disabled = false; btn.textContent = '✅ Gửi Đăng Ký'; }
     }
   }
-};
-
-// ==========================================
-// XEM LỊCH ĐÃ ĐĂNG KÝ (ViewScheduleApp)
-// ==========================================
-const ViewScheduleApp = {
-  lookup: async () => {
-    const inputEl = document.getElementById('vsEmpId');
-    const empId = (inputEl ? inputEl.value : '').trim().toLowerCase();
-    const area  = document.getElementById('vsResultArea');
-    if (!area) return;
-
-    if (!empId) {
-      Utils.showToast('Vui lòng nhập mã nhân viên', 'error');
-      return;
-    }
-
-    area.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">⏳ Đang tải...</div>';
-
-    let allRegs = [];
-
-    // Try backend
-    // Try backend
-    try {
-      const db = window.FirebaseDB?.db;
-      if (db) {
-        const { collection, query, where, getDocs } = window.FirebaseDB;
-        const q = query(collection(db, "registrations"), where("empId", "==", empId));
-        const qSnap = await getDocs(q);
-        const data = qSnap.docs.map(d => d.data());
-        if (data.length > 0) allRegs = data;
-      } else {
-        const apiLink = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
-        if (apiLink) {
-          const url = apiLink + '?action=get_registration&empId=' + encodeURIComponent(empId);
-          const resp = await fetch(url);
-          const data = await resp.json();
-          if (Array.isArray(data)) allRegs = data;
-        }
-      }
-    } catch (e) { /* fallback to local */ }
-
-    // Fallback: localStorage
-    if (allRegs.length === 0) {
-      const key = 'agr_reg_' + empId;
-      const local = JSON.parse(localStorage.getItem(key) || '[]');
-      allRegs = local;
-    }
-
-    if (allRegs.length === 0) {
-      area.innerHTML = '<div class="vs-empty-state">'
-        + '<div class="vs-empty-icon">🔍</div>'
-        + '<div>Không tìm thấy lịch đăng ký cho mã: <strong>' + empId.toUpperCase() + '</strong></div>'
-        + '<div style="font-size:12px;margin-top:8px;color:var(--text-muted)">Bạn có thể chưa đăng ký lịch hoặc nhập sai mã nhân viên.</div>'
-        + '</div>';
-      return;
-    }
-
-    let html = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">Lịch của: <strong style="color:var(--text-primary)">' + empId.toUpperCase() + '</strong></div>';
-
-    allRegs.forEach(reg => {
-      const shiftObj = (State && State.shifts) ? (State.shifts.find(s => s.id === reg.shiftId) || {}) : {};
-      html += '<div class="view-schedule-result">'
-        + '<div class="vsr-header">'
-        + '<div class="vsr-name">' + (shiftObj.icon || '📅') + ' ' + (reg.shiftLabel || reg.shiftId) + '</div>'
-        + '<div class="vsr-meta">' + reg.shiftId + ' &nbsp;|&nbsp; ' + (reg.empName || reg.empId) + '</div>'
-        + '</div>'
-        + '<table class="vsr-table">';
-
-      (reg.selections || []).forEach(sel => {
-        const isOff = sel.choice === 'OFF';
-        html += '<tr>'
-          + '<td class="vsr-date">' + sel.label + '</td>'
-          + '<td class="vsr-shift ' + (isOff ? 'off' : 'working') + '">' + (isOff ? '— OFF' : (reg.shiftLabel || reg.shiftId)) + '</td>'
-          + '</tr>';
-      });
-
-      html += '</table></div>';
-    });
-
-    area.innerHTML = html;
-  }
-
   ,
   crOriginalData: null,
   crCurrentSelections: [],
@@ -604,5 +521,89 @@ const ViewScheduleApp = {
       btn.textContent = 'Gửi yêu cầu thay đổi';
     }
   }
+
 };
 
+
+// ==========================================
+// XEM LỊCH ĐÃ ĐĂNG KÝ (ViewScheduleApp)
+// ==========================================
+const ViewScheduleApp = {
+  lookup: async () => {
+    const inputEl = document.getElementById('vsEmpId');
+    const empId = (inputEl ? inputEl.value : '').trim().toLowerCase();
+    const area  = document.getElementById('vsResultArea');
+    if (!area) return;
+
+    if (!empId) {
+      Utils.showToast('Vui lòng nhập mã nhân viên', 'error');
+      return;
+    }
+
+    area.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">⏳ Đang tải...</div>';
+
+    let allRegs = [];
+
+    // Try backend
+    // Try backend
+    try {
+      const db = window.FirebaseDB?.db;
+      if (db) {
+        const { collection, query, where, getDocs } = window.FirebaseDB;
+        const q = query(collection(db, "registrations"), where("empId", "==", empId));
+        const qSnap = await getDocs(q);
+        const data = qSnap.docs.map(d => d.data());
+        if (data.length > 0) allRegs = data;
+      } else {
+        const apiLink = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
+        if (apiLink) {
+          const url = apiLink + '?action=get_registration&empId=' + encodeURIComponent(empId);
+          const resp = await fetch(url);
+          const data = await resp.json();
+          if (Array.isArray(data)) allRegs = data;
+        }
+      }
+    } catch (e) { /* fallback to local */ }
+
+    // Fallback: localStorage
+    if (allRegs.length === 0) {
+      const key = 'agr_reg_' + empId;
+      const local = JSON.parse(localStorage.getItem(key) || '[]');
+      allRegs = local;
+    }
+
+    if (allRegs.length === 0) {
+      area.innerHTML = '<div class="vs-empty-state">'
+        + '<div class="vs-empty-icon">🔍</div>'
+        + '<div>Không tìm thấy lịch đăng ký cho mã: <strong>' + empId.toUpperCase() + '</strong></div>'
+        + '<div style="font-size:12px;margin-top:8px;color:var(--text-muted)">Bạn có thể chưa đăng ký lịch hoặc nhập sai mã nhân viên.</div>'
+        + '</div>';
+      return;
+    }
+
+    let html = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">Lịch của: <strong style="color:var(--text-primary)">' + empId.toUpperCase() + '</strong></div>';
+
+    allRegs.forEach(reg => {
+      const shiftObj = (State && State.shifts) ? (State.shifts.find(s => s.id === reg.shiftId) || {}) : {};
+      html += '<div class="view-schedule-result">'
+        + '<div class="vsr-header">'
+        + '<div class="vsr-name">' + (shiftObj.icon || '📅') + ' ' + (reg.shiftLabel || reg.shiftId) + '</div>'
+        + '<div class="vsr-meta">' + reg.shiftId + ' &nbsp;|&nbsp; ' + (reg.empName || reg.empId) + '</div>'
+        + '</div>'
+        + '<table class="vsr-table">';
+
+      (reg.selections || []).forEach(sel => {
+        const isOff = sel.choice === 'OFF';
+        html += '<tr>'
+          + '<td class="vsr-date">' + sel.label + '</td>'
+          + '<td class="vsr-shift ' + (isOff ? 'off' : 'working') + '">' + (isOff ? '— OFF' : (reg.shiftLabel || reg.shiftId)) + '</td>'
+          + '</tr>';
+      });
+
+      html += '</table></div>';
+    });
+
+    area.innerHTML = html;
+  }
+
+};
