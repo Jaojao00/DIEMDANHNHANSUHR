@@ -1252,7 +1252,7 @@ textarea.form-input { min-height: 72px; }
   overflow-x: auto;
   overflow-y: hidden;
   margin-bottom: 20px;
-}
+ -webkit-overflow-scrolling: touch; width: 100%; }
 .reg-table { width: 100%; border-collapse: collapse; }
 .reg-table thead th {
   background: var(--bg-panel);
