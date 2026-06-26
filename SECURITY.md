@@ -33,6 +33,7 @@ Vui lòng báo cáo lỗi bảo mật theo quy trình sau:
 ### Các Cơ Chế Bảo Mật Đang Được Áp Dụng:
 - **Chống gian lận điểm danh**: Khóa chức năng điểm danh nếu nhân viên nhập sai thông tin liên tiếp (Rate limiting).
 - **Phân quyền truy cập**: Toàn bộ dữ liệu điểm danh, quản lý ca và thông tin liên lạc được bảo vệ sau lớp xác thực tài khoản Admin (`admin_login`).
+- **Khóa chống Spam cấp độ Ca (Shift-level Lock)**: Nới lỏng khóa chống trùng lặp Firebase từ cấp độ "Kỳ đăng ký" xuống cấp độ "Ca làm việc", cho phép nhân sự linh hoạt đăng ký nhiều ca khác nhau trong ngày (VD: Ca Ngày + Ca Đêm) một cách an toàn mà vẫn ngăn chặn tuyệt đối việc spam gửi cùng một ca.
 - **Data Obfuscation**: Dữ liệu nhân viên được xác thực chéo với máy chủ Google Apps Script.
 - **Xác thực khung giờ**: Nhân viên bị ràng buộc bởi các thiết lập thời gian (Không được điểm danh ngoài giờ quy định, cấm gửi đơn xin nghỉ từ 18:00 đến 06:00).
 

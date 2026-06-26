@@ -130,9 +130,10 @@ DIEMDANHNHANSUHR/
 | 3 | **Xem vị trí làm việc** | Sau khi điểm danh → hiển thị vị trí cố định, sau giờ nghỉ, 4h-6h |
 | 4 | **Xin Nghỉ / Xin Off** | Gửi yêu cầu xin off với lý do |
 | 5 | **Xin Lên Ca** | Đăng ký thêm ca, chọn ca mục tiêu (kèm tự động gán vào danh sách Ca mới) |
-| 6 | **Đăng ký lịch** | Chọn ca → Chọn WORK/OFF cho từng ngày trong kỳ |
+| 6 | **Đăng ký lịch (Matrix UI)** | Gom 3 Ca Ngày thành một nút duy nhất, hiển thị dạng Ma trận (Radio Button). Tự động phân luồng dữ liệu trả về đúng Sheet trên Backend. |
 | 7 | **Xem lịch đã đăng ký** | Tra cứu bằng mã NV → hiển thị lịch tất cả ca |
-| 8 | **Nút Xóa Cache Nhanh** | Nổi bật góc màn hình để refresh tức thì và sửa lỗi treo máy |
+| 8 | **Sao chép nhanh (Copy)**| Tích chọn danh sách và sao chép định dạng chuẩn (Mã NV, Tên) để dán ra Excel. |
+| 9 | **Nút Xóa Cache Nhanh** | Nổi bật góc màn hình để refresh tức thì và sửa lỗi treo máy |
 
 ### 🔧 Quản Trị Viên (Admin View — Desktop)
 
