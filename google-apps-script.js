@@ -35,7 +35,7 @@ function doPost(e) {
     var action = data.action;
     var shiftId = data.shiftId;
     
-    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config" && action !== "sync_roster") {
+    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config" && action !== "sync_roster" && action !== "get_change_requests" && action !== "submit_change_request" && action !== "approve_change_request") {
       return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -487,6 +487,63 @@ function doPost(e) {
 
     // ACTION: RESET_REGISTRATIONS (Xóa tất cả các sheet lịch đăng ký cũ)
     
+    
+    // ACTION: SUBMIT_CHANGE_REQUEST
+    if (action === "submit_change_request") {
+      var lock = LockService.getScriptLock();
+      try {
+        lock.waitLock(10000);
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+        var crSheet = regSs.getSheetByName("ChangeRequests");
+        if (!crSheet) {
+          crSheet = regSs.insertSheet("ChangeRequests");
+          crSheet.appendRow(["ID", "EmpID", "EmpName", "ShiftID", "Selections", "Status", "Timestamp"]);
+        }
+        var reqId = "CR_" + new Date().getTime() + "_" + Math.floor(Math.random()*1000);
+        crSheet.appendRow([
+          reqId,
+          data.empId,
+          data.empName,
+          data.shiftId,
+          JSON.stringify(data.selections || []),
+          "pending",
+          new Date().toISOString()
+        ]);
+        return sendJsonResponse({ status: "success", reqId: reqId });
+      } catch (e) {
+        return sendJsonResponse({ status: "error", message: e.toString() });
+      } finally {
+        lock.releaseLock();
+      }
+    }
+
+    // ACTION: GET_CHANGE_REQUESTS
+    if (action === "get_change_requests") {
+      try {
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+        var crSheet = regSs.getSheetByName("ChangeRequests");
+        if (!crSheet) return sendJsonResponse({ status: "success", data: [] });
+        var dataRange = crSheet.getDataRange().getValues();
+        var requests = [];
+        for (var i = 1; i < dataRange.length; i++) {
+          if (dataRange[i][5] === "pending") {
+            requests.push({
+              id: dataRange[i][0],
+              empId: dataRange[i][1],
+              empName: dataRange[i][2],
+              shiftId: dataRange[i][3],
+              selections: JSON.parse(dataRange[i][4] || "[]"),
+              status: dataRange[i][5],
+              timestamp: dataRange[i][6]
+            });
+          }
+        }
+        return sendJsonResponse({ status: "success", data: requests });
+      } catch (e) {
+        return sendJsonResponse({ status: "error", message: e.toString() });
+      }
+    }
+
     // ACTION: APPROVE_CHANGE_REQUEST (Duyệt thay đổi lịch)
     if (action === "approve_change_request") {
       var lock = LockService.getScriptLock();

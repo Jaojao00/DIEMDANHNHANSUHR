@@ -706,21 +706,32 @@
       </div>
     </div>
     
-    <div class="reg-body" style="padding: 20px;">
-      <div class="form-group">
-        <label>Chọn Ca Muốn Đổi</label>
-        <select id="crShiftSelect" class="form-control" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
-          <option value="CA_NGAY">CA NGÀY (06:00-22:00)</option>
-          <option value="18:00-22:00">Ca Tối (18:00-22:00)</option>
-          <option value="22:00-06:00">Ca Đêm (22:00-06:00)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Mã Nhân Viên</label>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="crEmpId" class="form-control" placeholder="VD: OPS123456" style="text-transform: uppercase;">
-          <button class="btn btn-primary" onclick="RegApp.searchChangeRequest()" style="white-space: nowrap; padding: 0 20px;">Tra cứu</button>
+    <div class="reg-body">
+      <div class="view-schedule-lookup">
+        <div class="reg-section-title">Tra cứu yêu cầu sửa lịch</div>
+        
+        <div class="form-group" style="margin-bottom:12px">
+          <label for="crShiftSelect">Chọn Ca Muốn Đổi</label>
+          <div class="input-wrapper" style="position: relative;">
+            <select id="crShiftSelect" class="form-control" style="background: transparent; color: var(--text-primary); border: none; width: 100%; outline: none; -webkit-appearance: none; appearance: none; padding-right: 30px;">
+              <option value="CA_NGAY">CA NGÀY (06:00-22:00)</option>
+              <option value="18:00-22:00">Ca Tối (18:00-22:00)</option>
+              <option value="22:00-06:00">Ca Đêm (22:00-06:00)</option>
+            </select>
+            <div style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--primary);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>
+            </div>
+          </div>
         </div>
+
+        <div class="form-group" style="margin-bottom:12px">
+          <label for="crEmpId">Mã Nhân Viên</label>
+          <div class="input-wrapper">
+            <input type="text" id="crEmpId" placeholder="VD: Ops224190" autocomplete="off" autocapitalize="none" style="text-transform: uppercase;"/>
+          </div>
+        </div>
+        
+        <button class="reg-submit-btn" onclick="RegApp.searchChangeRequest()" style="margin-bottom:0">🔍 Tra cứu lịch</button>
       </div>
       
       <div id="crResultArea" style="display:none; margin-top: 20px;">
