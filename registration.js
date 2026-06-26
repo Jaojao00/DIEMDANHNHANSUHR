@@ -133,7 +133,7 @@ const RegApp = {
         + '<div class="rsc-icon" style="background:' + shift.color + '22; color:' + shift.color + ';">' + shift.icon + '</div>'
         + '<div class="rsc-info">'
         + '<div class="rsc-name">' + shift.label + '</div>'
-        + '<div class="rsc-time">' + timeStr + '</div>'
+        + '<div class="rsc-time" style="color:' + shift.color + '; background:' + shift.color + '1A; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: bold; border: 1px solid ' + shift.color + '33;">' + timeStr + '</div>'
         + '</div>'
         + '<div class="rsc-arrow">→</div>'
         + '</div>';
