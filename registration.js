@@ -364,11 +364,40 @@ const RegApp = {
   crCurrentSelections: [],
   crFirebaseId: null,
 
+    crSelectedShift: 'CA_NGAY',
+  crSelectedShiftName: 'CA NGÀY',
+  selectCRShift: (shiftId, element) => {
+    RegApp.crSelectedShift = shiftId;
+    RegApp.crSelectedShiftName = element.getAttribute('data-name') || shiftId;
+    
+    // Reset all cards in the change request modal
+    const cards = document.querySelectorAll('.cr-shift-cards .reg-shift-card');
+    cards.forEach(c => {
+      c.classList.remove('selected');
+      c.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+      const checkmark = c.querySelector('.checkmark');
+      if (checkmark) checkmark.style.display = 'none';
+      const arrow = c.querySelector('.arrow-icon');
+      if (arrow) arrow.style.display = 'block';
+    });
+    
+    // Select the clicked card
+    element.classList.add('selected');
+    element.style.borderColor = 'var(--primary)';
+    const checkmark = element.querySelector('.checkmark');
+    if (checkmark) checkmark.style.display = 'block';
+    const arrow = element.querySelector('.arrow-icon');
+    if (arrow) arrow.style.display = 'none';
+  },
+
   openChangeRequestModal: () => {
     document.getElementById('regStep1').style.display = 'none';
     document.getElementById('regChangeRequest').style.display = 'block';
     document.getElementById('crResultArea').style.display = 'none';
     document.getElementById('crEmpId').value = '';
+    // Reset shift selection to CA_NGAY by default
+    const defaultCard = document.querySelector('.cr-shift-cards .reg-shift-card[data-shift="CA_NGAY"]');
+    if (defaultCard) RegApp.selectCRShift('CA_NGAY', defaultCard);
   },
 
   closeChangeRequestModal: () => {
@@ -378,7 +407,7 @@ const RegApp = {
 
   searchChangeRequest: async () => {
     const empId = document.getElementById('crEmpId').value.trim().toLowerCase();
-    const shiftId = document.getElementById('crShiftSelect').value;
+    const shiftId = RegApp.crSelectedShift;
     if (!empId) return alert('Vui lòng nhập Mã nhân viên!');
     
     try {
@@ -401,7 +430,7 @@ const RegApp = {
       RegApp.crCurrentSelections = JSON.parse(JSON.stringify(data.selections || []));
       
       document.getElementById('crEmpName').textContent = (data.empName || '').toUpperCase();
-      document.getElementById('crShiftName').textContent = document.getElementById('crShiftSelect').options[document.getElementById('crShiftSelect').selectedIndex].text;
+      document.getElementById('crShiftName').textContent = RegApp.crSelectedShiftName;
       
       RegApp.renderChangeTable();
       document.getElementById('crResultArea').style.display = 'block';
