@@ -120,12 +120,20 @@ const RegApp = {
     const container = document.getElementById('regShiftList');
     if (!container || !State || !State.shifts) return;
 
-    container.innerHTML = State.shifts.map(shift => {
+    // Build the Registration-specific shifts
+    const regShifts = [
+      { id: 'CA_NGAY', label: 'CA NGÀY', icon: '☀️', color: '#ffb347', displayTime: '06:00-22:00' },
+      State.shifts.find(s => s.id === '18:00-22:00'),
+      State.shifts.find(s => s.id === '22:00-06:00')
+    ].filter(Boolean);
+
+    container.innerHTML = regShifts.map(shift => {
+      const timeStr = shift.displayTime || shift.id;
       return '<div class="reg-shift-card" onclick="RegApp.selectShift(\'' + shift.id + '\')">'
         + '<div class="rsc-icon" style="background:' + shift.color + '22; color:' + shift.color + ';">' + shift.icon + '</div>'
         + '<div class="rsc-info">'
         + '<div class="rsc-name">' + shift.label + '</div>'
-        + '<div class="rsc-time">' + shift.id + '</div>'
+        + '<div class="rsc-time">' + timeStr + '</div>'
         + '</div>'
         + '<div class="rsc-arrow">→</div>'
         + '</div>';
@@ -133,7 +141,12 @@ const RegApp = {
   },
 
   selectShift: (shiftId) => {
-    const shift = State.shifts.find(s => s.id === shiftId);
+    let shift;
+    if (shiftId === 'CA_NGAY') {
+      shift = { id: 'CA_NGAY', label: 'CA NGÀY', icon: '☀️', color: '#ffb347', displayTime: '06:00-22:00' };
+    } else {
+      shift = State.shifts.find(s => s.id === shiftId);
+    }
     if (!shift) return;
     RegApp.selectedShift = shift;
 
@@ -178,22 +191,54 @@ const RegApp = {
   },
 
   renderDateTable: () => {
+    const thead = document.querySelector('#regTable thead');
     const tbody = document.getElementById('regTableBody');
-    if (!tbody || !RegApp.selectedShift) return;
+    if (!tbody || !thead || !RegApp.selectedShift) return;
     const dates = RegApp.getDateRange();
 
     if (dates.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--text-muted)">Admin chưa cấu hình ngày đăng ký. Vui lòng liên hệ quản lý.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Admin chưa cấu hình ngày đăng ký. Vui lòng liên hệ quản lý.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = dates.map((d, i) => {
-      return '<tr>'
-        + '<td>' + d.label + '</td>'
-        + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="WORK" data-date="' + d.iso + '" id="w_' + i + '"></td>'
-        + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="OFF"  data-date="' + d.iso + '" id="o_' + i + '"></td>'
-        + '</tr>';
-    }).join('');
+    if (RegApp.selectedShift.id === 'CA_NGAY') {
+      thead.innerHTML = `
+        <tr>
+          <th>Ngày</th>
+          <th style="color:#43e97b; min-width:80px">Ca OS Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-15:00</small></th>
+          <th style="color:#4facf7; min-width:80px">Ca Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-10:00</small></th>
+          <th style="color:#ffb347; min-width:80px">Ca Chiều<br><small style="font-weight:normal;opacity:0.8">15:00-22:00</small></th>
+          <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
+        </tr>
+      `;
+      tbody.innerHTML = dates.map((d, i) => {
+        return '<tr>'
+          + '<td>' + d.label + '</td>'
+          + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="06:00-15:00" data-date="' + d.iso + '"></td>'
+          + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="06:00-10:00" data-date="' + d.iso + '"></td>'
+          + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="15:00-22:00" data-date="' + d.iso + '"></td>'
+          + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="OFF" data-date="' + d.iso + '"></td>'
+          + '</tr>';
+      }).join('');
+    } else {
+      thead.innerHTML = `
+        <tr>
+          <th>Ngày</th>
+          <th id="regColShift">Ca làm việc</th>
+          <th>OFF (Không đăng ký)</th>
+        </tr>
+      `;
+      const colEl = document.getElementById('regColShift');
+      if (colEl) colEl.textContent = RegApp.selectedShift.label + ' (' + RegApp.selectedShift.id + ')';
+
+      tbody.innerHTML = dates.map((d, i) => {
+        return '<tr>'
+          + '<td>' + d.label + '</td>'
+          + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="WORK" data-date="' + d.iso + '"></td>'
+          + '<td><input type="radio" class="reg-radio" name="regDay_' + i + '" value="OFF"  data-date="' + d.iso + '"></td>'
+          + '</tr>';
+      }).join('');
+    }
   },
 
   submit: async () => {
@@ -270,10 +315,10 @@ const RegApp = {
         const regRef = collection(db, "registrations");
         
         // Double check on Firebase to prevent cross-device duplicate quickly
-        const q = query(regRef, where("empId", "==", empId), where("period", "==", currentPeriod));
+        const q = query(regRef, where("empId", "==", empId), where("period", "==", currentPeriod), where("shiftId", "==", RegApp.selectedShift.id));
         const qSnap = await getDocs(q);
         if (!qSnap.empty) {
-          throw new Error('Bạn đã đăng ký lịch làm việc rồi, vui lòng chờ kỳ lịch mới rồi tiếp tục!');
+          throw new Error('Bạn đã đăng ký ca này rồi, không được đăng ký lại!');
         }
         
         // Save to Firebase as a "lock" to prevent duplicates in the same period

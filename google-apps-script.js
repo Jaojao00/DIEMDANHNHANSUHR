@@ -370,21 +370,6 @@ function doPost(e) {
           }
         }
         
-        // Tên sheet động: LỊCHT6_22:00-06:00
-        var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "UNKNOWN");
-        var regSheet = regSs.getSheetByName(regSheetName);
-        
-        if (!regSheet) {
-          regSheet = regSs.insertSheet(regSheetName);
-          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-          (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
-          regSheet.appendRow(headerRow);
-        } else if (regSheet.getLastRow() === 0) {
-          var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-          (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
-          regSheet.appendRow(headerRow);
-        }
-        
         var searchId = (data.empId || "").toLowerCase().trim();
         
         // Thu thập danh sách các ca đã đăng ký
@@ -407,27 +392,92 @@ function doPost(e) {
           }
         }
         
-        var reqShift = data.shiftId || "";
-        
-        // Chỉ duy nhất 1 luật: Không được đăng ký cùng 1 ca tới 2 lần
-        if (userRegisteredShifts.indexOf(reqShift) !== -1) {
-          return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký ca " + reqShift + " trong kỳ này rồi, không được đăng ký lại!" })).setMimeType(ContentService.MimeType.JSON);
+        if (data.shiftId === "CA_NGAY") {
+          var subShifts = [
+            { id: "06:00-15:00", label: "Ca OS Sáng" },
+            { id: "06:00-10:00", label: "Ca Sáng" },
+            { id: "15:00-22:00", label: "Ca Chiều" }
+          ];
+          
+          for (var k = 0; k < subShifts.length; k++) {
+            var subShift = subShifts[k];
+            var reqShift = subShift.id;
+            
+            if (userRegisteredShifts.indexOf(reqShift) !== -1) {
+              continue; // Bỏ qua nếu đã đăng ký ca này rồi
+            }
+            
+            var subSelections = (data.selections || []).map(function(sel) {
+              return {
+                date: sel.date,
+                label: sel.label,
+                choice: (sel.choice === subShift.id) ? "WORK" : "OFF"
+              };
+            });
+            
+            var regSheetName = "LỊCHT" + month + "_" + subShift.id;
+            var regSheet = regSs.getSheetByName(regSheetName);
+            
+            if (!regSheet) {
+              regSheet = regSs.insertSheet(regSheetName);
+              var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
+              subSelections.forEach(function(sel) { headerRow.push(sel.label); });
+              regSheet.appendRow(headerRow);
+            } else if (regSheet.getLastRow() === 0) {
+              var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
+              subSelections.forEach(function(sel) { headerRow.push(sel.label); });
+              regSheet.appendRow(headerRow);
+            }
+            
+            var newRow = [
+              Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
+              data.empId || "",
+              data.empName || "",
+              data.empPhone || "",
+              data.osGender || "",
+              subShift.id,
+              subShift.label
+            ];
+            subSelections.forEach(function(sel) { newRow.push(sel.choice); });
+            regSheet.appendRow(newRow);
+          }
+          
+          return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+        } else {
+          var reqShift = data.shiftId || "";
+          
+          if (userRegisteredShifts.indexOf(reqShift) !== -1) {
+            return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký ca " + reqShift + " trong kỳ này rồi, không được đăng ký lại!" })).setMimeType(ContentService.MimeType.JSON);
+          }
+          
+          var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "UNKNOWN");
+          var regSheet = regSs.getSheetByName(regSheetName);
+          
+          if (!regSheet) {
+            regSheet = regSs.insertSheet(regSheetName);
+            var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
+            (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
+            regSheet.appendRow(headerRow);
+          } else if (regSheet.getLastRow() === 0) {
+            var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
+            (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
+            regSheet.appendRow(headerRow);
+          }
+          
+          var newRow = [
+            Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
+            data.empId || "",
+            data.empName || "",
+            data.empPhone || "",
+            data.osGender || "",
+            data.shiftId || "",
+            data.shiftLabel || ""
+          ];
+          (data.selections || []).forEach(function(sel) { newRow.push(sel.choice); });
+          regSheet.appendRow(newRow);
+          
+          return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
         }
-        
-        // Append new row
-        var newRow = [
-          Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
-          data.empId || "",
-          data.empName || "",
-          data.empPhone || "",
-          data.osGender || "",
-          data.shiftId || "",
-          data.shiftLabel || ""
-        ];
-        (data.selections || []).forEach(function(sel) { newRow.push(sel.choice); });
-        regSheet.appendRow(newRow);
-        
-        return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
       } catch(regErr) {
         return ContentService.createTextOutput(JSON.stringify({ error: regErr.toString() })).setMimeType(ContentService.MimeType.JSON);
       } finally {
