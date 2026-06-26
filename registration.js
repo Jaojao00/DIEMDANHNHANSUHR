@@ -430,7 +430,7 @@ const RegApp = {
         targetShiftIds = [shiftId];
       }
       
-      const empData = dataArr.find(r => targetShiftIds.includes(r.shiftId));
+      const empData = dataArr.find(r => targetShiftIds.includes(r.shiftLabel) || targetShiftIds.includes(r.shiftId));
       if (!empData) {
         return alert('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
       }
