@@ -412,59 +412,78 @@ const RegApp = {
       const API_LINK = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
       if (!API_LINK) return alert('Lỗi kết nối máy chủ!');
 
-      // Fetch the schedule for the selected shift to get the user's registrations
       document.getElementById('crResultArea').style.display = 'none';
-      const res = await fetch(`${API_LINK}?action=load&shiftId=${shiftId}`);
+      
+      // Sử dụng get_registration giống như phần Xem lịch (ViewScheduleApp)
+      const res = await fetch(`${API_LINK}?action=get_registration&empId=${encodeURIComponent(empId)}`);
       const dataArr = await res.json();
       
       if (!dataArr || dataArr.length === 0 || dataArr.error) {
-        return alert(dataArr.error || 'Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
+        return alert(dataArr.error || 'Không tìm thấy dữ liệu đăng ký của bạn trên hệ thống!');
       }
       
-      const empData = dataArr.find(r => (r.id || '').toLowerCase() === empId);
+      // Lọc ra đúng ca mà người dùng đang chọn (CA_NGAY gồm nhiều ca con)
+      let targetShiftIds = [];
+      if (shiftId === 'CA_NGAY') {
+        targetShiftIds = ['06:00-15:00', '06:00-10:00', '15:00-22:00', 'CA_NGAY'];
+      } else {
+        targetShiftIds = [shiftId];
+      }
+      
+      const empData = dataArr.find(r => targetShiftIds.includes(r.shiftId));
       if (!empData) {
         return alert('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
       }
       
-      // Build crCurrentSelections from positions array
+      // Build crCurrentSelections từ mảng selections của backend (WORK, OFF, v.v.)
       RegApp.crCurrentSelections = [];
-      if (empData.positions && Array.isArray(empData.positions) && RegApp.dates) {
-        empData.positions.forEach((pos, idx) => {
-          if (pos && pos.trim() !== "" && RegApp.dates[idx]) {
-            RegApp.crCurrentSelections.push({
-              id: RegApp.dates[idx].id,
-              label: RegApp.dates[idx].label,
-              value: pos
-            });
+      if (empData.selections && Array.isArray(empData.selections) && RegApp.dates) {
+        empData.selections.forEach(sel => {
+          if (sel.choice && sel.choice !== "OFF" && sel.choice.trim() !== "") {
+            const matchedDate = RegApp.dates.find(d => d.label === sel.label || d.id === sel.label.substring(0, 10));
+            if (matchedDate) {
+              RegApp.crCurrentSelections.push({
+                id: matchedDate.id,
+                label: matchedDate.label,
+                value: sel.choice
+              });
+            } else {
+              // Fallback nếu không khớp được RegApp.dates
+              RegApp.crCurrentSelections.push({
+                id: sel.label.substring(0, 10),
+                label: sel.label,
+                value: sel.choice
+              });
+            }
           }
         });
       }
       
       RegApp.crOriginalData = {
-        empId: empData.id,
-        empName: empData.name,
-        shiftId: shiftId,
+        empId: empData.empId,
+        empName: empData.empName,
+        shiftId: empData.shiftId,
+        shiftLabel: empData.shiftLabel,
         selections: JSON.parse(JSON.stringify(RegApp.crCurrentSelections))
       };
-      RegApp.crFirebaseId = null; // No longer using Firebase
+      RegApp.crFirebaseId = null;
       
-      document.getElementById('crEmpName').textContent = (empData.name || '').toUpperCase();
-      document.getElementById('crShiftName').textContent = RegApp.crSelectedShiftName;
+      document.getElementById('crEmpName').textContent = (empData.empName || '').toUpperCase();
+      document.getElementById('crShiftName').textContent = empData.shiftLabel || RegApp.crSelectedShiftName;
       
       RegApp.renderChangeTable();
       document.getElementById('crResultArea').style.display = 'block';
       
-      // Now check if they already have a pending request
+      // Check pending requests
       const resReq = await fetch(API_LINK, { method: 'POST', body: JSON.stringify({ action: 'get_change_requests' }) });
       const reqData = await resReq.json();
       
       if (reqData && reqData.data) {
         const pendingForEmp = reqData.data.filter(r => r.empId.toLowerCase() === empId.toLowerCase());
         if (pendingForEmp.length > 0) {
-          const matchedReq = pendingForEmp.find(r => r.shiftId === shiftId);
+          const matchedReq = pendingForEmp.find(r => targetShiftIds.includes(r.shiftId));
           if (matchedReq) {
-            RegApp.crFirebaseId = matchedReq.id; // Store reqId here
-            // Update selections from pending request
+            RegApp.crFirebaseId = matchedReq.id; // Store reqId
             if (matchedReq.selections) {
               RegApp.crCurrentSelections = JSON.parse(JSON.stringify(matchedReq.selections));
             }
