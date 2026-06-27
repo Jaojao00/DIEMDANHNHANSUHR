@@ -928,19 +928,25 @@ const AdminApp = {
   pendingChangeRequests: [],
   currentApproveReq: null,
 
-  listenToChangeRequests: () => {
-    const db = window.FirebaseDB?.db;
-    if (!db) return;
-    const { collection, query, where, onSnapshot } = window.FirebaseDB;
-    const q = query(collection(db, "change_requests"), where("status", "==", "pending"));
-    onSnapshot(q, (snapshot) => {
-      AdminApp.pendingChangeRequests = snapshot.docs.map(doc => Object.assign({ id: doc.id }, doc.data()));
-      AdminApp.updateNotifBadge();
-      // Re-render table if we are on the registration view
-      if (document.getElementById('scheduleView').classList.contains('active')) {
-        if (AdminApp.currentRegPayload) AdminApp.renderRegistrationTable(AdminApp.currentRegPayload);
+    fetchChangeRequests: async () => {
+    try {
+      const apiLink = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
+      if (!apiLink) return;
+      
+      const res = await fetch(`${apiLink}?action=get_change_requests`);
+      const data = await res.json();
+      
+      if (data.status === 'success' && data.data) {
+        AdminApp.pendingChangeRequests = data.data;
+        AdminApp.updateNotifBadge();
+        // Re-render table if we are on the registration view
+        if (document.getElementById('scheduleView') && document.getElementById('scheduleView').classList.contains('active')) {
+          if (AdminApp.currentRegPayload) AdminApp.renderRegistrationTable(AdminApp.currentRegPayload);
+        }
       }
-    });
+    } catch(e) {
+      console.error("Lỗi lấy danh sách change request: ", e);
+    }
   },
 
   updateNotifBadge: () => {
@@ -955,7 +961,16 @@ const AdminApp = {
     }
   },
 
-  openNotifModal: () => {
+    openNotifModal: async () => {
+    const btn = document.getElementById('adminNotifBtn');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span style="font-size:16px; font-weight:bold;">⏳</span>';
+    
+    await AdminApp.fetchChangeRequests();
+    
+    btn.innerHTML = originalHtml;
+    AdminApp.updateNotifBadge();
+
     const modal = document.getElementById('adminNotifModal');
     const list = document.getElementById('adminNotifList');
     if (!modal || !list) return;
@@ -970,14 +985,16 @@ const AdminApp = {
             <div>
               <div style="font-weight:bold; color:var(--text-main);">${(req.empName || '').toUpperCase()} <span style="font-size:11px; color:var(--text-muted);">(${req.empId})</span></div>
               <div style="font-size:12px; color:var(--primary); margin-top:4px;">Yêu cầu sửa: ${req.shiftLabel || req.shiftId}</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${new Date(req.timestamp).toLocaleString()}</div>
             </div>
-            <button class="btn btn-primary" style="padding:6px 12px; font-size:12px;" onclick="AdminApp.jumpToChangeRequest('${req.shiftId}', '${req.empId}')">Tới Lịch</button>
+            <button class="btn btn-primary btn-sm" onclick="AdminApp.openApproveModal('${req.id}')" style="padding:6px 12px; font-size:12px;">Xem</button>
           </div>
         `;
       });
       html += '</div>';
       list.innerHTML = html;
     }
+    
     modal.classList.remove('hidden');
   },
 
@@ -1016,24 +1033,20 @@ const AdminApp = {
     document.getElementById('adminApproveModal').classList.add('hidden');
   },
 
-  handleApproveChange: async (isApproved) => {
+    handleApproveChange: async (isApproved) => {
     if (!AdminApp.currentApproveReq) return;
     const req = AdminApp.currentApproveReq;
     
-    // UI disable
     document.getElementById('confirmApproveBtn').disabled = true;
     document.getElementById('rejectApproveBtn').disabled = true;
     
     try {
-      const db = window.FirebaseDB?.db;
-      const { doc, updateDoc } = window.FirebaseDB;
-      
       if (isApproved) {
         document.getElementById('confirmApproveBtn').textContent = 'Đang xử lý...';
         
-        // Call backend to update sheets
         const payload = {
           action: 'approve_change_request',
+          reqId: req.id,
           empId: req.empId,
           shiftId: req.shiftId,
           selections: req.selections
@@ -1050,33 +1063,35 @@ const AdminApp = {
           throw new Error(resJson.error);
         }
         
-        // Update Firebase Reg if needed (targetRegId)
-        if (req.targetRegId) {
-          await updateDoc(doc(db, "registrations", req.targetRegId), {
-            selections: req.selections,
-            timestamp: Date.now()
-          });
-        }
-        
-        // Update status of change request
-        await updateDoc(doc(db, "change_requests", req.id), { status: 'approved' });
-        
-        Utils.showToast(`Yêu cầu của bạn đã được duyệt. Mã NV: ${req.empId}, Họ Tên: ${req.empName}, SĐT: ${req.empPhone}`, 'success', 8000);
+        Utils.showToast("Đã duyệt yêu cầu và cập nhật lịch", "success");
       } else {
-        document.getElementById('rejectApproveBtn').textContent = 'Đang từ chối...';
-        await updateDoc(doc(db, "change_requests", req.id), { status: 'rejected' });
-        Utils.showToast('Đã từ chối yêu cầu thay đổi lịch.', 'info');
+        document.getElementById('rejectApproveBtn').textContent = 'Đang xử lý...';
+        
+        const payload = {
+          action: 'reject_change_request',
+          reqId: req.id
+        };
+        const apiLink = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
+        await fetch(apiLink, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        
+        Utils.showToast("Đã từ chối yêu cầu", "info");
       }
       
       AdminApp.closeApproveModal();
-      AdminApp.loadData();
-    } catch(e) {
+      AdminApp.currentApproveReq = null;
+      await AdminApp.fetchChangeRequests();
+      AdminApp.openNotifModal();
+      
+    } catch (e) {
       console.error(e);
       alert('Lỗi: ' + e.message);
     } finally {
       document.getElementById('confirmApproveBtn').disabled = false;
-      document.getElementById('confirmApproveBtn').textContent = 'Duyệt';
       document.getElementById('rejectApproveBtn').disabled = false;
+      document.getElementById('confirmApproveBtn').textContent = 'Duyệt';
       document.getElementById('rejectApproveBtn').textContent = 'Từ chối';
     }
   },
@@ -1196,7 +1211,7 @@ const AdminApp = {
   },
 
   switchToAdmin: () => {
-    AdminApp.listenToChangeRequests();
+    AdminApp.fetchChangeRequests();
 
     State.isAdminMode = true;
     const empView = document.getElementById('employeeView');
