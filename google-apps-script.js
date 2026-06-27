@@ -35,7 +35,7 @@ function doPost(e) {
     var action = data.action;
     var shiftId = data.shiftId;
     
-    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config" && action !== "sync_roster" && action !== "get_change_requests" && action !== "submit_change_request" && action !== "approve_change_request" && action !== "reject_change_request") {
+    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config" && action !== "sync_roster" && action !== "get_change_requests" && action !== "submit_change_request" && action !== "approve_change_request" && action !== "reject_change_request" && action !== "get_booking") {
       return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -563,6 +563,54 @@ function doPost(e) {
         lock.releaseLock();
       }
     }
+
+    // ACTION: GET_BOOKING
+    if (action === "get_booking") {
+      try {
+        var ss = SpreadsheetApp.getActiveSpreadsheet();
+        var bookingSheet = ss.getSheetByName("SOC_South");
+        if (!bookingSheet) return sendJsonResponse({ status: "success", data: [] });
+        
+        var dataRange = bookingSheet.getDataRange().getValues();
+        var bookings = [];
+        
+        // Skip header row (row 0)
+        for (var i = 1; i < dataRange.length; i++) {
+          var row = dataRange[i];
+          // Check if row is empty by checking if Ticket Number (col 1) is empty
+          if (!row[1] && !row[3]) continue;
+          
+          var dateVal = row[3]; // Ngày fulfill
+          if (dateVal instanceof Date) {
+            // Formatting JS Date to YYYY-MM-DD
+            var y = dateVal.getFullYear();
+            var m = ("0" + (dateVal.getMonth() + 1)).slice(-2);
+            var d = ("0" + dateVal.getDate()).slice(-2);
+            dateVal = y + "-" + m + "-" + d;
+          } else {
+            dateVal = dateVal.toString();
+          }
+          
+          bookings.push({
+            commit: row[0],
+            ticket: row[1],
+            date: dateVal,
+            department: row[4],
+            socName: row[5],
+            area: row[6],
+            shift: row[7],
+            vendor: row[8],
+            totalReq: row[9],
+            totalKpi: row[10],
+            latestCommit: row[11]
+          });
+        }
+        return sendJsonResponse({ status: "success", data: bookings });
+      } catch (e) {
+        return sendJsonResponse({ status: "error", message: e.toString() });
+      }
+    }
+
     // ACTION: GET_CHANGE_REQUESTS
     if (action === "get_change_requests") {
       try {
