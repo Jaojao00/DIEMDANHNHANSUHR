@@ -101,10 +101,10 @@ const Utils = {
     let end = new Date(scheduleDate);
 
     if (shiftId === '18:00-22:00') {
-      // Ca Tối: 13h - 14h cùng ngày
-      start.setHours(13, 0, 0);
+      // Ca Tối: 10h - 14h cùng ngày
+      start.setHours(10, 0, 0);
       end.setHours(14, 0, 0);
-      startStr = "13h00"; endStr = "14h00";
+      startStr = "10h00"; endStr = "14h00";
     } else if (shiftId === '22:00-06:00') {
       // Ca Đêm: 14h - 18h cùng ngày
       start.setHours(14, 0, 0);
