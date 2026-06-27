@@ -1033,15 +1033,20 @@
                 <option value="09:00-18:00">09:00-18:00</option>
               </select>
               <select
-                id="bookingVendorFilter"
+                id="bookingTotalReqFilter"
                 class="status-filter-select"
                 onchange="
-                  if (typeof App !== 'undefined') AdminApp.renderBookingTable();
+                  if (typeof AdminApp !== 'undefined') AdminApp.renderBookingTable();
                 "
               >
-                <option value="">Tất cả Vendor</option>
-                <option value="AGR">AGR</option>
+                <option value="">Tất cả Total Request</option>
+                <option value=">0">> 0</option>
+                <option value="0">= 0</option>
               </select>
+              <button id="btnCopySelectedBooking" style="display: none; margin-left: 8px; background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; align-items: center; gap: 5px; height: 32px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                Copy <span id="copySelectedBookingCount">0</span>
+              </button>
               <input
                 type="text"
                 id="bookingSearch"
@@ -1083,6 +1088,7 @@
             <table class="schedule-table" id="bookingTable">
               <thead id="bookingHead">
                 <tr>
+                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllBooking" onchange="if (typeof AdminApp !== 'undefined') AdminApp.toggleAllBooking(this.checked)" style="cursor:pointer"></th>
                   <th style="min-width: 60px">Commit >= Req</th>
                   <th>Ticket Number</th>
                   <th>Ngày fulfill</th>
@@ -1099,7 +1105,7 @@
               </thead>
               <tbody id="bookingBody">
                 <tr class="loading-row">
-                  <td colspan="12">
+                  <td colspan="13">
                     <div class="loading-spinner">
                       <div class="spinner"></div>
                       <span>Đang lấy dữ liệu Booking...</span>

@@ -1122,10 +1122,10 @@ const EmployeeApp = {
 // GIAO DIỆN QUẢN TRỊ (ADMIN UI)
 // ==========================================
 const AdminApp = {
-  pendingChangeRequests: [],
-  currentApproveReq: null,
-  bookingInterval: null,
+  checkinUnsubscribe: null,
+  currentViewMode: 'final', // 'final', 'registration', 'booking'
   bookingData: [],
+  selectedBookings: new Set(),
 
   fetchChangeRequests: async () => {
     try {
@@ -1664,6 +1664,26 @@ const AdminApp = {
         }, 3000);
       });
     }
+    // Booking Copy Button
+    const btnCopySelectedBooking = document.getElementById('btnCopySelectedBooking');
+    if (btnCopySelectedBooking) {
+      btnCopySelectedBooking.addEventListener('click', () => {
+        if (AdminApp.selectedBookings.size === 0) return;
+        let texts = [];
+        AdminApp.bookingData.forEach(b => {
+           if (AdminApp.selectedBookings.has(b.ticket)) {
+              texts.push(b.totalReq !== null && b.totalReq !== undefined ? b.totalReq.toString() : "0");
+           }
+        });
+        const textToCopy = texts.join('\\n');
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          Utils.showToast(`Đã copy ${texts.length} giá trị Total Request`, 'success');
+        }).catch(err => {
+          console.error("Lỗi copy: ", err);
+          Utils.showToast("Không thể copy!", 'error');
+        });
+      });
+    }
 
     // Booking Refresh Button
     const bookingRefreshBtn = document.getElementById("bookingRefreshBtn");
@@ -1935,7 +1955,7 @@ const AdminApp = {
 
     const dateFilter = document.getElementById("bookingDateFilter")?.value; // YYYY-MM-DD
     const shiftFilter = document.getElementById("bookingShiftFilter")?.value;
-    const vendorFilter = document.getElementById("bookingVendorFilter")?.value;
+    const totalReqFilter = document.getElementById("bookingTotalReqFilter")?.value;
     const searchStr = (
       document.getElementById("bookingSearch")?.value || ""
     ).toLowerCase();
@@ -1960,7 +1980,11 @@ const AdminApp = {
       }
 
       if (shiftFilter && b.shift !== shiftFilter) match = false;
-      if (vendorFilter && b.vendor !== vendorFilter) match = false;
+      if (totalReqFilter) {
+         let val = parseInt(b.totalReq) || 0;
+         if (totalReqFilter === '>0' && val <= 0) match = false;
+         if (totalReqFilter === '0' && val !== 0) match = false;
+      }
 
       if (searchStr) {
         const tkt = (b.ticket || "").toString().toLowerCase();
@@ -2005,8 +2029,12 @@ const AdminApp = {
         }
       } catch (e) {}
 
+      let isSelected = AdminApp.selectedBookings.has(b.ticket);
       html += `
-          <tr>
+          <tr class="${isSelected ? 'selected-row' : ''}">
+            <td style="text-align:center;">
+              <input type="checkbox" class="booking-checkbox" data-ticket="${b.ticket}" ${isSelected ? 'checked' : ''} style="cursor:pointer">
+            </td>
             ${commitCell}
             <td>${b.ticket || ""}</td>
             <td>${dateStr}</td>
@@ -2023,6 +2051,77 @@ const AdminApp = {
         `;
     });
     tbody.innerHTML = html;
+
+    // Setup checkbox listeners
+    const checkboxes = tbody.querySelectorAll('.booking-checkbox');
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', (e) => {
+        const tId = e.target.dataset.ticket;
+        if (e.target.checked) {
+          AdminApp.selectedBookings.add(tId);
+          e.target.closest('tr').classList.add('selected-row');
+        } else {
+          AdminApp.selectedBookings.delete(tId);
+          e.target.closest('tr').classList.remove('selected-row');
+          const selectAll = document.getElementById('selectAllBooking');
+          if (selectAll) selectAll.checked = false;
+        }
+        AdminApp.updateBookingCopyButton();
+      });
+    });
+
+    const selectAll = document.getElementById('selectAllBooking');
+    if (selectAll && filtered.length > 0) {
+      let allChecked = true;
+      filtered.forEach(b => {
+         if (!AdminApp.selectedBookings.has(b.ticket)) allChecked = false;
+      });
+      selectAll.checked = allChecked;
+    } else if (selectAll) {
+      selectAll.checked = false;
+    }
+
+    AdminApp.updateBookingCopyButton();
+  },
+
+  toggleAllBooking: (isChecked) => {
+    const shiftFilter = document.getElementById("bookingShiftFilter")?.value;
+    const totalReqFilter = document.getElementById("bookingTotalReqFilter")?.value;
+    const searchStr = (document.getElementById("bookingSearch")?.value || "").toLowerCase();
+    
+    const filtered = AdminApp.bookingData.filter((b) => {
+      let match = true;
+      if (shiftFilter && b.shift !== shiftFilter) match = false;
+      if (totalReqFilter) {
+         let val = parseInt(b.totalReq) || 0;
+         if (totalReqFilter === '>0' && val <= 0) match = false;
+         if (totalReqFilter === '0' && val !== 0) match = false;
+      }
+      if (searchStr) {
+        const tkt = (b.ticket || "").toString().toLowerCase();
+        const dept = (b.department || "").toString().toLowerCase();
+        const soc = (b.socName || "").toString().toLowerCase();
+        if (!tkt.includes(searchStr) && !dept.includes(searchStr) && !soc.includes(searchStr)) match = false;
+      }
+      return match;
+    });
+
+    if (isChecked) {
+      filtered.forEach(b => AdminApp.selectedBookings.add(b.ticket));
+    } else {
+      filtered.forEach(b => AdminApp.selectedBookings.delete(b.ticket));
+    }
+    AdminApp.renderBookingTable();
+  },
+
+  updateBookingCopyButton: () => {
+    const btn = document.getElementById('btnCopySelectedBooking');
+    const countSpan = document.getElementById('copySelectedBookingCount');
+    if (btn && countSpan) {
+      const count = AdminApp.selectedBookings.size;
+      countSpan.textContent = count;
+      btn.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
   },
 
   loadData: async (isSilent = false) => {
