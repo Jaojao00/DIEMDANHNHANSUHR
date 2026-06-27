@@ -86,7 +86,7 @@ const Utils = {
     }, CONFIG.TOAST_DURATION || 3000);
   },
   getShiftStorageKey: (shiftId) => `agr_schedule_${shiftId}`,
-  isWithinTimeWindow: (shiftId) => {
+    isWithinTimeWindow: (shiftId) => {
     const scheduleDateStr = localStorage.getItem('agr_schedule_date');
     const scheduleDate = scheduleDateStr ? new Date(scheduleDateStr) : new Date();
     scheduleDate.setHours(0, 0, 0, 0);
@@ -97,49 +97,39 @@ const Utils = {
     let startStr = "";
     let endStr = "";
 
-    let shiftDate = new Date(scheduleDate);
-    
+    let start = new Date(scheduleDate);
+    let end = new Date(scheduleDate);
+
     if (shiftId === '18:00-22:00') {
-      let d1Start = new Date(shiftDate); d1Start.setHours(10, 0, 0);
-      let d1End = new Date(shiftDate); d1End.setHours(14, 0, 0);
-      let d2Start = new Date(shiftDate); d2Start.setHours(22, 0, 0);
-      let d2End = new Date(shiftDate); d2End.setHours(23, 59, 59);
-      
-      isAllowed = (now >= d1Start && now <= d1End) || (now >= d2Start && now <= d2End);
-      isOver = (now > d2End);
-      startStr = "10h-14h"; endStr = "Sau 22:00";
+      // Ca Tối: 13h - 14h cùng ngày
+      start.setHours(13, 0, 0);
+      end.setHours(14, 0, 0);
+      startStr = "13h00"; endStr = "14h00";
     } else if (shiftId === '22:00-06:00') {
-      let d1Start = new Date(shiftDate); d1Start.setHours(14, 0, 0);
-      let d1End = new Date(shiftDate); d1End.setHours(18, 0, 0);
-      let d2Start = new Date(shiftDate); d2Start.setDate(d2Start.getDate() + 1); d2Start.setHours(6, 0, 0);
-      let d2End = new Date(shiftDate); d2End.setDate(d2End.getDate() + 1); d2End.setHours(12, 0, 0);
-      
-      isAllowed = (now >= d1Start && now <= d1End) || (now >= d2Start && now <= d2End);
-      isOver = (now > d2End);
-      startStr = "14h-18h"; endStr = "Sau 06:00 sáng";
+      // Ca Đêm: 14h - 18h cùng ngày
+      start.setHours(14, 0, 0);
+      end.setHours(18, 0, 0);
+      startStr = "14h00"; endStr = "18h00";
     } else if (shiftId === '15:00-22:00') {
-      let d1Start = new Date(shiftDate); d1Start.setHours(9, 0, 0);
-      let d1End = new Date(shiftDate); d1End.setHours(12, 0, 0);
-      let d2Start = new Date(shiftDate); d2Start.setHours(22, 0, 0);
-      let d2End = new Date(shiftDate); d2End.setHours(23, 59, 59);
-      
-      isAllowed = (now >= d1Start && now <= d1End) || (now >= d2Start && now <= d2End);
-      isOver = (now > d2End);
-      startStr = "09h-12h"; endStr = "Sau 22:00";
+      // Ca Chiều: 9h - 12h cùng ngày
+      start.setHours(9, 0, 0);
+      end.setHours(12, 0, 0);
+      startStr = "09h00"; endStr = "12h00";
     } else if (shiftId === '06:00-10:00' || shiftId === '06:00-15:00') {
-      let endHour = shiftId === '06:00-10:00' ? 10 : 15;
-      let d1End = new Date(shiftDate); d1End.setDate(d1End.getDate() - 1); d1End.setHours(19, 0, 0);
-      let d2Start = new Date(shiftDate); d2Start.setHours(endHour, 0, 0);
-      let d2End = new Date(shiftDate); d2End.setHours(23, 59, 59);
-      
-      isAllowed = (now <= d1End) || (now >= d2Start && now <= d2End);
-      isOver = (now > d2End);
-      startStr = "<19h h.trước"; endStr = "Sau " + endHour + "h00";
+      // Ca Sáng & OS Sáng: trước 19h ngày hôm trước
+      start.setDate(start.getDate() - 1);
+      start.setHours(0, 0, 0);
+      end.setDate(end.getDate() - 1);
+      end.setHours(19, 0, 0);
+      startStr = "00h00 hôm trước"; endStr = "19h00 hôm trước";
     } else {
-      isAllowed = true;
-      isOver = false;
-      startStr = "00:00"; endStr = "23:59";
+      start.setHours(0, 0, 0);
+      end.setHours(23, 59, 59);
+      startStr = "00h00"; endStr = "23h59";
     }
+
+    isAllowed = now >= start && now <= end;
+    isOver = now > end;
 
     return {
       isAllowed: isAllowed,
