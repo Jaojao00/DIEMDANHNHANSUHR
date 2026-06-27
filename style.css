@@ -552,13 +552,13 @@ input, textarea { font-family: inherit; }
 .schedule-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .schedule-table thead { position: sticky; top: 0; z-index: 10; }
 .schedule-table th {
-  padding: 8px 10px;
-  background: var(--bg-card);
-  color: var(--text-muted);
-  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-  border-bottom: 1px solid var(--border);
-  text-align: left; white-space: nowrap;
-}
+    padding: 16px 15px;
+    background: transparent;
+    color: #00e5ff;
+    font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .7px;
+    border-bottom: 5px solid var(--border);
+    text-align: left; white-space: nowrap;
+  }
 .schedule-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text-primary); vertical-align: middle; }
 .schedule-table tr { transition: background .15s; }
 .schedule-table tr:hover td { background: var(--bg-hover); }
