@@ -1597,7 +1597,7 @@ const AdminApp = {
       if (!tbody) return;
       
       if (!AdminApp.bookingData || AdminApp.bookingData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu Booking.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu Booking.</td></tr>`;
         return;
       }
       
@@ -1641,7 +1641,7 @@ const AdminApp = {
       });
       
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:20px;color:var(--text-muted)">Không có Booking nào khớp với bộ lọc.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted)">Không có Booking nào khớp với bộ lọc.</td></tr>`;
         return;
       }
       
@@ -1667,6 +1667,7 @@ const AdminApp = {
             ${commitCell}
             <td>${b.ticket || ''}</td>
             <td>${dateStr}</td>
+            <td>${b.region || ''}</td>
             <td>${b.department || ''}</td>
             <td>${b.socName || ''}</td>
             <td>${b.area || ''}</td>
