@@ -567,7 +567,7 @@ function doPost(e) {
     // ACTION: GET_BOOKING
     if (action === "get_booking") {
       try {
-        var ss = SpreadsheetApp.getActiveSpreadsheet();
+        var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         var bookingSheet = ss.getSheetByName("SOC_South");
         if (!bookingSheet) return sendJsonResponse({ status: "success", data: [] });
         

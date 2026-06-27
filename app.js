@@ -1463,7 +1463,7 @@ const AdminApp = {
             body: JSON.stringify({ action: 'sync_roster', shiftId: State.selectedShiftId })
           });
           const result = await res.json();
-          if (result.success) {
+          if (result.status === 'success') {
             alert(result.message || 'Đã đồng bộ lịch thành công!');
             // Reload data
             if (AdminApp.currentViewMode === 'final') {
@@ -1572,7 +1572,7 @@ const AdminApp = {
         });
         const result = await res.json();
         
-        if (result.success) {
+        if (result.status === 'success') {
           AdminApp.bookingData = result.data;
           AdminApp.renderBookingTable();
         } else {
