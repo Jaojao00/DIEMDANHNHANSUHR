@@ -437,7 +437,7 @@ const RegApp = {
         targetShiftIds = [shiftId];
       }
       
-            let empData;
+      let empData;
       if (shiftId === 'CA_NGAY') {
         const subShiftDataList = dataArr.filter(r => targetShiftIds.includes(r.shiftLabel) || targetShiftIds.includes(r.shiftId));
         if (subShiftDataList.length === 0) {
@@ -466,7 +466,6 @@ const RegApp = {
           }
         });
         
-        // Convert map back to array. Sort by label if needed, but assuming original order is preserved in keys
         empData.selections = Object.values(mergedSelections);
       } else {
         empData = dataArr.find(r => targetShiftIds.includes(r.shiftLabel) || targetShiftIds.includes(r.shiftId));
@@ -475,7 +474,7 @@ const RegApp = {
         }
       }
       
-      // Build crCurrentSelections từ mảng selections của backend (WORK, OFF, v.v.)
+            // Build crCurrentSelections từ mảng selections của backend (WORK, OFF, v.v.)
       RegApp.crCurrentSelections = [];
       if (empData.selections && Array.isArray(empData.selections)) {
         empData.selections.forEach(sel => {
@@ -488,7 +487,25 @@ const RegApp = {
             });
           }
         });
+      }
+      
+      RegApp.crOriginalData = {
+        empId: empData.empId,
+        empName: empData.empName,
+        shiftId: empData.shiftId,
+        shiftLabel: empData.shiftLabel,
+        selections: JSON.parse(JSON.stringify(RegApp.crCurrentSelections))
       };
+      RegApp.crFirebaseId = null;
+      
+      document.getElementById('crEmpName').textContent = (empData.empName || '').toUpperCase();
+      document.getElementById('crShiftName').textContent = empData.shiftLabel || RegApp.crSelectedShiftName;
+      
+      RegApp.renderChangeTable();
+      document.getElementById('crResultArea').style.display = 'block';
+      
+      // Check pending requests
+      const resReq = await fetch(API_LINK, { method: 'POST', body: JSON.stringify({ action: 'get_change_requests' }) });
       const reqData = await resReq.json();
       
       if (reqData && reqData.data) {
