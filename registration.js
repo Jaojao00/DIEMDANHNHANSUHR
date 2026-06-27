@@ -409,9 +409,15 @@ const RegApp = {
     const shiftId = RegApp.crSelectedShift;
     if (!empId) return alert('Vui lòng nhập Mã nhân viên!');
     
+    const searchBtn = document.querySelector('button[onclick="RegApp.searchChangeRequest()"]');
+    if (searchBtn) {
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = '<svg class="spinner" width="16" height="16" viewBox="0 0 50 50" style="vertical-align:middle; margin-right:5px;"><circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="31.4 1000" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/></circle></svg> Đang tra cứu...';
+    }
+    
     try {
       const API_LINK = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
-      if (!API_LINK) return alert('Lỗi kết nối máy chủ!');
+      if (!API_LINK) throw new Error('Lỗi kết nối máy chủ!');
 
       document.getElementById('crResultArea').style.display = 'none';
       
@@ -436,26 +442,17 @@ const RegApp = {
         return alert('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
       }
       
-      // Build crCurrentSelections từ mảng selections của backend (WORK, OFF, v.v.)
+            // Build crCurrentSelections từ mảng selections của backend (WORK, OFF, v.v.)
       RegApp.crCurrentSelections = [];
-      if (empData.selections && Array.isArray(empData.selections) && RegApp.dates) {
+      if (empData.selections && Array.isArray(empData.selections)) {
         empData.selections.forEach(sel => {
-          if (sel.choice && sel.choice !== "OFF" && sel.choice.trim() !== "") {
-            const matchedDate = RegApp.dates.find(d => d.label === sel.label || d.id === sel.label.substring(0, 10));
-            if (matchedDate) {
-              RegApp.crCurrentSelections.push({
-                id: matchedDate.id,
-                label: matchedDate.label,
-                value: sel.choice
-              });
-            } else {
-              // Fallback nếu không khớp được RegApp.dates
-              RegApp.crCurrentSelections.push({
-                id: sel.label.substring(0, 10),
-                label: sel.label,
-                value: sel.choice
-              });
-            }
+          if (sel.label && sel.choice && sel.choice.trim() !== "") {
+            RegApp.crCurrentSelections.push({
+              id: sel.label.substring(0, 10),
+              label: sel.label,
+              value: sel.choice,
+              choice: sel.choice
+            });
           }
         });
       }
@@ -497,6 +494,11 @@ const RegApp = {
     } catch (e) {
       console.error(e);
       alert('Lỗi tra cứu: ' + e.message);
+    } finally {
+      if (searchBtn) {
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = '🔍 Tra cứu lịch';
+      }
     }
   },
   
@@ -572,7 +574,8 @@ const RegApp = {
     submitChangeRequest: async () => {
     const btn = document.getElementById('crSubmitBtn');
     btn.disabled = true;
-    btn.textContent = 'Đang gửi yêu cầu...';
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<svg class="spinner" width="20" height="20" viewBox="0 0 50 50" style="vertical-align:middle; margin-right:8px;"><circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="31.4 1000" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/></circle></svg> Đang gửi yêu cầu...';
     
     try {
       const API_LINK = localStorage.getItem('agr_api_link') || (typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '');
@@ -606,7 +609,8 @@ const RegApp = {
       console.error(e);
       alert('Lỗi: ' + e.message);
     } finally {
-      btn.textContent = 'Gửi yêu cầu thay đổi';
+      btn.disabled = false;
+      btn.innerHTML = 'Gửi yêu cầu thay đổi';
     }
   }
 
