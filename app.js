@@ -1375,16 +1375,32 @@ const AdminApp = {
           if (scheduleTableContainer) scheduleTableContainer.style.display = 'none';
           if (bookingTableContainer) bookingTableContainer.style.display = 'block';
           
+          const shiftFilter = document.getElementById('bookingShiftFilter');
+          if (shiftFilter) shiftFilter.value = "";
           AdminApp.loadBookingData();
         });
       }
     }
     
+    // Booking Date Filter Auto-Refresh
+    const bookingDateFilter = document.getElementById('bookingDateFilter');
+    if (bookingDateFilter) {
+      let dateTimeout;
+      bookingDateFilter.addEventListener('change', () => {
+        clearTimeout(dateTimeout);
+        dateTimeout = setTimeout(() => {
+          if (typeof AdminApp !== 'undefined') AdminApp.renderBookingTable();
+        }, 3000);
+      });
+    }
+    
     // Booking Refresh Button
     const bookingRefreshBtn = document.getElementById('bookingRefreshBtn');
     if (bookingRefreshBtn) {
-      bookingRefreshBtn.addEventListener('click', () => {
-        AdminApp.loadBookingData();
+      bookingRefreshBtn.addEventListener('click', async () => {
+        bookingRefreshBtn.classList.add('spin-anim');
+        await AdminApp.loadBookingData();
+        setTimeout(() => { bookingRefreshBtn.classList.remove('spin-anim'); }, 500);
       });
     }
 
@@ -1550,7 +1566,13 @@ const AdminApp = {
       tab.addEventListener('click', () => {
         State.selectedShiftId = tab.dataset.shift;
         AdminApp.renderShiftTabs(); // Re-render to update active class
-        AdminApp.loadData();
+        if (AdminApp.currentViewMode === 'booking') {
+           const shiftFilter = document.getElementById('bookingShiftFilter');
+           if (shiftFilter) shiftFilter.value = State.selectedShiftId;
+           AdminApp.loadBookingData();
+        } else {
+           AdminApp.loadData();
+        }
       });
     });
   },
@@ -1683,12 +1705,7 @@ const AdminApp = {
     },
 
     loadData: async (isSilent = false) => {
-      if (AdminApp.currentViewMode === 'booking') {
-        const shiftFilter = document.getElementById('bookingShiftFilter');
-        if (shiftFilter) shiftFilter.value = State.selectedShiftId;
-        AdminApp.loadBookingData();
-        return;
-      }
+
     try {
       if(!isSilent) {
         const statusDot = document.getElementById('connectionStatus');

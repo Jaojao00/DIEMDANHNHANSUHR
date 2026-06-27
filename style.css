@@ -1375,3 +1375,10 @@ textarea.form-input { min-height: 72px; }
   transform: rotate(180deg);
   border-color: rgba(255, 255, 255, 0.2);
 }
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+.spin-anim svg {
+  animation: spin 1s linear infinite;
+}
