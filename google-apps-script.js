@@ -578,9 +578,9 @@ function doPost(e) {
         for (var i = 1; i < dataRange.length; i++) {
           var row = dataRange[i];
           // Check if row is empty by checking if Ticket Number (col 1) is empty
-          if (!row[1] && !row[3]) continue;
+          if (!row[1] && !row[2]) continue;
           
-          var dateVal = row[3]; // Ngày fulfill
+          var dateVal = row[2]; // Ngày fulfill
           if (dateVal instanceof Date) {
             // Formatting JS Date to YYYY-MM-DD
             var y = dateVal.getFullYear();
@@ -595,6 +595,7 @@ function doPost(e) {
             commit: row[0],
             ticket: row[1],
             date: dateVal,
+            region: row[3],
             department: row[4],
             socName: row[5],
             area: row[6],

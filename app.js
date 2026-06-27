@@ -1683,6 +1683,12 @@ const AdminApp = {
     },
 
     loadData: async (isSilent = false) => {
+      if (AdminApp.currentViewMode === 'booking') {
+        const shiftFilter = document.getElementById('bookingShiftFilter');
+        if (shiftFilter) shiftFilter.value = State.selectedShiftId;
+        AdminApp.loadBookingData();
+        return;
+      }
     try {
       if(!isSilent) {
         const statusDot = document.getElementById('connectionStatus');
