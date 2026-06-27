@@ -1306,3 +1306,8 @@ function setupAutoTriggers() {
   ScriptApp.newTrigger("trigger_Generate_CaDem").timeBased().atHour(22).nearMinute(0).everyDays(1).create();
   ScriptApp.newTrigger("trigger_Sync_CaDem").timeBased().atHour(6).nearMinute(0).everyDays(1).create();
 }
+
+
+function sendJsonResponse(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
