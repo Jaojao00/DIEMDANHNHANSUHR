@@ -876,7 +876,7 @@ const EmployeeApp = {
             'Chọn Ca Xin Lên <span style="color:#ff5c5c">*</span>';
         if (shiftSelect && shiftSelect.options.length > 0) {
           shiftSelect.options[0].style.display = "none";
-          shiftSelect.value = "06:00-10:00";
+          shiftSelect.value = "18:00-22:00";
         }
 
         const reasonLabel = document.getElementById("req_reason_label");
