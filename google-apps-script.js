@@ -1,4 +1,4 @@
-/**
+﻿/**
  * AGR - HỆ THỐNG ĐIỂM DANH - BACKEND (Google Apps Script)
  * Dán toàn bộ mã này vào Google Apps Script của bạn.
  */
@@ -959,15 +959,15 @@ function doGet(e) {
               if (rowId !== empIdSearch) continue;
               
               var selections = [];
-              for (var ci = 6; ci < headers.length; ci++) {
+              for (var ci = 7; ci < headers.length; ci++) {
                 selections.push({ label: headers[ci], choice: vals[ri][ci] || "OFF" });
               }
               
               result.push({
                 empId: vals[ri][1],
                 empName: vals[ri][2],
-                shiftId: vals[ri][4],
-                shiftLabel: vals[ri][5],
+                shiftId: vals[ri][5],
+                shiftLabel: vals[ri][6],
                 selections: selections,
                 timestamp: vals[ri][0]
               });
