@@ -95,26 +95,18 @@
 ```
 DIEMDANHNHANSUHR/
 │
-├── index.html               # Trang web chính
-│                             #   ├─ Employee View (Mobile)
-│                             #   ├─ Admin View (Desktop)
-│                             #   ├─ Registration View
-│                             #   └─ Modals & Bottom Navigation Bar
-│
+├── index.html                # Trang web chính (UI chung cho Employee, Admin, Registration)
 ├── style.css                 # Giao diện Dark mode AGR
-│                             #   ├─ CSS variables, typography (Inter + JetBrains Mono)
-│                             #   └─ Responsive Mobile-first & Glassmorphism effects
-│
-├── app.js                    # Logic nghiệp vụ chính
-│                             #   ├─ State, Utils, DataManager
-│                             #   ├─ Quản lý bộ nhớ đệm (Cache)
-│                             #   └─ Chặn điểm danh sai giờ (Khóa khung giờ)
-│
-├── registration.js           # Module đăng ký lịch & Tra cứu lịch
-│
-├── config.js                 # Cấu hình hệ thống (API URL, Regex)
-│
-└── google-apps-script.js     # Backend Google Apps Script (Auto-scheduler 00:00)
+├── utils.js                  # Các tiện ích dùng chung (hiển thị Toast, Loading, format ngày)
+├── dataManager.js            # Quản lý trạng thái (State) và gọi dữ liệu (API calls)
+├── employee.js               # Giao diện và logic dành cho Nhân sự (Điểm danh, xin off/lên ca)
+├── admin.js                  # Giao diện và logic dành cho Admin (Duyệt lịch, booking)
+├── app.js                    # File khởi chạy (Bootstrapper) gọi các module khi trang tải xong
+├── registration.js           # Module đăng ký lịch & Tra cứu lịch làm việc
+├── config.js                 # Cấu hình hệ thống (API URL, Hằng số)
+├── google-apps-script.js     # Backend Google Apps Script (doGet/doPost)
+├── scripts/                  # Chứa các script Python hỗ trợ dọn dẹp, patch lỗi, automation
+└── archive/                  # Lưu trữ mã nguồn cũ, các file patch JS đã hết hạn
 ```
 
 ---
