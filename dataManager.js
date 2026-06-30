@@ -1,4 +1,4 @@
-﻿
+
 // ==========================================
 // TRẠNG THÁI ỨNG DỤNG (STATE)
 // ==========================================
@@ -212,10 +212,11 @@ const DataManager = {
         const url = `${State.apiLink}?action=get_shift_registrations&shiftId=${shiftId}`;
         const response = await fetch(url);
         const json = await response.json();
+        let resultObj = { periods: [] };
         if (json.periods && Array.isArray(json.periods)) {
-          resolve(json);
+          resultObj = json;
         } else if (json.data && Array.isArray(json.data)) {
-          resolve({
+          resultObj = {
             periods: [
               {
                 id: "current",
@@ -224,12 +225,21 @@ const DataManager = {
                 data: json.data,
               },
             ],
-          });
-        } else {
-          resolve({ periods: [] });
+          };
         }
+        // Save to cache for Optimistic UI
+        localStorage.setItem(`agr_reg_cache_${shiftId}`, JSON.stringify(resultObj));
+        resolve(resultObj);
       } catch (error) {
         console.error("Lỗi tải danh sách đăng ký:", error);
+        // Fallback to cache if available
+        try {
+           const cached = localStorage.getItem(`agr_reg_cache_${shiftId}`);
+           if (cached) {
+              resolve(JSON.parse(cached));
+              return;
+           }
+        } catch(e) {}
         resolve({ periods: [] });
       }
     });

@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // GIAO DIỆN QUẢN TRỊ (ADMIN UI)
 // ==========================================
 const AdminApp = {
@@ -809,7 +809,7 @@ const AdminApp = {
     });
   },
 
-  loadBookingData: async () => {
+  loadBookingData: async (isSilent = false) => {
     if (AdminApp.currentViewMode !== "booking") {
       if (AdminApp.bookingInterval) {
         clearInterval(AdminApp.bookingInterval);
@@ -818,6 +818,18 @@ const AdminApp = {
       return;
     }
 
+    // 1. OPTIMISTIC UI: Đọc cache hiển thị ngay
+    if (!isSilent) {
+       try {
+          const cached = localStorage.getItem("agr_booking_cache");
+          if (cached) {
+             AdminApp.bookingData = JSON.parse(cached);
+             AdminApp.renderBookingTable();
+          }
+       } catch(e) {}
+    }
+
+    // 2. Fetch dữ liệu mới ngầm
     try {
       const res = await fetch(State.apiLink, {
         method: "POST",
@@ -827,6 +839,7 @@ const AdminApp = {
 
       if (result.status === "success") {
         AdminApp.bookingData = result.data;
+        localStorage.setItem("agr_booking_cache", JSON.stringify(result.data));
         AdminApp.renderBookingTable();
       } else {
         console.error("Error loading booking:", result.error);
@@ -839,7 +852,7 @@ const AdminApp = {
     if (!AdminApp.bookingInterval) {
       AdminApp.bookingInterval = setInterval(() => {
         if (AdminApp.currentViewMode === "booking") {
-          AdminApp.loadBookingData();
+          AdminApp.loadBookingData(true);
         }
       }, 15000); // 15 seconds
     }
@@ -1028,10 +1041,11 @@ const AdminApp = {
   loadData: async (isSilent = false) => {
     try {
       if (!isSilent) {
+        // Change to a less intrusive loading state instead of blocking
         const statusDot = document.getElementById("connectionStatus");
         const statusText = document.getElementById("connectionText");
         if (statusDot) statusDot.className = "status-dot loading";
-        if (statusText) statusText.textContent = "Đang tải...";
+        if (statusText) statusText.textContent = "Đang làm mới...";
       }
 
       // Update badge
@@ -1042,24 +1056,54 @@ const AdminApp = {
         badge.style.background = `linear-gradient(135deg, ${shift.color}, #222)`;
       }
 
-      const requestsData = await DataManager.loadRequests();
-
-      let data = [];
       const filterSelect = document.getElementById("statusFilter");
       const regPeriodSelect = document.getElementById("regPeriodSelect");
 
+      // 1. OPTIMISTIC UI: Render immediately from cache
+      if (!isSilent) {
+        try {
+          if (AdminApp.currentViewMode === "final") {
+             if (filterSelect) filterSelect.style.display = "inline-block";
+             if (regPeriodSelect) regPeriodSelect.style.display = "none";
+             
+             const stored = localStorage.getItem(Utils.getShiftStorageKey(State.selectedShiftId));
+             if (stored) {
+               State.scheduleData = JSON.parse(stored).map(DataManager.normalizeEmp);
+               AdminApp.renderTable();
+               AdminApp.renderStats();
+             }
+          } else {
+             if (filterSelect) filterSelect.style.display = "none";
+             
+             const cachedRegStr = localStorage.getItem("agr_reg_cache_" + State.selectedShiftId);
+             if (cachedRegStr) {
+               const cachedReg = JSON.parse(cachedRegStr);
+               AdminApp.allRegistrationPeriods = cachedReg.periods || [];
+               if (AdminApp.allRegistrationPeriods.length > 0) {
+                 if (regPeriodSelect) regPeriodSelect.style.display = "inline-block";
+                 // Giữ nguyên logic hiển thị cho kỳ mới nhất
+                 AdminApp.renderRegistrationTable(AdminApp.allRegistrationPeriods[AdminApp.allRegistrationPeriods.length - 1]);
+               } else {
+                 if (regPeriodSelect) regPeriodSelect.style.display = "none";
+                 AdminApp.renderRegistrationTable({ headers: [], data: [] });
+               }
+             }
+          }
+        } catch(e) {}
+      }
+
+      // 2. Fetch fresh data in background
+      const requestsData = await DataManager.loadRequests();
+
+      let data = [];
       if (AdminApp.currentViewMode === "final") {
         data = await DataManager.loadSchedule(State.selectedShiftId);
         State.scheduleData = data;
         AdminApp.renderTable();
-        if (filterSelect) filterSelect.style.display = "inline-block";
-        if (regPeriodSelect) regPeriodSelect.style.display = "none";
       } else {
         const regRes = await DataManager.loadRegistrations(
           State.selectedShiftId,
         );
-        if (filterSelect) filterSelect.style.display = "none";
-
         AdminApp.allRegistrationPeriods = regRes.periods || [];
         if (regPeriodSelect) {
           regPeriodSelect.innerHTML = "";
