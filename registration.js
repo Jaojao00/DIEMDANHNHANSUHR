@@ -638,7 +638,7 @@ const RegApp = {
       const data = await res.json();
       
       if (data.status === 'success') {
-        Utils.showToast('Hệ thống đã gửi yêu cầu thay đổi lịch thành công! Vui lòng chờ Admin xác nhận.', 'success');
+        Utils.showGenericSuccessModal('Gửi yêu cầu thành công!', 'Hệ thống đã ghi nhận yêu cầu thay đổi lịch của bạn. Vui lòng chờ Admin xác nhận.', '✅');
         RegApp.closeChangeRequestModal();
       } else {
         throw new Error(data.error || 'Lỗi không xác định từ máy chủ');

@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // TIỆN ÍCH (UTILITIES)
 // ==========================================
 const Utils = {
@@ -36,6 +36,18 @@ const Utils = {
       toast.addEventListener("animationend", () => toast.remove());
     }, CONFIG.TOAST_DURATION || 3000);
   },
+
+  showGenericSuccessModal: (title, message, icon = "✅") => {
+    const modal = document.getElementById("genericSuccessModal");
+    if (!modal) return;
+    
+    document.getElementById("genericSuccessTitle").textContent = title;
+    document.getElementById("genericSuccessMessage").textContent = message;
+    document.getElementById("genericSuccessIcon").textContent = icon;
+    
+    modal.classList.remove("hidden");
+  },
+
   getShiftStorageKey: (shiftId) => `agr_schedule_${shiftId}`,
   isWithinTimeWindow: (shiftId) => {
     const scheduleDateStr = localStorage.getItem("agr_schedule_date");

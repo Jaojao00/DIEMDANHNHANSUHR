@@ -178,7 +178,7 @@ const AdminApp = {
           throw new Error(resJson.error);
         }
 
-        Utils.showToast("Đã duyệt yêu cầu và cập nhật lịch", "success");
+          Utils.showGenericSuccessModal("Phê duyệt thành công", "Đã duyệt yêu cầu thay đổi lịch và cập nhật vào hệ thống.", "✅");
       } else {
         document.getElementById("rejectApproveBtn").textContent =
           "Đang xử lý...";
@@ -195,7 +195,7 @@ const AdminApp = {
           body: JSON.stringify(payload),
         });
 
-        Utils.showToast("Đã từ chối yêu cầu", "info");
+          Utils.showGenericSuccessModal("Từ chối thành công", "Đã từ chối yêu cầu thay đổi lịch.", "❌");
       }
 
       AdminApp.closeApproveModal();
