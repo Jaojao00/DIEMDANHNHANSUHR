@@ -411,6 +411,17 @@ const RegApp = {
       Utils.showToast('Vui lòng nhập Mã nhân viên!', 'error');
       return;
     }
+
+    const lastChangeReqTime = localStorage.getItem('agr_last_change_req_' + empId);
+    if (lastChangeReqTime) {
+       const timeDiff = Date.now() - parseInt(lastChangeReqTime);
+       if (timeDiff < 24 * 60 * 60 * 1000) {
+          const hoursLeft = Math.ceil((24 * 60 * 60 * 1000 - timeDiff) / (60 * 60 * 1000));
+          Utils.showToast(`Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ thêm ${hoursLeft} tiếng nữa để gửi yêu cầu mới!`, 'warning');
+          return;
+       }
+    }
+
     
     const searchBtn = document.querySelector('button[onclick="RegApp.searchChangeRequest()"]');
     if (searchBtn) {
@@ -638,6 +649,8 @@ const RegApp = {
       const data = await res.json();
       
       if (data.status === 'success') {
+        const empId = document.getElementById('crEmpId').value.trim().toLowerCase();
+        localStorage.setItem('agr_last_change_req_' + empId, Date.now());
         Utils.showGenericSuccessModal('Gửi yêu cầu thành công!', 'Hệ thống đã ghi nhận yêu cầu thay đổi lịch của bạn. Vui lòng chờ Admin xác nhận.', '✅');
         RegApp.closeChangeRequestModal();
       } else {
