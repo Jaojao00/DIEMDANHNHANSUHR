@@ -407,7 +407,10 @@ const RegApp = {
   searchChangeRequest: async () => {
     const empId = document.getElementById('crEmpId').value.trim().toLowerCase();
     const shiftId = RegApp.crSelectedShift;
-    if (!empId) return alert('Vui lòng nhập Mã nhân viên!');
+    if (!empId) {
+      Utils.showToast('Vui lòng nhập Mã nhân viên!', 'error');
+      return;
+    }
     
     const searchBtn = document.querySelector('button[onclick="RegApp.searchChangeRequest()"]');
     if (searchBtn) {
@@ -426,7 +429,8 @@ const RegApp = {
       const dataArr = await res.json();
       
       if (!dataArr || dataArr.length === 0 || dataArr.error) {
-        return alert(dataArr.error || 'Không tìm thấy dữ liệu đăng ký của bạn trên hệ thống!');
+        Utils.showToast(dataArr.error || 'Không tìm thấy dữ liệu đăng ký của bạn trên hệ thống!', 'error');
+        return;
       }
       
       // Lọc ra đúng ca mà người dùng đang chọn (CA_NGAY gồm nhiều ca con)
@@ -441,7 +445,8 @@ const RegApp = {
       if (shiftId === 'CA_NGAY') {
         const subShiftDataList = dataArr.filter(r => targetShiftIds.includes(r.shiftLabel) || targetShiftIds.includes(r.shiftId));
         if (subShiftDataList.length === 0) {
-          return alert('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
+          Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!', 'warning');
+          return;
         }
         
         empData = {
@@ -470,7 +475,8 @@ const RegApp = {
       } else {
         empData = dataArr.find(r => targetShiftIds.includes(r.shiftLabel) || targetShiftIds.includes(r.shiftId));
         if (!empData) {
-          return alert('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!');
+          Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!', 'warning');
+          return;
         }
       }
       
@@ -517,7 +523,7 @@ const RegApp = {
             if (matchedReq.selections) {
               RegApp.crCurrentSelections = JSON.parse(JSON.stringify(matchedReq.selections));
             }
-            alert('Bạn đang có một yêu cầu sửa lịch CHƯA ĐƯỢC DUYỆT cho ca này. Bạn có thể tiếp tục chỉnh sửa và gửi lại.');
+            Utils.showToast('Bạn đang có một yêu cầu sửa lịch CHƯA ĐƯỢC DUYỆT cho ca này. Bạn có thể tiếp tục chỉnh sửa và gửi lại.', 'warning');
             RegApp.renderChangeTable();
           }
         }
@@ -525,7 +531,7 @@ const RegApp = {
       
     } catch (e) {
       console.error(e);
-      alert('Lỗi tra cứu: ' + e.message);
+      Utils.showToast('Lỗi tra cứu: ' + e.message, 'error');
     } finally {
       if (searchBtn) {
         searchBtn.disabled = false;
@@ -632,14 +638,14 @@ const RegApp = {
       const data = await res.json();
       
       if (data.status === 'success') {
-        alert('Hệ thống đã gửi yêu cầu thay đổi lịch thành công! Vui lòng chờ Admin xác nhận.');
+        Utils.showToast('Hệ thống đã gửi yêu cầu thay đổi lịch thành công! Vui lòng chờ Admin xác nhận.', 'success');
         RegApp.closeChangeRequestModal();
       } else {
         throw new Error(data.error || 'Lỗi không xác định từ máy chủ');
       }
     } catch(e) {
       console.error(e);
-      alert('Lỗi: ' + e.message);
+      Utils.showToast('Lỗi: ' + e.message, 'error');
     } finally {
       btn.disabled = false;
       btn.innerHTML = 'Gửi yêu cầu thay đổi';
