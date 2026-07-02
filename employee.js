@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // GIAO DIỆN NHÂN VIÊN (EMPLOYEE UI)
 // ==========================================
 const EmployeeApp = {
@@ -412,6 +412,20 @@ const EmployeeApp = {
           return;
         }
 
+        const reqStorageKey = type === "XIN OFF" ? 'agr_last_off_req_' : 'agr_last_extra_req_';
+        const lastReqTime = localStorage.getItem(reqStorageKey + empId.toLowerCase());
+        if (lastReqTime) {
+          const timeDiff = Date.now() - parseInt(lastReqTime);
+          if (timeDiff < 24 * 60 * 60 * 1000) {
+            const hoursLeft = Math.ceil((24 * 60 * 60 * 1000 - timeDiff) / (60 * 60 * 1000));
+            Utils.showToast(
+              `Bạn đã gửi yêu cầu ${type === "XIN OFF" ? "Xin OFF" : "Xin Lên Ca"} gần đây. Vui lòng chờ thêm ${hoursLeft} tiếng nữa để gửi yêu cầu mới!`,
+              "warning"
+            );
+            return;
+          }
+        }
+
         const btn = document.getElementById("requestSubmitBtn");
         try {
           if (btn) {
@@ -438,6 +452,10 @@ const EmployeeApp = {
             targetShift,
             timestamp: ts,
           });
+
+          // Save timestamp to prevent spam
+          const savedStorageKey = type === "XIN OFF" ? 'agr_last_off_req_' : 'agr_last_extra_req_';
+          localStorage.setItem(savedStorageKey + empId.toLowerCase(), Date.now());
 
           const modalEl = document.getElementById("requestModal");
           if (modalEl) modalEl.classList.add("hidden");
