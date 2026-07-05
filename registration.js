@@ -621,6 +621,27 @@ const RegApp = {
   },
 
     submitChangeRequest: async () => {
+    if (RegApp.isSubmittingChange) return;
+    const empId = RegApp.crOriginalData.empId.toLowerCase();
+
+    const lastChangeReqTime = localStorage.getItem('agr_last_change_req_' + empId);
+    if (lastChangeReqTime) {
+       const timeDiff = Date.now() - parseInt(lastChangeReqTime);
+       if (timeDiff < 24 * 60 * 60 * 1000) {
+          Utils.showToast('Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ 24h để gửi lại.', 'error');
+          return;
+       }
+    }
+
+    // Chống spam nhiều tab cùng lúc
+    const pendingKey = 'agr_pending_req_' + empId;
+    if (localStorage.getItem(pendingKey)) {
+        Utils.showToast('Yêu cầu đang được xử lý, vui lòng không click liên tục!', 'warning');
+        return;
+    }
+    localStorage.setItem(pendingKey, 'true');
+
+    RegApp.isSubmittingChange = true;
     const btn = document.getElementById('crSubmitBtn');
     btn.disabled = true;
     const originalText = btn.innerHTML;
@@ -649,7 +670,6 @@ const RegApp = {
       const data = await res.json();
       
       if (data.status === 'success') {
-        const empId = document.getElementById('crEmpId').value.trim().toLowerCase();
         localStorage.setItem('agr_last_change_req_' + empId, Date.now());
         Utils.showGenericSuccessModal('Gửi yêu cầu thành công!', 'Hệ thống đã ghi nhận yêu cầu thay đổi lịch của bạn. Vui lòng chờ Admin xác nhận.', '✅');
         RegApp.closeChangeRequestModal();
@@ -659,9 +679,11 @@ const RegApp = {
     } catch(e) {
       console.error(e);
       Utils.showToast('Lỗi: ' + e.message, 'error');
-    } finally {
       btn.disabled = false;
       btn.innerHTML = 'Gửi yêu cầu thay đổi';
+    } finally {
+      localStorage.removeItem(pendingKey);
+      RegApp.isSubmittingChange = false;
     }
   }
 
