@@ -2,6 +2,53 @@
 // TIỆN ÍCH (UTILITIES)
 // ==========================================
 const Utils = {
+  audioCtx: null,
+  initAudio: function() {
+    if (!this.audioCtx) {
+      this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+  },
+  playTone: function(freq, type, duration, vol=0.1) {
+    try {
+      this.initAudio();
+      const osc = this.audioCtx.createOscillator();
+      const gain = this.audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.audioCtx.destination);
+      osc.start();
+      osc.stop(this.audioCtx.currentTime + duration);
+    } catch(e) {}
+  },
+  playSuccessSound: function() {
+    this.playTone(523.25, 'sine', 0.1, 0.1); 
+    setTimeout(() => this.playTone(659.25, 'sine', 0.3, 0.1), 100); 
+    setTimeout(() => this.playTone(783.99, 'sine', 0.6, 0.1), 200); 
+  },
+  playErrorSound: function() {
+    this.playTone(200, 'sawtooth', 0.2, 0.1);
+    setTimeout(() => this.playTone(150, 'sawtooth', 0.4, 0.1), 150);
+  },
+  playClickSound: function() {
+    this.playTone(800, 'sine', 0.05, 0.02);
+  },
+  fireConfetti: function() {
+    if (typeof confetti === 'function') {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+      });
+    }
+  },
+
   formatDate: (date = new Date()) => {
     const days = [
       "Chủ Nhật",
@@ -25,7 +72,10 @@ const Utils = {
     toast.className = `toast ${type}`;
 
     let icon = "✓";
-    if (type === "error") icon = "⚠️";
+    if (type === "error") {
+      icon = "⚠️";
+      Utils.playErrorSound();
+    }
     if (type === "warning") icon = "ℹ️";
 
     toast.innerHTML = `<span style="font-size:16px">${icon}</span><span>${message}</span>`;
@@ -46,6 +96,9 @@ const Utils = {
     document.getElementById("genericSuccessIcon").textContent = icon;
     
     modal.classList.remove("hidden");
+    
+    Utils.playSuccessSound();
+    Utils.fireConfetti();
   },
 
   getShiftStorageKey: (shiftId) => `agr_schedule_${shiftId}`,

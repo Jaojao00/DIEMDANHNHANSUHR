@@ -1,4 +1,4 @@
-﻿window.escapeHTML = function (str) {
+window.escapeHTML = function (str) {
   if (!str) return "";
   return str
     .toString()
@@ -19,6 +19,15 @@ document.addEventListener("DOMContentLoaded", () => {
   EmployeeApp.init();
   AdminApp.init();
   EmpNav.init();
+
+  // Global âm thanh khi click nút
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("button") || e.target.closest(".nav-item") || e.target.closest(".shift-tab")) {
+      if (window.Utils && typeof window.Utils.playClickSound === 'function') {
+        window.Utils.playClickSound();
+      }
+    }
+  });
 
   // Khởi tạo ngày lịch main view
   const mainDateInput = document.getElementById("mainScheduleDateInput");
