@@ -68,10 +68,10 @@ const AdminApp = {
         '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Không có yêu cầu nào đang chờ duyệt.</p>';
     } else {
       let html = '<div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">';
-      html += '<label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" id="selectAllBulk" onchange="AdminApp.toggleSelectAllBulk(this)"> Chọn tất cả</label>';
+      html += '<label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer; color:var(--text-main); font-weight:500;"><input type="checkbox" id="selectAllBulk" onchange="AdminApp.toggleSelectAllBulk(this)"> Chọn tất cả</label>';
       html += '<div>';
-      html += '<button class="btn btn-primary btn-sm" onclick="AdminApp.handleBulkApprove()" style="font-size:12px; margin-right:8px; background:var(--success);">Duyệt đã chọn</button>';
-      html += '<button class="btn btn-outline btn-sm" onclick="AdminApp.handleBulkReject()" style="font-size:12px; border-color:var(--danger); color:var(--danger);">Xóa đã chọn</button>';
+      html += '<button class="btn btn-sm" onclick="AdminApp.handleBulkApprove()" style="background: #10b981; color: #ffffff; border: none; font-weight: 600; padding: 6px 14px; border-radius: 6px; font-size: 12px; margin-right: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.2s;">✓ Duyệt đã chọn</button>';
+      html += '<button class="btn btn-sm" onclick="AdminApp.handleBulkReject()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; font-weight: 600; padding: 6px 14px; border-radius: 6px; font-size: 12px; transition: all 0.2s;">✗ Xóa đã chọn</button>';
       html += '</div></div>';
       
       html += '<div style="display:flex; flex-direction:column; gap:10px;">';
