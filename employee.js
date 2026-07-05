@@ -1,4 +1,4 @@
-﻿// ==========================================
+// ==========================================
 // GIAO DIỆN NHÂN VIÊN (EMPLOYEE UI)
 // ==========================================
 const EmployeeApp = {
@@ -259,6 +259,20 @@ const EmployeeApp = {
     if (openLeaveRequestBtn) {
       openLeaveRequestBtn.addEventListener("click", () => {
         const now = new Date();
+
+        // === KHÓA TẠM THỜI: Sự kiện công ty 7-8/7/2026 ===
+        const lockStart = new Date('2026-07-07T00:00:00+07:00');
+        const lockEnd   = new Date('2026-07-09T00:00:00+07:00'); // hết ngày 8/7
+        if (now >= lockStart && now < lockEnd) {
+          Utils.showGenericSuccessModal(
+            '⚠️ Tạm khóa chức năng Xin OFF',
+            'Trong thời gian từ ngày 07/07 đến 08/07/2026, hệ thống tạm ngưng tiếp nhận đơn xin nghỉ để phục vụ sự kiện công ty.\n\nVui lòng liên hệ Admin nếu có nhu cầu đặc biệt.',
+            '🔒'
+          );
+          return;
+        }
+        // === HẾT KHÓA TẠM THỜI ===
+
         const hour = now.getHours();
         if (hour >= 18 || hour < 6) {
           Utils.showToast(
@@ -369,6 +383,20 @@ const EmployeeApp = {
 
         if (type === "XIN OFF") {
           const now = new Date();
+
+          // === KHÓA TẠM THỜI: Sự kiện công ty 7-8/7/2026 ===
+          const lockStart = new Date('2026-07-07T00:00:00+07:00');
+          const lockEnd   = new Date('2026-07-09T00:00:00+07:00');
+          if (now >= lockStart && now < lockEnd) {
+            Utils.showGenericSuccessModal(
+              '⚠️ Tạm khóa chức năng Xin OFF',
+              'Trong thời gian từ ngày 07/07 đến 08/07/2026, hệ thống tạm ngưng tiếp nhận đơn xin nghỉ để phục vụ sự kiện công ty.\n\nVui lòng liên hệ Admin nếu có nhu cầu đặc biệt.',
+              '🔒'
+            );
+            return;
+          }
+          // === HẾT KHÓA TẠM THỜI ===
+
           const hour = now.getHours();
           if (hour >= 18 || hour < 6) {
             Utils.showToast(
