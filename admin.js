@@ -67,14 +67,24 @@ const AdminApp = {
       list.innerHTML =
         '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Không có yêu cầu nào đang chờ duyệt.</p>';
     } else {
-      let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+      let html = '<div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">';
+      html += '<label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer;"><input type="checkbox" id="selectAllBulk" onchange="AdminApp.toggleSelectAllBulk(this)"> Chọn tất cả</label>';
+      html += '<div>';
+      html += '<button class="btn btn-primary btn-sm" onclick="AdminApp.handleBulkApprove()" style="font-size:12px; margin-right:8px; background:var(--success);">Duyệt đã chọn</button>';
+      html += '<button class="btn btn-outline btn-sm" onclick="AdminApp.handleBulkReject()" style="font-size:12px; border-color:var(--danger); color:var(--danger);">Xóa đã chọn</button>';
+      html += '</div></div>';
+      
+      html += '<div style="display:flex; flex-direction:column; gap:10px;">';
       AdminApp.pendingChangeRequests.forEach((req) => {
         html += `
           <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <div style="font-weight:bold; color:var(--text-main);">${(req.empName || "").toUpperCase()} <span style="font-size:11px; color:var(--text-muted);">(${req.empId})</span></div>
-              <div style="font-size:12px; color:var(--primary); margin-top:4px;">Yêu cầu sửa: ${req.shiftLabel || req.shiftId}</div>
-              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${new Date(req.timestamp).toLocaleString()}</div>
+            <div style="display:flex; gap:12px; align-items:center;">
+              <input type="checkbox" class="bulk-check" value="${req.id}" style="width:16px; height:16px; cursor:pointer;" onchange="AdminApp.updateBulkSelectAllState()">
+              <div>
+                <div style="font-weight:bold; color:var(--text-main);">${(req.empName || "").toUpperCase()} <span style="font-size:11px; color:var(--text-muted);">(${req.empId})</span></div>
+                <div style="font-size:12px; color:var(--primary); margin-top:4px;">Yêu cầu sửa: ${req.shiftLabel || req.shiftId}</div>
+                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${new Date(req.timestamp).toLocaleString()}</div>
+              </div>
             </div>
             <button class="btn btn-primary btn-sm" onclick="AdminApp.openApproveModal('${req.id}')" style="padding:6px 12px; font-size:12px;">Xem</button>
           </div>
@@ -89,6 +99,87 @@ const AdminApp = {
 
   closeNotifModal: () => {
     document.getElementById("adminNotifModal").classList.add("hidden");
+  },
+
+  toggleSelectAllBulk: (checkbox) => {
+    const checks = document.querySelectorAll('.bulk-check');
+    checks.forEach(c => c.checked = checkbox.checked);
+  },
+
+  updateBulkSelectAllState: () => {
+    const checks = document.querySelectorAll('.bulk-check');
+    const allChecked = Array.from(checks).every(c => c.checked);
+    const selectAll = document.getElementById('selectAllBulk');
+    if (selectAll) selectAll.checked = allChecked && checks.length > 0;
+  },
+
+  handleBulkApprove: async () => {
+    const checks = document.querySelectorAll('.bulk-check:checked');
+    if (checks.length === 0) {
+      Utils.showToast('Vui lòng chọn ít nhất một yêu cầu để duyệt', 'warning');
+      return;
+    }
+    if (!confirm(`Bạn có chắc chắn muốn duyệt ${checks.length} yêu cầu này?`)) return;
+
+    const btn = document.querySelector('button[onclick="AdminApp.handleBulkApprove()"]');
+    if (btn) btn.innerHTML = 'Đang duyệt...';
+
+    let successCount = 0;
+    for (const check of checks) {
+      const reqId = check.value;
+      const req = AdminApp.pendingChangeRequests.find(r => r.id === reqId);
+      if (!req) continue;
+
+      const payload = {
+        action: "approve_change_request",
+        reqId: req.id,
+        empId: req.empId,
+        shiftId: req.shiftId,
+        selections: req.selections,
+      };
+      const apiLink = localStorage.getItem("agr_api_link") || (typeof CONFIG !== "undefined" ? CONFIG.API_URL : "");
+      try {
+        const resp = await fetch(apiLink, { method: "POST", body: JSON.stringify(payload) });
+        const resJson = await resp.json();
+        if (!resJson.error) successCount++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    Utils.showGenericSuccessModal("Phê duyệt hoàn tất", `Đã duyệt thành công ${successCount}/${checks.length} yêu cầu.`, "✅");
+    await AdminApp.fetchChangeRequests();
+    AdminApp.openNotifModal();
+  },
+
+  handleBulkReject: async () => {
+    const checks = document.querySelectorAll('.bulk-check:checked');
+    if (checks.length === 0) {
+      Utils.showToast('Vui lòng chọn ít nhất một yêu cầu để xóa', 'warning');
+      return;
+    }
+    if (!confirm(`Bạn có chắc chắn muốn xóa ${checks.length} yêu cầu này?`)) return;
+
+    const btn = document.querySelector('button[onclick="AdminApp.handleBulkReject()"]');
+    if (btn) btn.innerHTML = 'Đang xóa...';
+
+    let successCount = 0;
+    for (const check of checks) {
+      const reqId = check.value;
+      const payload = { action: "reject_change_request", reqId: reqId };
+      const apiLink = localStorage.getItem("agr_api_link") || (typeof CONFIG !== "undefined" ? CONFIG.API_URL : "");
+      try {
+        const resp = await fetch(apiLink, { method: "POST", body: JSON.stringify(payload) });
+        const resJson = await resp.json();
+        if (!resJson.error) successCount++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    Utils.showGenericSuccessModal("Xóa hoàn tất", `Đã xóa thành công ${successCount}/${checks.length} yêu cầu.`, "❌");
+    await AdminApp.fetchChangeRequests();
+    AdminApp.openNotifModal();
   },
 
   jumpToChangeRequest: (shiftId, empId) => {
