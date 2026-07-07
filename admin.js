@@ -582,7 +582,7 @@ const AdminApp = {
         checked.forEach(cb => {
           const empId = cb.value;
           const empName = cb.dataset.name || '';
-          texts.push(`${empId} - ${empName}`);
+          texts.push(`${empId}\t${empName}`);
         });
         const textToCopy = texts.join('\n');
         navigator.clipboard.writeText(textToCopy).then(() => {
