@@ -576,7 +576,7 @@ const AdminApp = {
     const btnCopySelected = document.getElementById('btnCopySelected');
     if (btnCopySelected) {
       btnCopySelected.addEventListener('click', () => {
-        const checked = document.querySelectorAll('.schedule-checkbox:checked');
+        const checked = document.querySelectorAll('.schedule-checkbox:checked, .reg-checkbox:checked');
         if (checked.length === 0) return;
         let texts = [];
         checked.forEach(cb => {
@@ -1163,7 +1163,7 @@ const AdminApp = {
   updateScheduleCopyButton: () => {
     const btn = document.getElementById('btnCopySelected');
     const countSpan = document.getElementById('copySelectedCount');
-    const checked = document.querySelectorAll('.schedule-checkbox:checked').length;
+    const checked = document.querySelectorAll('.schedule-checkbox:checked, .reg-checkbox:checked').length;
     if (countSpan) countSpan.textContent = checked;
     if (btn) btn.style.display = checked > 0 ? 'inline-flex' : 'none';
   },
@@ -1477,7 +1477,7 @@ const AdminApp = {
 
       const tr = document.createElement("tr");
       let html = `
-        <td style="text-align:center"><input type="checkbox" class="reg-checkbox" value="${r.empId}" data-shift="${r.shiftId || State.selectedShiftId}" style="cursor: pointer;"></td>
+        <td style="text-align:center"><input type="checkbox" class="reg-checkbox" value="${r.empId}" data-name="${escapeHTML(r.name || r.empName || '')}" data-shift="${r.shiftId || State.selectedShiftId}" style="cursor: pointer;"></td>
         <td style="text-align:center">${idx + 1}</td>
         <td><span class="emp-id-badge">${r.empId}</span></td>
         <td style="font-weight:600; color:var(--text-main); white-space:nowrap">${r.name || r.empName || ""} ${badgeHtml}</td>
@@ -1563,8 +1563,7 @@ const AdminApp = {
       btn.style.display = checked > 0 ? "inline-block" : "none";
       btn.innerText = `Xóa đã chọn (${checked})`;
     }
-    const copyBtn = document.getElementById("btnCopySelectedReg"); // wait, index.html doesn't have btnCopySelectedReg
-    // the previous code was using btnCopySelected but for Delete... let me remove this broken block and rely on the new updateScheduleCopyButton
+    AdminApp.updateScheduleCopyButton();
   },
 
   renderTable: () => {
