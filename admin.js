@@ -568,7 +568,8 @@ const AdminApp = {
               errorEl.textContent = "Lỗi kết nối máy chủ";
               errorEl.classList.remove("hidden");
             }
-        });
+          });
+      });
     }
 
     // Main Table Copy Button (Đã Chốt)
