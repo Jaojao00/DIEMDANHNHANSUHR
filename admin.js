@@ -568,9 +568,39 @@ const AdminApp = {
               errorEl.textContent = "Lỗi kết nối máy chủ";
               errorEl.classList.remove("hidden");
             }
-          });
+        });
+    }
+
+    // Main Table Copy Button (Đã Chốt)
+    const btnCopySelected = document.getElementById('btnCopySelected');
+    if (btnCopySelected) {
+      btnCopySelected.addEventListener('click', () => {
+        const checked = document.querySelectorAll('.schedule-checkbox:checked');
+        if (checked.length === 0) return;
+        let texts = [];
+        checked.forEach(cb => {
+          const empId = cb.value;
+          const empName = cb.dataset.name || '';
+          texts.push(`${empId} - ${empName}`);
+        });
+        const textToCopy = texts.join('\n');
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          Utils.showToast(`Đã copy ${texts.length} nhân sự`, 'success');
+        }).catch(err => {
+          console.error("Lỗi copy: ", err);
+          Utils.showToast("Không thể copy!", 'error');
+        });
       });
     }
+
+    // Toggle Select All for Main Table
+    window.toggleSelectAllSchedule = function(source) {
+      const checkboxes = document.querySelectorAll('.schedule-checkbox');
+      checkboxes.forEach(cb => {
+        if (!cb.disabled) cb.checked = source.checked;
+      });
+      AdminApp.updateScheduleCopyButton();
+    };
 
     // View Mode Toggle
     const btnViewModeFinal = document.getElementById("viewModeFinal");
@@ -1129,6 +1159,14 @@ const AdminApp = {
     }
   },
 
+  updateScheduleCopyButton: () => {
+    const btn = document.getElementById('btnCopySelected');
+    const countSpan = document.getElementById('copySelectedCount');
+    const checked = document.querySelectorAll('.schedule-checkbox:checked').length;
+    if (countSpan) countSpan.textContent = checked;
+    if (btn) btn.style.display = checked > 0 ? 'inline-flex' : 'none';
+  },
+
   loadData: async (isSilent = false) => {
     try {
       if (!isSilent) {
@@ -1524,19 +1562,15 @@ const AdminApp = {
       btn.style.display = checked > 0 ? "inline-block" : "none";
       btn.innerText = `Xóa đã chọn (${checked})`;
     }
-    const copyBtn = document.getElementById("btnCopySelected");
-    if (copyBtn) {
-      copyBtn.style.display = checked > 0 ? "flex" : "none";
-      const copyCount = document.getElementById("copySelectedCount");
-      if (copyCount) copyCount.innerText = checked;
-    }
+    const copyBtn = document.getElementById("btnCopySelectedReg"); // wait, index.html doesn't have btnCopySelectedReg
+    // the previous code was using btnCopySelected but for Delete... let me remove this broken block and rely on the new updateScheduleCopyButton
   },
 
   renderTable: () => {
     const tbody = document.getElementById("scheduleBody");
     if (!tbody) return;
     const shift = State.shifts.find((s) => s.id === State.selectedShiftId);
-    const colCount = shift ? shift.colHeaders.length + 6 : 10;
+    const colCount = shift ? shift.colHeaders.length + 7 : 11;
 
     tbody.innerHTML = "";
 
@@ -1625,6 +1659,9 @@ const AdminApp = {
 
         return `
       <tr class="${rowClass}">
+        <td style="text-align:center">
+          <input type="checkbox" class="schedule-checkbox" value="${escapeHTML(emp.id)}" data-name="${escapeHTML(emp.name)}" onchange="AdminApp.updateScheduleCopyButton()" style="cursor: pointer; width: 16px; height: 16px;">
+        </td>
         <td>${emp.stt}</td>
         <td><span class="employee-code">${escapeHTML(emp.id)}</span></td>
         <td style="font-weight:500">${escapeHTML(emp.name)}</td>
@@ -1640,8 +1677,20 @@ const AdminApp = {
     const thead = document.getElementById("scheduleHead");
     if (thead && shift) {
       const posHeaders = shift.colHeaders.map((h) => `<th>${h}</th>`).join("");
-      thead.innerHTML = `<tr><th>STT</th><th>Mã CTV</th><th>Họ tên</th><th>Định danh</th>${posHeaders}<th>Note</th><th>Xác nhận</th></tr>`;
+      thead.innerHTML = `<tr>
+        <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllSchedule" onchange="toggleSelectAllSchedule(this)" style="cursor: pointer; width: 16px; height: 16px;"></th>
+        <th>STT</th>
+        <th>Mã CTV</th>
+        <th>Họ tên</th>
+        <th>Định danh</th>
+        ${posHeaders}
+        <th>Note</th>
+        <th>Xác nhận</th>
+      </tr>`;
     }
+
+    // Reset copy state
+    AdminApp.updateScheduleCopyButton();
 
     // Áp dụng bộ lọc và tìm kiếm hiện tại
     AdminApp.filterScheduleTable();
