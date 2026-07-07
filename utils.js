@@ -101,6 +101,19 @@ const Utils = {
     Utils.fireConfetti();
   },
 
+  showGenericAlertModal: (title, message, icon = "⚠️") => {
+    const modal = document.getElementById("genericAlertModal");
+    if (!modal) return;
+    
+    document.getElementById("genericAlertTitle").textContent = title;
+    document.getElementById("genericAlertMessage").textContent = message;
+    document.getElementById("genericAlertIcon").textContent = icon;
+    
+    modal.classList.remove("hidden");
+    
+    Utils.playErrorSound();
+  },
+
   getShiftStorageKey: (shiftId) => `agr_schedule_${shiftId}`,
   isWithinTimeWindow: (shiftId) => {
     const scheduleDateStr = localStorage.getItem("agr_schedule_date");

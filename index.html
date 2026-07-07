@@ -2226,6 +2226,50 @@
       </div>
     </div>
 
+    <!-- ==============================================================
+     GENERIC ALERT MODAL
+     ============================================================== -->
+    <div
+      id="genericAlertModal"
+      class="modal-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+      style="z-index: 10000;"
+    >
+      <div class="modal request-success-modal" style="max-width: 460px">
+        <div class="modal-body" style="padding: 24px; text-align: center">
+          <div
+            id="genericAlertIcon"
+            style="
+              font-size: 56px;
+              margin-bottom: 16px;
+              animation: confirmPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            "
+          >
+            ⚠️
+          </div>
+          <h2
+            id="genericAlertTitle"
+            style="color: var(--danger); margin: 0 0 10px 0; font-size: 24px"
+          >
+            Cảnh báo
+          </h2>
+          
+          <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 16px; text-align: center; margin: 20px 0">
+            <p id="genericAlertMessage" style="color: #eee; margin: 0; font-size: 15px; line-height: 1.5"></p>
+          </div>
+
+          <button
+            class="btn btn-primary"
+            style="width: 100%; border-radius: 24px; padding: 12px; background: var(--danger); border-color: var(--danger);"
+            onclick="document.getElementById('genericAlertModal').classList.add('hidden')"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Scripts -->
     <script type="module" src="firebase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>

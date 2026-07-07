@@ -261,14 +261,19 @@ const EmployeeApp = {
         const now = new Date();
 
         // === KHÓA TẠM THỜI: Sự kiện công ty 7-8/7/2026 ===
-        const lockStart = new Date('2026-07-07T00:00:00+07:00');
-        const lockEnd   = new Date('2026-07-09T00:00:00+07:00'); // hết ngày 8/7
-        if (now >= lockStart && now < lockEnd) {
-          Utils.showGenericSuccessModal(
-            '⚠️ Tạm khóa chức năng Xin OFF',
-            'Trong thời gian từ ngày 07/07 đến 08/07/2026, hệ thống tạm ngưng tiếp nhận đơn xin nghỉ để phục vụ sự kiện công ty.\n\nVui lòng liên hệ Admin nếu có nhu cầu đặc biệt.',
-            '🔒'
-          );
+        const y = now.getFullYear();
+        const m = now.getMonth() + 1;
+        const d = now.getDate();
+        if (y === 2026 && m === 7 && (d === 7 || d === 8)) {
+          if (window.Utils && typeof window.Utils.showGenericAlertModal === "function") {
+            window.Utils.showGenericAlertModal(
+              '⚠️ Tạm khóa Xin OFF',
+              'Hãy liên hệ admin, việc hiện tại sẽ không duyệt nghỉ từ 7 - 8 tháng 7.',
+              '🔒'
+            );
+          } else {
+            alert('Hãy liên hệ admin, việc hiện tại sẽ không duyệt nghỉ từ 7 - 8 tháng 7.');
+          }
           return;
         }
         // === HẾT KHÓA TẠM THỜI ===
@@ -385,14 +390,19 @@ const EmployeeApp = {
           const now = new Date();
 
           // === KHÓA TẠM THỜI: Sự kiện công ty 7-8/7/2026 ===
-          const lockStart = new Date('2026-07-07T00:00:00+07:00');
-          const lockEnd   = new Date('2026-07-09T00:00:00+07:00');
-          if (now >= lockStart && now < lockEnd) {
-            Utils.showGenericSuccessModal(
-              '⚠️ Tạm khóa chức năng Xin OFF',
-              'Trong thời gian từ ngày 07/07 đến 08/07/2026, hệ thống tạm ngưng tiếp nhận đơn xin nghỉ để phục vụ sự kiện công ty.\n\nVui lòng liên hệ Admin nếu có nhu cầu đặc biệt.',
-              '🔒'
-            );
+          const y = now.getFullYear();
+          const m = now.getMonth() + 1;
+          const d = now.getDate();
+          if (y === 2026 && m === 7 && (d === 7 || d === 8)) {
+            if (window.Utils && typeof window.Utils.showGenericAlertModal === "function") {
+              window.Utils.showGenericAlertModal(
+                '⚠️ Tạm khóa Xin OFF',
+                'Hãy liên hệ admin, việc hiện tại sẽ không duyệt nghỉ từ 7 - 8 tháng 7.',
+                '🔒'
+              );
+            } else {
+              alert('Hãy liên hệ admin, việc hiện tại sẽ không duyệt nghỉ từ 7 - 8 tháng 7.');
+            }
             return;
           }
           // === HẾT KHÓA TẠM THỜI ===
