@@ -361,6 +361,14 @@ const EmployeeApp = {
       });
     }
 
+    const reqRejectCloseBtn = document.getElementById("reqRejectCloseBtn");
+    if (reqRejectCloseBtn) {
+      reqRejectCloseBtn.addEventListener("click", () => {
+        const modalEl = document.getElementById("reqRejectModal");
+        if (modalEl) modalEl.classList.add("hidden");
+      });
+    }
+
     const requestForm = document.getElementById("requestForm");
     if (requestForm) {
       requestForm.addEventListener("submit", async (e) => {
@@ -427,15 +435,29 @@ const EmployeeApp = {
             note;
         }
 
-        if (
-          !empId ||
-          !name ||
-          !phone ||
-          !date ||
-          (type === "XIN OFF" && !reason)
-        ) {
+        if (!empId || !name || !phone || !date) {
           Utils.showToast("Vui lòng điền đầy đủ thông tin bắt buộc!", "error");
           return;
+        }
+
+        if (type === "XIN OFF") {
+          if (!reason) {
+            Utils.showToast("Bắt buộc phải ghi rõ lý do Xin OFF!", "error");
+            return;
+          }
+          
+          const rText = reason.toLowerCase();
+          const validKeywords = ["tang", "viếng", "đám ma", "mất", "ốm", "bệnh", "tai nạn", "cấp cứu", "viện", "sốt", "đột xuất"];
+          const isValid = validKeywords.some(kw => rText.includes(kw));
+          if (!isValid) {
+            const reqRejectModal = document.getElementById("reqRejectModal");
+            if (reqRejectModal) {
+              reqRejectModal.classList.remove("hidden");
+            } else {
+              Utils.showToast("Lý do không hợp lệ. Chỉ chấp nhận bất khả kháng.", "error");
+            }
+            return;
+          }
         }
 
         if (

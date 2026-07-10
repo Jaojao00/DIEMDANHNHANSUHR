@@ -599,6 +599,61 @@
       </div>
     </div>
 
+    <!-- REQUEST REJECT MODAL -->
+    <div id="reqRejectModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+      <div class="modal request-success-modal" style="max-width: 460px; border-top: 4px solid #ff5c5c;">
+        <div class="modal-body" style="padding: 24px; text-align: center">
+          <div class="success-anim-wrap" style="margin-bottom: 20px;">
+            <svg class="success-svg" viewBox="0 0 52 52" aria-hidden="true" style="stroke: #ff5c5c;">
+              <circle cx="26" cy="26" r="25" fill="none" style="stroke: #ff5c5c; stroke-width: 2;"/>
+              <path fill="none" d="M16 16 36 36 M36 16 16 36" style="stroke: #ff5c5c; stroke-width: 4; stroke-linecap: round;"/>
+            </svg>
+          </div>
+
+          <h2 class="success-heading" style="color: #ff5c5c; margin-bottom: 20px;">Từ Chối Xin OFF!</h2>
+          
+          <div class="position-result-card" style="text-align: left; background: rgba(255, 92, 92, 0.05); border: 1px solid rgba(255, 92, 92, 0.2);">
+            <div class="prc-header" style="background: rgba(255, 92, 92, 0.1); border-bottom: 1px solid rgba(255, 92, 92, 0.1); color: #ff5c5c;">
+              <span>⚠️</span>
+              <span>Lý do không hợp lệ</span>
+            </div>
+            <div style="padding: 16px; font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary);">
+              <p style="margin-bottom: 12px; color: var(--text-primary);">
+                Hệ thống <b>không thể phê duyệt</b> yêu cầu của bạn vì lý do Xin OFF chưa phù hợp. Theo quy định, Xin OFF đột xuất khi đã có lịch chỉ áp dụng cho <b>các trường hợp bất khả kháng</b>.
+              </p>
+              
+              <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                <span style="color: #4fc3f7; font-weight: 600; display: block; margin-bottom: 6px;">✅ Lý do hợp lệ:</span>
+                <ul style="margin: 0; padding-left: 20px; color: #e0e0e0;">
+                  <li>Ốm đau, tai nạn, cấp cứu, nhập viện</li>
+                  <li>Gia đình có tang sự, đám hiếu</li>
+                </ul>
+              </div>
+
+              <div style="background: rgba(255, 92, 92, 0.05); padding: 12px; border-radius: 8px;">
+                <span style="color: #ff5c5c; font-weight: 600; display: block; margin-bottom: 6px;">❌ Lý do bị từ chối:</span>
+                <ul style="margin: 0; padding-left: 20px; color: #e0e0e0;">
+                  <li>Về quê, việc cá nhân, đi chơi, bận đột xuất...</li>
+                </ul>
+              </div>
+              
+              <p style="margin-top: 12px; font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
+                Vui lòng tuân thủ lịch làm việc đã chốt để không ảnh hưởng đến vận hành. Cảm ơn bạn!
+              </p>
+            </div>
+          </div>
+
+          <button
+            class="btn btn-primary btn-full btn-xl"
+            id="reqRejectCloseBtn"
+            style="background: #333; color: white; margin-top: 20px; border-color: #444;"
+          >
+            Đã Hiểu & Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ==============================================================
      ADMIN VIEW — Desktop (Password Protected)
      ============================================================== -->

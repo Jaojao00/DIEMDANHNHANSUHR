@@ -106,7 +106,7 @@ const Utils = {
     if (!modal) return;
     
     document.getElementById("genericAlertTitle").textContent = title;
-    document.getElementById("genericAlertMessage").textContent = message;
+    document.getElementById("genericAlertMessage").innerHTML = message;
     document.getElementById("genericAlertIcon").textContent = icon;
     
     modal.classList.remove("hidden");
