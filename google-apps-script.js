@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AGR - HỆ THỐNG ĐIỂM DANH - BACKEND (Google Apps Script)
  * Dán toàn bộ mã này vào Google Apps Script của bạn.
  */
@@ -362,31 +362,44 @@ function doPost(e) {
         
         // Trích xuất Tháng từ ngày đầu tiên trong mảng selections
         var month = "X";
+        var isPeriod2 = false;
         if (data.selections && data.selections.length > 0) {
           var firstDateLabel = data.selections[0].label; // VD: "19/06/2026 (Thứ Sáu)"
-          var match = firstDateLabel.match(/\d{2}\/(\d{2})\/\d{4}/);
-          if (match && match[1]) {
-            month = parseInt(match[1], 10).toString(); // "06" -> "6"
+          var match = firstDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
+          if (match && match[1] && match[2]) {
+            var day = parseInt(match[1], 10);
+            month = parseInt(match[2], 10).toString(); // "06" -> "6"
+            if (day >= 16) {
+              isPeriod2 = true;
+            }
           }
         }
+        var periodSuffix = isPeriod2 ? "L2" : "";
         
         var searchId = (data.empId || "").toLowerCase().trim();
         
         // Thu thập danh sách các ca đã đăng ký
         var allSheets = regSs.getSheets();
         var userRegisteredShifts = [];
+        var sheetPrefix = "LỊCHT" + month + "_";
         
         for (var s = 0; s < allSheets.length; s++) {
           var sName = allSheets[s].getName();
-          if (sName.indexOf("LỊCHT" + month + "_") === 0) {
-            var shiftName = sName.replace("LỊCHT" + month + "_", "");
-            var sData = allSheets[s].getDataRange().getValues();
-            
-            for (var r = 1; r < sData.length; r++) {
-              var rId = (sData[r][1] || "").toString().toLowerCase().trim();
-              if (rId === searchId) {
-                userRegisteredShifts.push(shiftName);
-                break;
+          if (sName.indexOf(sheetPrefix) === 0) {
+            var hasL2 = sName.endsWith("L2");
+            if ((isPeriod2 && hasL2) || (!isPeriod2 && !hasL2)) {
+              var shiftName = sName.substring(sheetPrefix.length);
+              if (hasL2) {
+                shiftName = shiftName.substring(0, shiftName.length - 2);
+              }
+              var sData = allSheets[s].getDataRange().getValues();
+              
+              for (var r = 1; r < sData.length; r++) {
+                var rId = (sData[r][1] || "").toString().toLowerCase().trim();
+                if (rId === searchId) {
+                  userRegisteredShifts.push(shiftName);
+                  break;
+                }
               }
             }
           }
@@ -415,7 +428,7 @@ function doPost(e) {
               };
             });
             
-            var regSheetName = "LỊCHT" + month + "_" + subShift.id;
+            var regSheetName = "LỊCHT" + month + "_" + subShift.id + periodSuffix;
             var regSheet = regSs.getSheetByName(regSheetName);
             
             if (!regSheet) {
@@ -461,7 +474,7 @@ function doPost(e) {
             return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký ca " + reqShift + " trong kỳ này rồi, không được đăng ký lại!" })).setMimeType(ContentService.MimeType.JSON);
           }
           
-          var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "UNKNOWN");
+          var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "UNKNOWN") + periodSuffix;
           var regSheet = regSs.getSheetByName(regSheetName);
           
           if (!regSheet) {
@@ -1025,9 +1038,11 @@ function doGet(e) {
             var parts = sName.split("_");
             if (parts.length >= 2) {
               var sShiftId = parts.slice(1).join("_");
-              if (sShiftId === shiftSearch) {
+              var isMatch = (sShiftId === shiftSearch) || (sShiftId === shiftSearch + "L2");
+              if (isMatch) {
                 var periodMatch = sName.match(/LỊCHT(\w+)_/);
-                var periodName = periodMatch ? ("Kỳ " + periodMatch[1]) : sName;
+                var isL2 = sName.endsWith("L2");
+                var periodName = periodMatch ? ("Kỳ " + periodMatch[1] + (isL2 ? " Lần 2" : "")) : sName;
                 
                 var vals = sheet.getDataRange().getValues();
                 var headersList = vals.length > 0 ? vals[0] : [];
