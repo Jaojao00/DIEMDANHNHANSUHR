@@ -127,6 +127,22 @@ const EmployeeApp = {
           console.error("Lỗi preload schedule:", e),
         );
       }
+      
+      const savedEmpId = localStorage.getItem("agr_empId");
+      if (savedEmpId) {
+        const el = document.getElementById("employeeId");
+        if (el) el.value = savedEmpId;
+      }
+      const savedEmpName = localStorage.getItem("agr_empName");
+      if (savedEmpName) {
+        const el = document.getElementById("employeeName");
+        if (el) el.value = savedEmpName;
+      }
+      const savedEmpPhone = localStorage.getItem("agr_empPhone");
+      if (savedEmpPhone) {
+        const el = document.getElementById("employeePhone");
+        if (el) el.value = savedEmpPhone;
+      }
     }
   },
 
@@ -217,8 +233,12 @@ const EmployeeApp = {
           const result = await DataManager.updateAttendance(
             State.selectedShiftId,
             idStr,
-            phoneStr,
+            phoneStr
           );
+
+          localStorage.setItem("agr_empId", idStr);
+          localStorage.setItem("agr_empName", nameStr);
+          localStorage.setItem("agr_empPhone", phoneStr);
 
           // Hiện Success
           EmployeeApp.showSuccess(result.employeeData, result.isUnassigned);
@@ -302,6 +322,14 @@ const EmployeeApp = {
           if (savedDate) dateEl.value = savedDate;
           else dateEl.valueAsDate = new Date();
         }
+        
+        const savedEmpId = localStorage.getItem("agr_empId");
+        if (savedEmpId) { const el = document.getElementById("req_empId"); if (el) el.value = savedEmpId; }
+        const savedEmpName = localStorage.getItem("agr_empName");
+        if (savedEmpName) { const el = document.getElementById("req_name"); if (el) el.value = savedEmpName; }
+        const savedEmpPhone = localStorage.getItem("agr_empPhone");
+        if (savedEmpPhone) { const el = document.getElementById("req_phone"); if (el) el.value = savedEmpPhone; }
+        
         if (shiftGroup) shiftGroup.style.display = "block";
         if (shiftLabel)
           shiftLabel.innerHTML =
@@ -335,6 +363,14 @@ const EmployeeApp = {
           if (savedDate) dateEl.value = savedDate;
           else dateEl.valueAsDate = new Date();
         }
+        
+        const savedEmpId = localStorage.getItem("agr_empId");
+        if (savedEmpId) { const el = document.getElementById("req_empId"); if (el) el.value = savedEmpId; }
+        const savedEmpName = localStorage.getItem("agr_empName");
+        if (savedEmpName) { const el = document.getElementById("req_name"); if (el) el.value = savedEmpName; }
+        const savedEmpPhone = localStorage.getItem("agr_empPhone");
+        if (savedEmpPhone) { const el = document.getElementById("req_phone"); if (el) el.value = savedEmpPhone; }
+        
         if (shiftGroup) shiftGroup.style.display = "block";
         if (shiftLabel)
           shiftLabel.innerHTML =
@@ -502,6 +538,10 @@ const EmployeeApp = {
           const modalEl = document.getElementById("requestModal");
           if (modalEl) modalEl.classList.add("hidden");
           requestForm.reset();
+          
+          localStorage.setItem("agr_empId", empId);
+          localStorage.setItem("agr_empName", name);
+          localStorage.setItem("agr_empPhone", phone);
 
           // Tự động tải lại bảng để thấy ngay người vừa xin lên ca
           const refreshBtn = document.getElementById("refreshBtn");
