@@ -418,8 +418,6 @@ const RegApp = {
     if (savedEmpId) { const el = document.getElementById("crEmpId"); if (el) el.value = savedEmpId; }
     const savedEmpName = localStorage.getItem("agr_empName");
     if (savedEmpName) { const el = document.getElementById("crEmpName"); if (el) el.textContent = savedEmpName.toUpperCase(); }
-    const savedEmpPhone = localStorage.getItem("agr_empPhone");
-    if (savedEmpPhone) { const el = document.getElementById("crEmpPhone"); if (el) el.value = savedEmpPhone; }
     
     // Đặt mặc định ca đang chọn là CA_NGAY
     const firstCard = document.querySelector('.cr-shift-cards .reg-shift-card');
@@ -652,7 +650,7 @@ const RegApp = {
     submitChangeRequest: async () => {
     if (RegApp.isSubmittingChange) return;
     const empId = RegApp.crOriginalData.empId.toLowerCase();
-    const phone = document.getElementById('crEmpPhone').value.trim();
+    const phone = RegApp.crOriginalData.empPhone;
 
     const lastChangeReqTime = localStorage.getItem('agr_last_change_req_' + empId);
     if (lastChangeReqTime) {
