@@ -2450,15 +2450,20 @@
           <h3 class="modal-title" id="regManagerTitle">Nhập Dữ Liệu Đăng Ký Thủ Công</h3>
         </div>
         <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
-          <div class="manager-instructions">
-            <h4>Hướng dẫn:</h4>
-            <ol>
-              <li>Copy toàn bộ dữ liệu từ sheet đăng ký lịch của bạn (bao gồm cả dòng tiêu đề có Dấu thời gian, Mã NV... và các cột ngày).</li>
-              <li>Dán (Paste) vào ô trống bên dưới.</li>
-              <li>Nhấn <strong>"Đọc dữ liệu"</strong> để xem trước và <strong>"Áp dụng"</strong> để hiển thị lên bảng.</li>
-            </ol>
-          </div>
           
+          
+          
+          <div class="manager-section" style="margin-bottom: 20px;">
+            <label class="manager-label" style="text-transform: uppercase; font-weight: 600; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; display: block; letter-spacing: 0.5px;">Chọn ca cần cập nhật:</label>
+            <div class="manager-shift-btns" id="regManagerShiftBtns"></div>
+          </div>
+          <div class="manager-section" style="margin-bottom: 10px;">
+            <label class="manager-label" style="text-transform: uppercase; font-weight: 600; font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+              📋 Dán dữ liệu từ Google Sheets
+              <span class="manager-hint-inline" style="font-size: 12px; color: #6c757d; font-weight: normal; text-transform: none;">Ctrl+A → Ctrl+C → Dán vào đây</span>
+            </label>
+          </div>
+
           <div class="paste-area">
             <textarea id="regPasteInput" class="paste-input" placeholder="Dán dữ liệu đăng ký lịch tại đây (Ctrl+V)..."></textarea>
             <div class="paste-actions">

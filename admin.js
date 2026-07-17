@@ -905,6 +905,32 @@ const AdminApp = {
     if (regManagerBtn) {
       regManagerBtn.addEventListener("click", () => {
         if(regManagerModal) regManagerModal.classList.remove("hidden");
+
+        // Render shift buttons inside reg modal
+        const regBtnsContainer = document.getElementById("regManagerShiftBtns");
+        if (regBtnsContainer) {
+          regBtnsContainer.innerHTML = State.shifts
+            .map(
+              (s) => `<div class="mgr-shift-btn ${s.id === State.selectedShiftId ? "active" : ""}" data-shift="${s.id}" style="--tab-color:${s.color}">
+              <span>${s.label}</span>
+              <span class="mgr-shift-time">${s.id}</span>
+            </div>`
+            )
+            .join("");
+
+          regBtnsContainer.querySelectorAll(".mgr-shift-btn").forEach((btn) => {
+            btn.addEventListener("click", (e) => {
+              regBtnsContainer
+                .querySelectorAll(".mgr-shift-btn")
+                .forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              State.selectedShiftId = btn.dataset.shift; // Sync shift
+              AdminApp.renderShiftTabs(); // Sync background UI
+              AdminApp.loadData();
+            });
+          });
+        }
+
         if(regPasteInput) regPasteInput.value = "";
         if(regPreviewArea) regPreviewArea.classList.add("hidden");
         if(saveRegBtn) saveRegBtn.disabled = true;
