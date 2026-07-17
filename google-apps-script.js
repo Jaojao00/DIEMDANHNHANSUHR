@@ -1113,10 +1113,7 @@ function doGet(e) {
             }
             
             if (sShiftId === shiftSearch) {
-              var periodName = sName;
-                
-                var vals = sheet.getDataRange().getValues();
-                var headersList = vals.length > 0 ? vals[0] : [];
+                var periodName = sName;
                 for (var hi = 0; hi < headersList.length; hi++) {
                   if (Object.prototype.toString.call(headersList[hi]) === '[object Date]') {
                     headersList[hi] = Utilities.formatDate(headersList[hi], CONFIG.TIMEZONE, 'dd/MM/yyyy');
@@ -1141,12 +1138,29 @@ function doGet(e) {
                   headers: headersList.slice(7),
                   data: result
                 });
-              }
             }
           }
         }
         
-        return ContentService.createTextOutput(JSON.stringify({ periods: periods })).setMimeType(ContentService.MimeType.JSON);
+        var defaultIdx = periods.length - 1;
+        if (defaultIdx >= 0) {
+          return ContentService.createTextOutput(JSON.stringify({
+            periodId: periods[defaultIdx].id,
+            periodName: periods[defaultIdx].name,
+            headers: periods[defaultIdx].headers,
+            data: periods[defaultIdx].data,
+            availablePeriods: periods.map(function(p) { return { id: p.id, name: p.name }; })
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+        
+        return ContentService.createTextOutput(JSON.stringify({
+          periodId: null,
+          periodName: null,
+          headers: [],
+          data: [],
+          availablePeriods: []
+        })).setMimeType(ContentService.MimeType.JSON);
+        
       } catch (err) {
         return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
       }
