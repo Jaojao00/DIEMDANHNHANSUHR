@@ -1628,12 +1628,14 @@
         <div style="padding: 20px; text-align: center">
           <button
             class="btn btn-outline"
-            onclick="RegApp.openChangeRequestModal()"
+            onclick="Utils.showGenericAlertModal('Tính Năng Đã Khóa', 'Chức năng yêu cầu thay đổi lịch hiện đang được tạm khóa theo yêu cầu. Vui lòng liên hệ Admin để biết thêm chi tiết.', '🔒')"
             style="
               width: 100%;
               border-radius: 12px;
               padding: 14px;
               font-weight: 600;
+              opacity: 0.5;
+              cursor: not-allowed;
             "
           >
             <svg
