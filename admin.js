@@ -16,7 +16,7 @@ const AdminApp = {
 
       const res = await fetch(apiLink, {
         method: "POST",
-        body: JSON.stringify({ action: "get_change_requests" })
+        body: JSON.stringify({ action: "get_change_requests", adminToken: localStorage.getItem("agr_admin_token") })
       });
       const data = await res.json();
 
@@ -139,6 +139,7 @@ const AdminApp = {
       };
       const apiLink = localStorage.getItem("agr_api_link") || (typeof CONFIG !== "undefined" ? CONFIG.API_URL : "");
       try {
+        payload.adminToken = localStorage.getItem("agr_admin_token");
         const resp = await fetch(apiLink, { method: "POST", body: JSON.stringify(payload) });
         const resJson = await resp.json();
         if (!resJson.error) successCount++;
@@ -169,6 +170,7 @@ const AdminApp = {
       const payload = { action: "reject_change_request", reqId: reqId };
       const apiLink = localStorage.getItem("agr_api_link") || (typeof CONFIG !== "undefined" ? CONFIG.API_URL : "");
       try {
+        payload.adminToken = localStorage.getItem("agr_admin_token");
         const resp = await fetch(apiLink, { method: "POST", body: JSON.stringify(payload) });
         const resJson = await resp.json();
         if (!resJson.error) successCount++;
@@ -259,6 +261,7 @@ const AdminApp = {
         const apiLink =
           localStorage.getItem("agr_api_link") ||
           (typeof CONFIG !== "undefined" ? CONFIG.API_URL : "");
+        payload.adminToken = localStorage.getItem("agr_admin_token");
         const resp = await fetch(apiLink, {
           method: "POST",
           body: JSON.stringify(payload),
@@ -281,6 +284,7 @@ const AdminApp = {
         const apiLink =
           localStorage.getItem("agr_api_link") ||
           (typeof CONFIG !== "undefined" ? CONFIG.API_URL : "");
+        payload.adminToken = localStorage.getItem("agr_admin_token");
         await fetch(apiLink, {
           method: "POST",
           body: JSON.stringify(payload),
@@ -544,6 +548,7 @@ const AdminApp = {
             loginSubmitBtn.innerHTML = originalText;
             if (json.success) {
               localStorage.setItem("admin_email", email);
+              if (json.token) localStorage.setItem("agr_admin_token", json.token);
               if (adminEmailInput)
                 adminEmailInput.setAttribute("readonly", "true");
               if (changeAdminAccountBtn)
@@ -818,6 +823,7 @@ const AdminApp = {
             body: JSON.stringify({
               action: "sync_roster",
               shiftId: State.selectedShiftId,
+              adminToken: localStorage.getItem("agr_admin_token")
             }),
           });
           const result = await res.json();
@@ -955,7 +961,7 @@ const AdminApp = {
     try {
       const res = await fetch(State.apiLink, {
         method: "POST",
-        body: JSON.stringify({ action: "get_booking" }),
+        body: JSON.stringify({ action: "get_booking", adminToken: localStorage.getItem("agr_admin_token") }),
       });
       const result = await res.json();
 
@@ -1940,7 +1946,7 @@ const AdminApp = {
 
       const response = await fetch(url, {
         method: "POST",
-        body: JSON.stringify({ action: "reset_registrations" }),
+        body: JSON.stringify({ action: "reset_registrations", adminToken: localStorage.getItem("agr_admin_token") }),
       });
 
       const result = await response.json();
@@ -1970,6 +1976,13 @@ const AdminApp = {
     const regTo = document.getElementById("regDateTo");
     const regDateFrom = regFrom ? regFrom.value : "";
     const regDateTo = regTo ? regTo.value : "";
+    
+    if (regDateFrom && regDateTo) {
+      if (new Date(regDateFrom) > new Date(regDateTo)) {
+        Utils.showToast("Lỗi: Ngày kết thúc không thể nhỏ hơn ngày bắt đầu!", "error");
+        return;
+      }
+    }
 
     if (State.apiLink && (regDateFrom || regDateTo)) {
       try {
@@ -1979,6 +1992,7 @@ const AdminApp = {
             action: "save_reg_config",
             regDateFrom: regDateFrom,
             regDateTo: regDateTo,
+            adminToken: localStorage.getItem("agr_admin_token")
           }),
         });
         const json = await resp.json();

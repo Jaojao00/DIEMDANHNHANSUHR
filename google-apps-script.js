@@ -35,7 +35,15 @@ function doPost(e) {
     var action = data.action;
     var shiftId = data.shiftId;
     
-    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "reset_registrations" && action !== "admin_login" && action !== "save_reg_config" && action !== "sync_roster" && action !== "get_change_requests" && action !== "submit_change_request" && action !== "approve_change_request" && action !== "reject_change_request" && action !== "get_booking") {
+    // Auth Check for Admin Actions
+    var adminActions = ["save_reg_config", "reset_registrations", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking"];
+    if (adminActions.indexOf(action) !== -1) {
+      if (!verifyAdminToken(data.adminToken)) {
+        return ContentService.createTextOutput(JSON.stringify({ error: "Unauthorized. Vui lòng đăng nhập lại." })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    
+    if (!shiftId && action !== "request" && action !== "submit_registration" && action !== "submit_change_request" && adminActions.indexOf(action) === -1 && action !== "admin_login") {
       return ContentService.createTextOutput(JSON.stringify({ error: "Missing shiftId" })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -846,10 +854,21 @@ function doPost(e) {
       };
       
       if (admins[email] && admins[email] === password) {
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đăng nhập thành công" })).setMimeType(ContentService.MimeType.JSON);
+        var token = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, email + "hr-secret-salt-2026", Utilities.Charset.UTF_8));
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đăng nhập thành công", token: token })).setMimeType(ContentService.MimeType.JSON);
       } else {
         return ContentService.createTextOutput(JSON.stringify({ error: "Email hoặc mật khẩu không đúng" })).setMimeType(ContentService.MimeType.JSON);
       }
+    }
+
+    function verifyAdminToken(token) {
+      if (!token) return false;
+      var adminEmails = ["tainguyenhr.dev@gmail.com", "ptbt472@gmail.com"];
+      for (var i = 0; i < adminEmails.length; i++) {
+        var expected = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, adminEmails[i] + "hr-secret-salt-2026", Utilities.Charset.UTF_8));
+        if (token === expected) return true;
+      }
+      return false;
     }
 
     if (action === "sync_roster") {
@@ -876,6 +895,13 @@ function doGet(e) {
   try {
     var action = e.parameter.action;
     var shiftId = e.parameter.shiftId;
+    
+    // Auth Check for Admin Actions in GET
+    if (action === "get_shift_registrations") {
+      if (!verifyAdminToken(e.parameter.adminToken)) {
+        return ContentService.createTextOutput(JSON.stringify({ error: "Unauthorized" })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
     
     if (action === "load" && shiftId) {
       var sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
