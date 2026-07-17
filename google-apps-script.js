@@ -1142,24 +1142,7 @@ function doGet(e) {
           }
         }
         
-        var defaultIdx = periods.length - 1;
-        if (defaultIdx >= 0) {
-          return ContentService.createTextOutput(JSON.stringify({
-            periodId: periods[defaultIdx].id,
-            periodName: periods[defaultIdx].name,
-            headers: periods[defaultIdx].headers,
-            data: periods[defaultIdx].data,
-            availablePeriods: periods.map(function(p) { return { id: p.id, name: p.name }; })
-          })).setMimeType(ContentService.MimeType.JSON);
-        }
-        
-        return ContentService.createTextOutput(JSON.stringify({
-          periodId: null,
-          periodName: null,
-          headers: [],
-          data: [],
-          availablePeriods: []
-        })).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ periods: periods })).setMimeType(ContentService.MimeType.JSON);
         
       } catch (err) {
         return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
