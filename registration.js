@@ -411,6 +411,8 @@ const RegApp = {
   },
   
   openChangeRequestModal: () => {
+    Utils.showGenericAlertModal("Tính Năng Đã Khóa", "Chức năng yêu cầu thay đổi lịch hiện đang được tạm khóa theo yêu cầu. Vui lòng liên hệ Admin để biết thêm chi tiết.", "🔒");
+    return;
     document.getElementById('regStep1').style.display = 'none';
     document.getElementById('regChangeRequest').style.display = 'block';
     
