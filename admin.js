@@ -697,6 +697,10 @@ const AdminApp = {
     if (btnViewModeFinal && btnViewModeReg) {
       btnViewModeFinal.addEventListener("click", () => {
         AdminApp.currentViewMode = "final";
+        const rBtn = document.getElementById("regManagerBtn");
+        const mBtn = document.getElementById("managerBtn");
+        if(rBtn) rBtn.style.display = "none";
+        if(mBtn) mBtn.style.display = "inline-flex";
         btnViewModeFinal.style.background = "var(--primary)";
         btnViewModeFinal.style.color = "white";
         btnViewModeFinal.classList.remove("btn-ghost");
@@ -715,6 +719,10 @@ const AdminApp = {
       });
       btnViewModeReg.addEventListener("click", () => {
         AdminApp.currentViewMode = "registration";
+        const rBtn = document.getElementById("regManagerBtn");
+        const mBtn = document.getElementById("managerBtn");
+        if(rBtn) rBtn.style.display = "inline-flex";
+        if(mBtn) mBtn.style.display = "none";
         btnViewModeReg.style.background = "var(--primary)";
         btnViewModeReg.style.color = "white";
         btnViewModeReg.classList.remove("btn-ghost");
@@ -734,6 +742,10 @@ const AdminApp = {
       if (btnViewModeBooking) {
         btnViewModeBooking.addEventListener("click", () => {
           AdminApp.currentViewMode = "booking";
+        const rBtn = document.getElementById("regManagerBtn");
+        const mBtn = document.getElementById("managerBtn");
+        if(rBtn) rBtn.style.display = "none";
+        if(mBtn) mBtn.style.display = "none";
           btnViewModeBooking.style.background = "var(--primary)";
           btnViewModeBooking.style.color = "white";
           btnViewModeBooking.classList.remove("btn-ghost");
@@ -876,6 +888,146 @@ const AdminApp = {
         AdminApp.openManagerModal();
       });
     }
+
+    // --- REGISTRATION MANAGER MODAL ---
+    const regManagerBtn = document.getElementById("regManagerBtn");
+    const regManagerModal = document.getElementById("regManagerModal");
+    const regManagerCloseBtn = document.getElementById("regManagerCloseBtn");
+    const parseRegPasteBtn = document.getElementById("parseRegPasteBtn");
+    const clearRegPasteBtn = document.getElementById("clearRegPasteBtn");
+    const saveRegBtn = document.getElementById("saveRegBtn");
+    const regPasteInput = document.getElementById("regPasteInput");
+    const regPreviewArea = document.getElementById("regPreviewArea");
+    const regPreviewTable = document.getElementById("regPreviewTable");
+    
+    let parsedRegData = null;
+
+    if (regManagerBtn) {
+      regManagerBtn.addEventListener("click", () => {
+        if(regManagerModal) regManagerModal.classList.remove("hidden");
+        if(regPasteInput) regPasteInput.value = "";
+        if(regPreviewArea) regPreviewArea.classList.add("hidden");
+        if(saveRegBtn) saveRegBtn.disabled = true;
+        parsedRegData = null;
+      });
+    }
+
+    if (regManagerCloseBtn) {
+      regManagerCloseBtn.addEventListener("click", () => {
+        if(regManagerModal) regManagerModal.classList.add("hidden");
+      });
+    }
+
+    if (clearRegPasteBtn) {
+      clearRegPasteBtn.addEventListener("click", () => {
+        if(regPasteInput) regPasteInput.value = "";
+        if(regPreviewArea) regPreviewArea.classList.add("hidden");
+        if(saveRegBtn) saveRegBtn.disabled = true;
+        parsedRegData = null;
+      });
+    }
+
+    if (parseRegPasteBtn) {
+      parseRegPasteBtn.addEventListener("click", () => {
+        const text = regPasteInput.value.trim();
+        if (!text) {
+          Utils.showToast("Vui lòng dán dữ liệu trước", "error");
+          return;
+        }
+
+        const lines = text.split("\n").map(l => l.split("\t"));
+        if (lines.length < 2) {
+          Utils.showToast("Dữ liệu không hợp lệ (cần ít nhất 2 dòng)", "error");
+          return;
+        }
+
+        const headers = lines[0].map(h => h.trim());
+        // find indices
+        let colCa = -1, colMaNV = -1;
+        for (let i = 0; i < headers.length; i++) {
+          if (headers[i] === "Ca" || headers[i] === "Shift") colCa = i;
+          if (headers[i] === "Mã NV" || headers[i] === "MÃ NV") colMaNV = i;
+        }
+
+        if (colCa === -1 || colMaNV === -1) {
+          Utils.showToast("Không tìm thấy cột 'Ca' hoặc 'Mã NV'. Vui lòng dán đúng định dạng.", "error");
+          return;
+        }
+
+        const dateHeaders = headers.slice(7); // After "Tên Ca"
+        if (dateHeaders.length === 0) {
+           Utils.showToast("Không tìm thấy cột ngày tháng nào.", "error");
+           return;
+        }
+
+        const result = [];
+        for (let i = 1; i < lines.length; i++) {
+          const r = lines[i];
+          if (!r || r.length < 2) continue;
+          if (!r[colMaNV]) continue;
+          
+          result.push({
+            timestamp: r[0] || "",
+            empId: r[colMaNV] || "",
+            name: r[colMaNV + 1] || "",
+            phone: r[colMaNV + 2] || "",
+            choices: r.slice(7)
+          });
+        }
+
+        parsedRegData = {
+          id: "manual_" + Date.now(),
+          name: "Nhập thủ công " + Utils.formatDateObj(new Date()),
+          headers: dateHeaders,
+          data: result
+        };
+
+        // Render preview
+        const thead = regPreviewTable.querySelector("thead");
+        const tbody = regPreviewTable.querySelector("tbody");
+        
+        thead.innerHTML = "<tr><th>STT</th><th>Mã NV</th><th>Tên</th><th>" + dateHeaders.join("</th><th>") + "</th></tr>";
+        
+        let tbodyHtml = "";
+        result.slice(0, 50).forEach((row, idx) => { // show up to 50 in preview
+          let choicesHtml = row.choices.map(c => "<td>" + (c || "") + "</td>").join("");
+          tbodyHtml += "<tr><td>" + (idx+1) + "</td><td>" + row.empId + "</td><td>" + row.name + "</td>" + choicesHtml + "</tr>";
+        });
+        if (result.length > 50) tbodyHtml += "<tr><td colspan='" + (3 + dateHeaders.length) + "'>... và " + (result.length - 50) + " dòng khác</td></tr>";
+        
+        tbody.innerHTML = tbodyHtml;
+        document.getElementById("regPreviewCount").textContent = result.length;
+        
+        regPreviewArea.classList.remove("hidden");
+        saveRegBtn.disabled = false;
+        Utils.showToast("Đọc thành công " + result.length + " dòng", "success");
+      });
+    }
+
+    if (saveRegBtn) {
+      saveRegBtn.addEventListener("click", () => {
+        if (!parsedRegData) return;
+        
+        // Push to allRegistrationPeriods
+        AdminApp.allRegistrationPeriods.push(parsedRegData);
+        
+        // Update select
+        const regPeriodSelect = document.getElementById("regPeriodSelect");
+        if (regPeriodSelect) {
+            regPeriodSelect.style.display = "inline-block";
+            const opt = document.createElement("option");
+            opt.value = AdminApp.allRegistrationPeriods.length - 1;
+            opt.textContent = parsedRegData.name;
+            regPeriodSelect.appendChild(opt);
+            regPeriodSelect.value = AdminApp.allRegistrationPeriods.length - 1;
+        }
+
+        AdminApp.renderRegistrationTable(parsedRegData);
+        if(regManagerModal) regManagerModal.classList.add("hidden");
+        Utils.showToast("Đã áp dụng lịch đăng ký thủ công!", "success");
+      });
+    }
+
 
     const syncRegistrationBtn = document.getElementById("syncRegistrationBtn");
     if (syncRegistrationBtn) {
