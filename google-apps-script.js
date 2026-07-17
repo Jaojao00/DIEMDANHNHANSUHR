@@ -1,4 +1,4 @@
-﻿/**
+/**
  * AGR - HỆ THỐNG ĐIỂM DANH - BACKEND (Google Apps Script)
  * Dán toàn bộ mã này vào Google Apps Script của bạn.
  */
@@ -11,6 +11,16 @@ var CONFIG = {
   SPREADSHEET_ID: "1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI",
   TIMEZONE: "Asia/Ho_Chi_Minh"
 };
+
+function verifyAdminToken(token) {
+  if (!token) return false;
+  var adminEmails = ["tainguyenhr.dev@gmail.com", "ptbt472@gmail.com"];
+  for (var i = 0; i < adminEmails.length; i++) {
+    var expected = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, adminEmails[i] + "hr-secret-salt-2026", Utilities.Charset.UTF_8));
+    if (token === expected) return true;
+  }
+  return false;
+}
 
 // HELPER: Lấy hoặc tạo sheet CONFIG
 // ==========================================
@@ -895,15 +905,7 @@ function doPost(e) {
       }
     }
 
-    function verifyAdminToken(token) {
-      if (!token) return false;
-      var adminEmails = ["tainguyenhr.dev@gmail.com", "ptbt472@gmail.com"];
-      for (var i = 0; i < adminEmails.length; i++) {
-        var expected = Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, adminEmails[i] + "hr-secret-salt-2026", Utilities.Charset.UTF_8));
-        if (token === expected) return true;
-      }
-      return false;
-    }
+
 
     if (action === "sync_roster") {
       try {
