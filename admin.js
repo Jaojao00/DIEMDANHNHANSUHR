@@ -49,6 +49,74 @@ const AdminApp = {
     }
   },
 
+  openLogModal: async () => {
+    const btn = document.getElementById("adminLogBtn");
+    if (btn) btn.classList.add("loading");
+    
+    document.getElementById("adminLogModal").classList.remove("hidden");
+    
+    try {
+      const token = localStorage.getItem("admin_token");
+      if (!token) throw new Error("Chưa xác thực Admin");
+      
+      const res = await fetch(CONFIG.SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "get_admin_logs",
+          adminToken: token
+        })
+      });
+      const result = await res.json();
+      
+      if (result.status === "success") {
+        AdminApp.renderAdminLogs(result.data || []);
+      } else {
+        Utils.showToast(result.error || result.message, "error");
+      }
+    } catch (e) {
+      Utils.showToast("Lỗi tải lịch sử: " + e.message, "error");
+    } finally {
+      if (btn) btn.classList.remove("loading");
+    }
+  },
+
+  closeLogModal: () => {
+    document.getElementById("adminLogModal").classList.add("hidden");
+  },
+
+  renderAdminLogs: (logs) => {
+    const tbody = document.getElementById("adminLogTableBody");
+    if (!tbody) return;
+    
+    if (logs.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 20px; color: var(--text-muted)">Chưa có lịch sử chỉnh sửa nào.</td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = logs.map(log => {
+      const dt = new Date(log.timestamp);
+      const formattedDate = dt.toLocaleString("vi-VN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+      
+      return `
+        <tr>
+          <td><div class="emp-id-badge" style="background:var(--bg-elevated);color:var(--text-main)">${formattedDate}</div></td>
+          <td><b>${log.sheetName}</b></td>
+          <td><span style="color:var(--primary);font-weight:bold">${log.cell}</span></td>
+          <td><span style="color:var(--text-muted);text-decoration:line-through">${log.oldVal}</span></td>
+          <td><span style="color:#43e97b;font-weight:600">${log.newVal}</span></td>
+          <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${log.user}">${log.user}</td>
+        </tr>
+      `;
+    }).join("");
+  },
+
   openNotifModal: async () => {
     const btn = document.getElementById("adminNotifBtn");
     const originalHtml = btn.innerHTML;
@@ -463,6 +531,13 @@ const AdminApp = {
   setupEvents: () => {
     const notifBtn = document.getElementById("adminNotifBtn");
     if (notifBtn) notifBtn.addEventListener("click", AdminApp.openNotifModal);
+
+    const logBtn = document.getElementById("adminLogBtn");
+    if (logBtn) logBtn.addEventListener("click", AdminApp.openLogModal);
+
+    const closeLogBtn = document.getElementById("closeAdminLogModal");
+    if (closeLogBtn)
+      closeLogBtn.addEventListener("click", AdminApp.closeLogModal);
 
     const closeNotifBtn = document.getElementById("closeAdminNotifModal");
     if (closeNotifBtn)

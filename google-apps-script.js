@@ -36,7 +36,7 @@ function doPost(e) {
     var shiftId = data.shiftId;
     
     // Auth Check for Admin Actions
-    var adminActions = ["save_reg_config", "reset_registrations", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking"];
+    var adminActions = ["save_reg_config", "reset_registrations", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs"];
     if (adminActions.indexOf(action) !== -1) {
       if (!verifyAdminToken(data.adminToken)) {
         return ContentService.createTextOutput(JSON.stringify({ error: "Unauthorized. Vui lÃ²ng Ä‘Äƒng nháº­p láº¡i." })).setMimeType(ContentService.MimeType.JSON);
@@ -626,6 +626,33 @@ function doPost(e) {
           });
         }
         return sendJsonResponse({ status: "success", data: bookings });
+      } catch (e) {
+        return sendJsonResponse({ status: "error", message: e.toString() });
+      }
+    }
+
+    // ACTION: GET_ADMIN_LOGS
+    if (action === "get_admin_logs") {
+      try {
+        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+        var logSheet = regSs.getSheetByName("AdminLogs");
+        if (!logSheet) return sendJsonResponse({ status: "success", data: [] });
+        
+        var dataRange = logSheet.getDataRange().getValues();
+        var logs = [];
+        // Láº¥y 100 dÃ²ng gáº§n nháº¥t
+        var limit = Math.min(dataRange.length, 101); 
+        for (var i = 1; i < limit; i++) {
+          logs.push({
+            timestamp: dataRange[i][0],
+            user: dataRange[i][1],
+            sheetName: dataRange[i][2],
+            cell: dataRange[i][3],
+            oldVal: dataRange[i][4],
+            newVal: dataRange[i][5]
+          });
+        }
+        return sendJsonResponse({ status: "success", data: logs });
       } catch (e) {
         return sendJsonResponse({ status: "error", message: e.toString() });
       }
@@ -1410,4 +1437,48 @@ function setupAutoTriggers() {
 
 function sendJsonResponse(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+// ==========================================
+// TÍNH NANG THEO DÕI CH?NH S?A L?CH C?A ADMIN (ONEDIT)
+// ==========================================
+function onEdit(e) {
+  if (!e || !e.range) return;
+  var sheet = e.range.getSheet();
+  var sheetName = sheet.getName();
+  
+  // Ch? ghi nh?n n?u s?a trên các sheet L?ch Làm Vi?c
+  if (sheetName.match(/^T\d+_/) || sheetName.indexOf("L?CHT") === 0 || sheetName.indexOf("Ca_") === 0 || sheetName.indexOf("DangKyLich") === 0) {
+    try {
+      var ss = e.source;
+      var logSheet = ss.getSheetByName("AdminLogs");
+      if (!logSheet) {
+        logSheet = ss.insertSheet("AdminLogs");
+        logSheet.appendRow(["Th?i Gian", "Ngu?i S?a", "Tên Sheet", "V? Trí (Ô)", "D? Li?u Cu", "D? Li?u M?i"]);
+        logSheet.getRange("A1:F1").setFontWeight("bold").setBackground("#d9ead3");
+        logSheet.setFrozenRows(1);
+      }
+      
+      var timestamp = new Date().toISOString();
+      var user = e.user ? e.user.getEmail() : "Admin/User Khuy?t Danh";
+      if (!user || user === "") user = "Admin/User Khuy?t Danh";
+      var cell = e.range.getA1Notation();
+      var oldVal = e.oldValue !== undefined ? e.oldValue : "(Tr?ng)";
+      var newVal = e.value !== undefined ? e.value : "(Xóa)";
+      
+      // Chèn lên d?u danh sách log (dòng 2)
+      logSheet.insertRowAfter(1);
+      logSheet.getRange(2, 1, 1, 6).setValues([[
+        timestamp,
+        user,
+        sheetName,
+        cell,
+        oldVal,
+        newVal
+      ]]);
+      
+    } catch(err) {
+      // B? qua n?u có l?i ghi log
+    }
+  }
 }
