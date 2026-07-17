@@ -2536,3 +2536,27 @@ body {
   100% { background-position: 0% 50%; }
 }
 
+
+/* Refactored Classes from Inline Styles */
+.mono-text {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.req-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 6px;
+}
+
+.required-star {
+  color: #ff5c5c;
+}
+
+.modal-responsive {
+  max-width: min(90vw, 460px);
+}
+

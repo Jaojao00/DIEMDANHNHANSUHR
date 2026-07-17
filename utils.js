@@ -87,31 +87,24 @@ const Utils = {
     }, CONFIG.TOAST_DURATION || 3000);
   },
 
-  showGenericSuccessModal: (title, message, icon = "✅") => {
-    const modal = document.getElementById("genericSuccessModal");
-    if (!modal) return;
-    
-    document.getElementById("genericSuccessTitle").textContent = title;
-    document.getElementById("genericSuccessMessage").textContent = message;
-    document.getElementById("genericSuccessIcon").textContent = icon;
-    
-    modal.classList.remove("hidden");
-    
+  showGenericSuccessModal: (title, message, icon = "🎉") => {
+    if (typeof ModalManager !== 'undefined') {
+      ModalManager.showModal('success', { title, message }, { icon });
+    }
     Utils.playSuccessSound();
     Utils.fireConfetti();
   },
 
   showGenericAlertModal: (title, message, icon = "⚠️") => {
-    const modal = document.getElementById("genericAlertModal");
-    if (!modal) return;
-    
-    document.getElementById("genericAlertTitle").textContent = title;
-    document.getElementById("genericAlertMessage").innerHTML = message;
-    document.getElementById("genericAlertIcon").textContent = icon;
-    
-    modal.classList.remove("hidden");
-    
-    Utils.playErrorSound();
+    if (typeof ModalManager !== 'undefined') {
+      ModalManager.showModal('alert', { title, message }, { icon, titleColor: '#ff9800' });
+    }
+  },
+
+  closeGenericModals: () => {
+    if (typeof ModalManager !== 'undefined') {
+      ModalManager.closeModal();
+    }
   },
 
   getShiftStorageKey: (shiftId) => `agr_schedule_${shiftId}`,

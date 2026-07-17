@@ -548,46 +548,23 @@ const EmployeeApp = {
           if (refreshBtn) refreshBtn.click();
 
           // Hiển thị thông tin lên bảng thông báo thành công
-          const reqSuccessModal = document.getElementById(
-            "requestSuccessModal",
-          );
-          if (reqSuccessModal) {
-            const successTypeEl = document.getElementById("reqSuccessType");
-            const successTypeLabelEl = document.getElementById(
-              "reqSuccessTypeLabel",
-            );
-            const successIdEl = document.getElementById("reqSuccessId");
-            const successNameEl = document.getElementById("reqSuccessName");
-            const successPhoneEl = document.getElementById("reqSuccessPhone");
-            const successDateEl = document.getElementById("reqSuccessDate");
-            const successReasonEl = document.getElementById("reqSuccessReason");
-            const successNoteRowEl =
-              document.getElementById("reqSuccessNoteRow");
-            const successNoteEl = document.getElementById("reqSuccessNote");
-
-            if (successTypeEl)
-              successTypeEl.textContent = type === "XIN OFF" ? "OFF" : "LÊN CA";
-            if (successTypeLabelEl) {
-              successTypeLabelEl.textContent = type;
-              successTypeLabelEl.style.color =
-                type === "XIN OFF" ? "#ffbe00" : "#4fc3f7";
+          if (typeof ModalManager !== 'undefined') {
+            const details = [
+              { label: 'Loại', value: type },
+              { label: 'Mã NV', value: empId.toUpperCase() },
+              { label: 'Họ tên', value: name },
+              { label: 'Số ĐT', value: phone },
+              { label: 'Ngày', value: dateFormatted },
+              { label: 'Lý Do', value: reason }
+            ];
+            if (note) {
+              details.push({ label: 'Ghi chú', value: note });
             }
-            if (successIdEl) successIdEl.textContent = empId.toUpperCase();
-            if (successNameEl) successNameEl.textContent = name;
-            if (successPhoneEl) successPhoneEl.textContent = phone;
-            if (successDateEl) successDateEl.textContent = dateFormatted;
-            if (successReasonEl) successReasonEl.textContent = reason;
-
-            if (successNoteRowEl) {
-              if (note) {
-                successNoteRowEl.style.display = "flex";
-                if (successNoteEl) successNoteEl.textContent = note;
-              } else {
-                successNoteRowEl.style.display = "none";
-              }
-            }
-
-            reqSuccessModal.classList.remove("hidden");
+            ModalManager.showModal('success', {
+              title: 'Gửi yêu cầu thành công',
+              message: 'Hệ thống đã ghi nhận yêu cầu thay đổi lịch của bạn. Vui lòng chờ Admin xác nhận.',
+              details: details
+            });
           }
 
           Utils.showToast(`✅ Đăng ký ${type} thành công!`, "success");
@@ -602,14 +579,7 @@ const EmployeeApp = {
       });
     }
 
-    // Close Request Success Modal
-    const reqSuccessCloseBtn = document.getElementById("reqSuccessCloseBtn");
-    if (reqSuccessCloseBtn) {
-      reqSuccessCloseBtn.addEventListener("click", () => {
-        const successModal = document.getElementById("requestSuccessModal");
-        if (successModal) successModal.classList.add("hidden");
-      });
-    }
+      // Close Request Success Modal (Now handled internally by ModalManager)
   },
 
   showSuccess: (empData, isUnassigned) => {
