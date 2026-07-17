@@ -370,44 +370,42 @@ function doPost(e) {
         
         // Trích xuất Tháng từ ngày đầu tiên trong mảng selections
         var month = "X";
-        var isPeriod2 = false;
+        var startDayStr = "01";
+        var endDayStr = "31";
         if (data.selections && data.selections.length > 0) {
-          var firstDateLabel = data.selections[0].label; // VD: "19/06/2026 (Thứ Sáu)"
-          var match = firstDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
-          if (match && match[1] && match[2]) {
-            var day = parseInt(match[1], 10);
-            month = parseInt(match[2], 10).toString(); // "06" -> "6"
-            if (day >= 16) {
-              isPeriod2 = true;
-            }
+          var firstDateLabel = data.selections[0].label;
+          var lastDateLabel = data.selections[data.selections.length - 1].label;
+          
+          var matchFirst = firstDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
+          var matchLast = lastDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
+          
+          if (matchFirst && matchFirst[1] && matchFirst[2] && matchLast && matchLast[1]) {
+            month = parseInt(matchFirst[2], 10).toString();
+            startDayStr = matchFirst[1];
+            endDayStr = matchLast[1];
           }
         }
-        var periodSuffix = isPeriod2 ? "L2" : "";
+        var dateSuffix = startDayStr + endDayStr;
         
         var searchId = (data.empId || "").toLowerCase().trim();
         
         // Thu thập danh sách các ca đã đăng ký
         var allSheets = regSs.getSheets();
         var userRegisteredShifts = [];
-        var sheetPrefix = "LỊCHT" + month + "_";
+        var sheetPrefix = "T" + month + "_";
+        var currentPeriodSuffix = "_" + dateSuffix;
         
         for (var s = 0; s < allSheets.length; s++) {
           var sName = allSheets[s].getName();
-          if (sName.indexOf(sheetPrefix) === 0) {
-            var hasL2 = sName.endsWith("L2");
-            if ((isPeriod2 && hasL2) || (!isPeriod2 && !hasL2)) {
-              var shiftName = sName.substring(sheetPrefix.length);
-              if (hasL2) {
-                shiftName = shiftName.substring(0, shiftName.length - 2);
-              }
-              var sData = allSheets[s].getDataRange().getValues();
-              
-              for (var r = 1; r < sData.length; r++) {
-                var rId = (sData[r][1] || "").toString().toLowerCase().trim();
-                if (rId === searchId) {
-                  userRegisteredShifts.push(shiftName);
-                  break;
-                }
+          if (sName.indexOf(sheetPrefix) === 0 && sName.endsWith(currentPeriodSuffix)) {
+            var shiftName = sName.substring(sheetPrefix.length, sName.length - currentPeriodSuffix.length);
+            var sData = allSheets[s].getDataRange().getValues();
+            
+            for (var r = 1; r < sData.length; r++) {
+              var rId = (sData[r][1] || "").toString().toLowerCase().trim();
+              if (rId === searchId) {
+                userRegisteredShifts.push(shiftName);
+                break;
               }
             }
           }
@@ -436,7 +434,7 @@ function doPost(e) {
               };
             });
             
-            var regSheetName = "LỊCHT" + month + "_" + subShift.id + periodSuffix;
+            var regSheetName = "T" + month + "_" + subShift.id + "_" + dateSuffix;
             var regSheet = regSs.getSheetByName(regSheetName);
             
             if (!regSheet) {
@@ -482,7 +480,7 @@ function doPost(e) {
             return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký ca " + reqShift + " trong kỳ này rồi, không được đăng ký lại!" })).setMimeType(ContentService.MimeType.JSON);
           }
           
-          var regSheetName = "LỊCHT" + month + "_" + (data.shiftId || "UNKNOWN") + periodSuffix;
+          var regSheetName = "T" + month + "_" + (data.shiftId || "UNKNOWN") + "_" + dateSuffix;
           var regSheet = regSs.getSheetByName(regSheetName);
           
           if (!regSheet) {
@@ -667,13 +665,22 @@ function doPost(e) {
         lock.waitLock(30000);
         var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
         var month = "X";
+        var startDayStr = "01";
+        var endDayStr = "31";
         if (data.selections && data.selections.length > 0) {
           var firstDateLabel = data.selections[0].label;
-          var match = firstDateLabel.match(/\d{2}\/(\d{2})\/\d{4}/);
-          if (match && match[1]) {
-            month = parseInt(match[1], 10).toString();
+          var lastDateLabel = data.selections[data.selections.length - 1].label;
+          
+          var matchFirst = firstDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
+          var matchLast = lastDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
+          
+          if (matchFirst && matchFirst[1] && matchFirst[2] && matchLast && matchLast[1]) {
+            month = parseInt(matchFirst[2], 10).toString();
+            startDayStr = matchFirst[1];
+            endDayStr = matchLast[1];
           }
         }
+        var dateSuffix = startDayStr + endDayStr;
         var searchId = (data.empId || "").toLowerCase().trim();
         
         if (data.shiftId === "CA_NGAY") {
@@ -687,7 +694,7 @@ function doPost(e) {
             var subSelections = (data.selections || []).map(function(sel) {
               return { date: sel.date, label: sel.label, choice: (sel.choice === subShift.id) ? "WORK" : "OFF" };
             });
-            var regSheetName = "LỊCHT" + month + "_" + subShift.id;
+            var regSheetName = "T" + month + "_" + subShift.id + "_" + dateSuffix;
             var regSheet = regSs.getSheetByName(regSheetName);
             if (regSheet) {
               var vals = regSheet.getDataRange().getValues();
@@ -721,7 +728,7 @@ function doPost(e) {
           return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
         } else {
           var reqShift = data.shiftId || "";
-          var regSheetName = "LỊCHT" + month + "_" + reqShift;
+          var regSheetName = "T" + month + "_" + reqShift + "_" + dateSuffix;
           var regSheet = regSs.getSheetByName(regSheetName);
           if (!regSheet) {
             return ContentService.createTextOutput(JSON.stringify({ error: "Không tìm thấy sheet lịch làm việc." })).setMimeType(ContentService.MimeType.JSON);
@@ -771,8 +778,8 @@ function doPost(e) {
         for (var s = 0; s < allSheets.length; s++) {
           var sheet = allSheets[s];
           var sName = sheet.getName();
-          // Chỉ xóa các sheet có tên bắt đầu bằng LỊCHT hoặc DangKyLich
-          if (sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
+          // Chỉ xóa các sheet có tên bắt đầu bằng LỊCHT, T[tháng]_ hoặc DangKyLich
+          if (sName.match(/^T\d+_/) || sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
             // Đảm bảo không xóa sheet cuối cùng của file
             if (regSs.getSheets().length > 1) {
               regSs.deleteSheet(sheet);
@@ -983,12 +990,12 @@ function doGet(e) {
         var allSheets = regSs.getSheets();
         var result = [];
         
-        // Quét tất cả các sheet bắt đầu bằng "LỊCHT" hoặc "DangKyLich"
+        // Quét tất cả các sheet bắt đầu bằng "T[tháng]_", "LỊCHT" hoặc "DangKyLich"
         for (var s = 0; s < allSheets.length; s++) {
           var sheet = allSheets[s];
           var sName = sheet.getName();
           
-          if (sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
+          if (sName.match(/^T\d+_/) || sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
             if (sheet.getLastRow() <= 1) continue;
             var vals = sheet.getDataRange().getValues();
             var headers = vals[0];
@@ -1060,15 +1067,17 @@ function doGet(e) {
           var sheet = allSheets[s];
           var sName = sheet.getName();
           
-          if (sName.indexOf("LỊCH") === 0) {
+          if (sName.match(/^T\d+_/)) {
             var parts = sName.split("_");
-            if (parts.length >= 2) {
-              var sShiftId = parts.slice(1).join("_");
-              var isMatch = (sShiftId === shiftSearch) || (sShiftId === shiftSearch + "L2");
-              if (isMatch) {
-                var periodMatch = sName.match(/LỊCHT(\w+)_/);
-                var isL2 = sName.endsWith("L2");
-                var periodName = periodMatch ? ("Kỳ " + periodMatch[1] + (isL2 ? " Lần 2" : "")) : sName;
+            if (parts.length >= 3) {
+              var sMonth = parts[0].replace("T", "");
+              var dateSuffix = parts[parts.length - 1];
+              var sShiftId = parts.slice(1, parts.length - 1).join("_");
+              
+              if (sShiftId === shiftSearch) {
+                var startD = dateSuffix.substring(0, 2);
+                var endD = dateSuffix.substring(2, 4);
+                var periodName = "Tháng " + sMonth + " (" + startD + " - " + endD + ")";
                 
                 var vals = sheet.getDataRange().getValues();
                 var headersList = vals.length > 0 ? vals[0] : [];
@@ -1124,32 +1133,33 @@ function autoGenerateRoster(targetShifts) {
   for (var k = 0; k < targetShifts.length; k++) {
     var shiftId = targetShifts[k];
     
-    // Tìm sheet DANG_KY_LICH chứa shiftId
+    // Tìm sheet chứa shiftId và có cột ngày hôm nay
     var allSheets = ss.getSheets();
     var regSheet = null;
+    var regData = null;
+    var todayColIndex = -1;
+    
     for (var s = 0; s < allSheets.length; s++) {
       var sName = allSheets[s].getName();
-      if (sName.indexOf("LỊCH") === 0 && sName.indexOf(shiftId) !== -1) {
-        regSheet = allSheets[s];
-        break;
+      if ((sName.match(/^T\d+_/) || sName.indexOf("LỊCH") === 0) && sName.indexOf(shiftId) !== -1) {
+        var tempSheet = allSheets[s];
+        var tempRegData = tempSheet.getDataRange().getValues();
+        if (tempRegData.length > 0) {
+          var headers = tempRegData[0];
+          for (var i = 0; i < headers.length; i++) {
+            if (headers[i].toString().indexOf(todayStr) !== -1) {
+              regSheet = tempSheet;
+              regData = tempRegData;
+              todayColIndex = i;
+              break;
+            }
+          }
+        }
+        if (regSheet) break;
       }
     }
     
-    if (!regSheet) continue;
-    
-    var regData = regSheet.getDataRange().getValues();
-    if (regData.length <= 1) continue;
-    
-    var headers = regData[0];
-    var todayColIndex = -1;
-    for (var i = 0; i < headers.length; i++) {
-      if (headers[i].toString().indexOf(todayStr) !== -1) {
-        todayColIndex = i;
-        break;
-      }
-    }
-    
-    if (todayColIndex === -1) continue;
+    if (!regSheet || todayColIndex === -1 || regData.length <= 1) continue;
     
     var workersForToday = [];
     for (var r = 1; r < regData.length; r++) {
