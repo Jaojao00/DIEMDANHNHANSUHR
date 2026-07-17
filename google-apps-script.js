@@ -1093,19 +1093,27 @@ function doGet(e) {
         for (var s = 0; s < allSheets.length; s++) {
           var sheet = allSheets[s];
           var sName = sheet.getName();
+          if (sName.indexOf("Ca_") === 0 || sName === "CONFIG" || sName === "AdminLogs" || sName === "ChangeRequests") continue;
           
-          var matchT = sName.match(/^(?:L[IỊ]CHT|T)(\d+_.*)/);
-          if (matchT && matchT[1]) {
-            var parts = matchT[1].split("_");
-            if (parts.length >= 3) {
-              var sMonth = parts[0];
-              var dateSuffix = parts[parts.length - 1];
-              var sShiftId = parts.slice(1, parts.length - 1).join("_");
-              
-              if (sShiftId === shiftSearch) {
-                var startD = dateSuffix.substring(0, 2);
-                var endD = dateSuffix.substring(2, 4);
-                var periodName = "Tháng " + sMonth + " (" + startD + " - " + endD + ")";
+          var vals = sheet.getDataRange().getValues();
+          if (vals.length === 0) continue;
+          var headersList = vals[0];
+          
+          if (headersList.length >= 7 && (headersList[5] === "Ca" || headersList[5] === "Shift") && (headersList[1] === "Mã NV" || headersList[1] === "MÃ NV" || headersList[1] === "M NV")) {
+            var sShiftId = "";
+            if (vals.length > 1 && vals[1][5]) {
+               sShiftId = vals[1][5];
+            } else {
+               var nm = sName.toLowerCase();
+               if (nm.indexOf("os s") > -1) sShiftId = "06:00-15:00";
+               else if (nm.indexOf("sáng") > -1 || nm.indexOf("sng") > -1) sShiftId = "06:00-10:00";
+               else if (nm.indexOf("chiều") > -1 || nm.indexOf("chi?u") > -1) sShiftId = "15:00-22:00";
+               else if (nm.indexOf("tối") > -1 || nm.indexOf("t?i") > -1) sShiftId = "18:00-22:00";
+               else if (nm.indexOf("đêm") > -1 || nm.indexOf("dm") > -1) sShiftId = "22:00-06:00";
+            }
+            
+            if (sShiftId === shiftSearch) {
+              var periodName = sName;
                 
                 var vals = sheet.getDataRange().getValues();
                 var headersList = vals.length > 0 ? vals[0] : [];
@@ -1490,6 +1498,7 @@ function onEdit(e) {
     }
   }
 }
+
 
 
 
