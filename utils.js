@@ -172,3 +172,21 @@ const Utils = {
 
 // Attach Utils to window
 window.Utils = Utils;
+
+Utils.getActualSheetName = function(shiftId) {
+  if (!shiftId || shiftId === 'OFF' || shiftId === 'CA_NGAY' || shiftId === 'WORK') return shiftId;
+  if (shiftId.startsWith('T')) return shiftId;
+  const fromStr = localStorage.getItem('agr_reg_date_from');
+  const toStr = localStorage.getItem('agr_reg_date_to');
+  if (fromStr && toStr) {
+    try {
+      const dFrom = new Date(fromStr);
+      const dTo = new Date(toStr);
+      const month = dFrom.getMonth() + 1;
+      const dayFrom = String(dFrom.getDate()).padStart(2, '0');
+      const dayTo = String(dTo.getDate()).padStart(2, '0');
+      return `T__`;
+    } catch(e) {}
+  }
+  return `T7__1631`;
+};

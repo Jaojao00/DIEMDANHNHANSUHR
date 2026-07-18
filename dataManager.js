@@ -209,7 +209,8 @@ const DataManager = {
   loadRegistrations: async (shiftId) => {
     return new Promise(async (resolve) => {
       try {
-        const url = `${State.apiLink}?action=get_shift_registrations&shiftId=${shiftId}&adminToken=${localStorage.getItem("agr_admin_token")}`;
+        const actualShiftId = window.Utils ? window.Utils.getActualSheetName(shiftId) : shiftId;
+        const url = `${State.apiLink}?action=get_shift_registrations&shiftId=${encodeURIComponent(actualShiftId)}&adminToken=${localStorage.getItem("agr_admin_token")}`;
         const response = await fetch(url);
         const json = await response.json();
         let resultObj = { periods: [] };
