@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/generator": "^8.0.0",
+    "@babel/traverse": "^8.0.4"
+  },
+  "devDependencies": {
+    "@google/clasp": "^3.3.0"
+  }
+}
