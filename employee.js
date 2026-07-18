@@ -634,3 +634,6 @@ const EmployeeApp = {
   },
 };
 
+
+// Attach EmployeeApp to window
+window.EmployeeApp = EmployeeApp;

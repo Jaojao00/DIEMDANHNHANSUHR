@@ -965,3 +965,6 @@ const AdminApp = {
     }
   }
 };
+
+// Attach AdminApp to window for inline HTML onclick handlers
+window.AdminApp = AdminApp;

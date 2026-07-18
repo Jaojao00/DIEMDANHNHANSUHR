@@ -169,3 +169,6 @@ const Utils = {
   },
 };
 
+
+// Attach Utils to window
+window.Utils = Utils;

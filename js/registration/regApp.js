@@ -583,3 +583,8 @@ const ViewScheduleApp = {
     area.innerHTML = html;
   }
 };
+
+// Attach to window for inline HTML onclick handlers
+window.EmpNav = EmpNav;
+window.RegApp = RegApp;
+window.ViewScheduleApp = ViewScheduleApp;
