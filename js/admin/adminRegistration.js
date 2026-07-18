@@ -150,7 +150,7 @@ Object.assign(AdminApp, {
 
       dateHeaders.forEach((date, i) => {
         const filterVal = AdminApp.regDateFilters[date];
-        if (!filterVal) return; // if 'Tất cả' or no filter
+        if (!filterVal || filterVal === "ALL") return; // if 'Tất cả' or no filter
 
         let choice = "";
         if (r.choices && Array.isArray(r.choices)) {
