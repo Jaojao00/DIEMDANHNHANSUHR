@@ -1,4 +1,4 @@
-﻿// js/registration/regApp.js
+// js/registration/regApp.js
 /**
  * Main Controller for Registration Module
  * Connects RegUI, RegAPI, and RegValidation
@@ -72,7 +72,7 @@ const EmpNav = {
       vsView.style.display = 'block';
     }
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   }
 };
 
@@ -91,12 +91,12 @@ const RegApp = {
     if (s1) s1.style.display = step === 1 ? 'block' : 'none';
     if (s2) s2.style.display = step === 2 ? 'block' : 'none';
     if (step === 1) RegApp.renderShiftList();
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
   },
 
   renderShiftList: () => {
     const container = document.getElementById('regShiftList');
-    if (!container || !State || !State.shifts) return;
+    if (!container || typeof State === 'undefined' || !State.shifts) return;
 
     const regShifts = [
       { id: 'CA_NGAY', label: 'CA NGÀY', icon: '☀️', color: '#ffb347', displayTime: '06:00-22:00' },
@@ -112,6 +112,7 @@ const RegApp = {
     if (shiftId === 'CA_NGAY') {
       shift = { id: 'CA_NGAY', label: 'CA NGÀY', icon: '☀️', color: '#ffb347', displayTime: '06:00-22:00' };
     } else {
+      if (typeof State === 'undefined' || !State.shifts) return;
       shift = State.shifts.find(s => s.id === shiftId);
     }
     if (!shift) return;
@@ -125,7 +126,7 @@ const RegApp = {
     if (iconEl) { iconEl.textContent = shift.icon; iconEl.style.background = shift.color + '22'; }
     if (nameEl) nameEl.textContent = shift.label;
     if (timeEl) timeEl.textContent = shift.id;
-    if (labelEl) labelEl.textContent = shift.label + ' – ' + shift.id;
+    if (labelEl) labelEl.textContent = `${shift.label} – ${shift.id}`;
 
     RegApp.renderDateTable();
     RegApp.showStep(2);
@@ -146,8 +147,8 @@ const RegApp = {
       const mm   = (cur.getMonth() + 1).toString().padStart(2, '0');
       const dd   = cur.getDate().toString().padStart(2, '0');
       dates.push({
-        iso: yyyy + '-' + mm + '-' + dd,
-        label: dd + '/' + mm + '/' + yyyy + ' (' + days[cur.getDay()] + ')'
+        iso: `${yyyy}-${mm}-${dd}`,
+        label: `${dd}/${mm}/${yyyy} (${days[cur.getDay()]})`
       });
       cur.setDate(cur.getDate() + 1);
     }
@@ -162,19 +163,24 @@ const RegApp = {
     const dates = RegApp.getDateRange();
     const htmlObj = RegUI.renderDateTable(dates, RegApp.selectedShift);
     
+    // Setting innerHTML safely because HTML comes from UI component
     thead.innerHTML = htmlObj.thead;
     tbody.innerHTML = htmlObj.tbody;
     
     if (RegApp.selectedShift.id !== 'CA_NGAY') {
       const colEl = document.getElementById('regColShift');
-      if (colEl) colEl.textContent = RegApp.selectedShift.label + ' (' + RegApp.selectedShift.id + ')';
+      if (colEl) colEl.textContent = `${RegApp.selectedShift.label} (${RegApp.selectedShift.id})`;
     }
   },
 
   submit: async () => {
-    const empId   = (document.getElementById('regEmpId')   ? document.getElementById('regEmpId').value   : '').trim();
-    const empName = (document.getElementById('regEmpName') ? document.getElementById('regEmpName').value : '').trim();
-    const empPhone= (document.getElementById('regEmpPhone')? document.getElementById('regEmpPhone').value: '').trim();
+    const empIdEl = document.getElementById('regEmpId');
+    const empNameEl = document.getElementById('regEmpName');
+    const empPhoneEl = document.getElementById('regEmpPhone');
+    
+    const empId   = (empIdEl ? empIdEl.value : '').trim().toLowerCase();
+    const empName = (empNameEl ? empNameEl.value : '').trim();
+    const empPhone= (empPhoneEl? empPhoneEl.value: '').trim();
     
     let osGender = '';
     const osGenderRadios = document.getElementsByName('regOsGender');
@@ -185,35 +191,37 @@ const RegApp = {
       }
     }
 
-    const validationErrors = RegValidation.validateInputs(empId, empName, empPhone, osGender);
-    if (validationErrors.length > 0) {
-      Utils.showToast(validationErrors[0], 'error');
-      return;
+    if (typeof RegValidation !== 'undefined') {
+      const validationErrors = RegValidation.validateInputs(empId, empName, empPhone, osGender);
+      if (validationErrors.length > 0) {
+        if (typeof Utils !== 'undefined') Utils.showToast(validationErrors[0], 'error');
+        return;
+      }
     }
 
     const dates = RegApp.getDateRange();
     if (dates.length === 0) {
-      Utils.showToast('Admin chưa cấu hình ngày đăng ký', 'error');
+      if (typeof Utils !== 'undefined') Utils.showToast('Admin chưa cấu hình ngày đăng ký', 'error');
       return;
     }
 
     const selections = [];
     let allFilled = true;
     dates.forEach((d, i) => {
-      const chosen = document.querySelector('input[name="regDay_' + i + '"]:checked');
+      const chosen = document.querySelector(`input[name="regDay_${i}"]:checked`);
       if (!chosen) { allFilled = false; return; }
       selections.push({ date: d.iso, label: d.label, choice: chosen.value });
     });
 
     if (!allFilled) {
-      Utils.showToast('Vui lòng chọn ca hoặc OFF cho tất cả các ngày!', 'error');
+      if (typeof Utils !== 'undefined') Utils.showToast('Vui lòng chọn ca hoặc OFF cho tất cả các ngày!', 'error');
       return;
     }
 
     const btn = document.getElementById('regSubmitBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang gửi...'; }
 
-    const currentPeriod = dates.length > 0 ? ${dates[0].iso}_ : 'unknown';
+    const currentPeriod = dates.length > 0 ? `${dates[0].iso}_${dates[dates.length-1].iso}` : 'unknown';
 
     const payload = {
       action:     'submit_registration',
@@ -231,8 +239,8 @@ const RegApp = {
     const result = await RegAPI.submitRegistration(payload);
 
     if (result.sheetSuccess) {
-      // Save locally for offline view
-      const localKey = 'agr_reg_' + empId.toLowerCase();
+      // Save locally for offline view using standardized key
+      const localKey = `agr_reg_${empId}`;
       const localExisting = JSON.parse(localStorage.getItem(localKey) || '[]');
       const updated = localExisting.filter(r => r.shiftId !== RegApp.selectedShift.id);
       updated.push(payload);
@@ -243,7 +251,7 @@ const RegApp = {
       localStorage.setItem("agr_empPhone", empPhone);
       localStorage.setItem("agr_osGender", osGender);
 
-      Utils.showToast('✅ Đăng ký lịch thành công!', 'success');
+      if (typeof Utils !== 'undefined') Utils.showToast('✅ Đăng ký lịch thành công!', 'success');
       if (btn) { btn.disabled = false; btn.textContent = '🚀 Gửi Đăng Ký'; }
 
       setTimeout(() => {
@@ -253,8 +261,8 @@ const RegApp = {
         ViewScheduleApp.lookup();
       }, 800);
     } else {
-      Utils.showToast('Lỗi gửi đăng ký: ' + (result.error || 'Unknown error'), 'error');
-      if (btn) { btn.disabled = false; btn.textContent = '✅ Gửi Đăng Ký'; }
+      if (typeof Utils !== 'undefined') Utils.showToast(`Lỗi gửi đăng ký: ${result.error || 'Unknown error'}`, 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '🚀 Gửi Đăng Ký'; } // Fix the text recovery
     }
   },
 
@@ -281,29 +289,34 @@ const RegApp = {
   },
   
   openChangeRequestModal: () => {
-    Utils.showGenericAlertModal("Tính Năng Đã Khóa", "Chức năng yêu cầu thay đổi lịch hiện đang được tạm khóa theo yêu cầu. Vui lòng liên hệ Admin để biết thêm chi tiết.", "🔒");
+    if (typeof Utils !== 'undefined') Utils.showGenericAlertModal("Tính Năng Đã Khóa", "Chức năng yêu cầu thay đổi lịch hiện đang được tạm khóa theo yêu cầu. Vui lòng liên hệ Admin để biết thêm chi tiết.", "🔒");
     return;
   },
 
   closeChangeRequestModal: () => {
-    document.getElementById('regChangeRequest').style.display = 'none';
-    document.getElementById('regStep1').style.display = 'block';
+    const modal = document.getElementById('regChangeRequest');
+    const step1 = document.getElementById('regStep1');
+    if (modal) modal.style.display = 'none';
+    if (step1) step1.style.display = 'block';
   },
 
   searchChangeRequest: async () => {
-    const empId = document.getElementById('crEmpId').value.trim().toLowerCase();
+    const crEmpIdEl = document.getElementById('crEmpId');
+    if (!crEmpIdEl) return;
+    
+    const empId = crEmpIdEl.value.trim().toLowerCase();
     const shiftId = RegApp.crSelectedShift;
     if (!empId) {
-      Utils.showToast('Vui lòng nhập Mã nhân viên!', 'error');
+      if (typeof Utils !== 'undefined') Utils.showToast('Vui lòng nhập Mã nhân viên!', 'error');
       return;
     }
 
-    const lastChangeReqTime = localStorage.getItem('agr_last_change_req_' + empId);
+    const lastChangeReqTime = localStorage.getItem(`agr_last_change_req_${empId}`);
     if (lastChangeReqTime) {
        const timeDiff = Date.now() - parseInt(lastChangeReqTime);
        if (timeDiff < 24 * 60 * 60 * 1000) {
           const hoursLeft = Math.ceil((24 * 60 * 60 * 1000 - timeDiff) / (60 * 60 * 1000));
-          Utils.showToast(Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ thêm  tiếng nữa để gửi yêu cầu mới!, 'warning');
+          if (typeof Utils !== 'undefined') Utils.showToast(`Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ thêm ${hoursLeft} tiếng nữa để gửi yêu cầu mới!`, 'warning');
           return;
        }
     }
@@ -315,12 +328,13 @@ const RegApp = {
     }
     
     try {
-      document.getElementById('crResultArea').style.display = 'none';
+      const resultArea = document.getElementById('crResultArea');
+      if (resultArea) resultArea.style.display = 'none';
       
       const dataArr = await RegAPI.getRegistrations(empId);
       
       if (!dataArr || dataArr.length === 0) {
-        Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn trên hệ thống!', 'error');
+        if (typeof Utils !== 'undefined') Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn trên hệ thống!', 'error');
         return;
       }
       
@@ -335,13 +349,14 @@ const RegApp = {
       if (shiftId === 'CA_NGAY') {
         const subShiftDataList = dataArr.filter(r => targetShiftIds.includes(r.shiftLabel) || targetShiftIds.includes(r.shiftId));
         if (subShiftDataList.length === 0) {
-          Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!', 'warning');
+          if (typeof Utils !== 'undefined') Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!', 'warning');
           return;
         }
         
         empData = {
           empId: subShiftDataList[0].empId,
           empName: subShiftDataList[0].empName,
+          empPhone: subShiftDataList[0].empPhone || '',
           shiftId: 'CA_NGAY',
           shiftLabel: 'CA NGÀY (06:00-22:00)',
           selections: []
@@ -354,7 +369,7 @@ const RegApp = {
               if (!mergedSelections[sel.label]) {
                 mergedSelections[sel.label] = { label: sel.label, choice: "OFF" };
               }
-              if (sel.choice === "WORK") {
+              if (sel.choice !== "OFF") {
                 mergedSelections[sel.label].choice = subShiftData.shiftId;
               }
             });
@@ -365,7 +380,7 @@ const RegApp = {
       } else {
         empData = dataArr.find(r => targetShiftIds.includes(r.shiftLabel) || targetShiftIds.includes(r.shiftId));
         if (!empData) {
-          Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!', 'warning');
+          if (typeof Utils !== 'undefined') Utils.showToast('Không tìm thấy dữ liệu đăng ký của bạn cho ca này trên hệ thống!', 'warning');
           return;
         }
       }
@@ -387,6 +402,7 @@ const RegApp = {
       RegApp.crOriginalData = {
         empId: empData.empId,
         empName: empData.empName,
+        empPhone: empData.empPhone, // ensure phone is preserved
         shiftId: empData.shiftId,
         shiftLabel: empData.shiftLabel,
         period: empData.period || '',
@@ -394,15 +410,18 @@ const RegApp = {
       };
       RegApp.crFirebaseId = null;
       
-      document.getElementById('crEmpName').textContent = (empData.empName || '').toUpperCase();
-      document.getElementById('crShiftName').textContent = empData.shiftLabel || RegApp.crSelectedShiftName;
+      const crEmpNameEl = document.getElementById('crEmpName');
+      if (crEmpNameEl) crEmpNameEl.textContent = (empData.empName || '').toUpperCase();
+      
+      const crShiftNameEl = document.getElementById('crShiftName');
+      if (crShiftNameEl) crShiftNameEl.textContent = empData.shiftLabel || RegApp.crSelectedShiftName;
       
       RegApp.renderChangeTable();
-      document.getElementById('crResultArea').style.display = 'block';
+      if (resultArea) resultArea.style.display = 'block';
       
       // Check pending requests
       const pendingReqs = await RegAPI.getChangeRequests();
-      const pendingForEmp = pendingReqs.filter(r => r.empId.toLowerCase() === empId.toLowerCase());
+      const pendingForEmp = pendingReqs.filter(r => (r.empId || '').toLowerCase() === empId);
       if (pendingForEmp.length > 0) {
         const matchedReq = pendingForEmp.find(r => targetShiftIds.includes(r.shiftId));
         if (matchedReq) {
@@ -410,14 +429,14 @@ const RegApp = {
           if (matchedReq.selections) {
             RegApp.crCurrentSelections = JSON.parse(JSON.stringify(matchedReq.selections));
           }
-          Utils.showToast('Bạn đang có một yêu cầu sửa lịch CHƯA ĐƯỢC DUYỆT cho ca này. Bạn có thể tiếp tục chỉnh sửa và gửi lại.', 'warning');
+          if (typeof Utils !== 'undefined') Utils.showToast('Bạn đang có một yêu cầu sửa lịch CHƯA ĐƯỢC DUYỆT cho ca này. Bạn có thể tiếp tục chỉnh sửa và gửi lại.', 'warning');
           RegApp.renderChangeTable();
         }
       }
       
     } catch (e) {
       console.error(e);
-      Utils.showToast('Lỗi tra cứu: ' + e.message, 'error');
+      if (typeof Utils !== 'undefined') Utils.showToast(`Lỗi tra cứu: ${e.message}`, 'error');
     } finally {
       if (searchBtn) {
         searchBtn.disabled = false;
@@ -427,8 +446,9 @@ const RegApp = {
   },
   
   renderChangeTable: () => {
-    const thead = document.getElementById('crTable').querySelector('thead');
+    const thead = document.querySelector('#crTable thead');
     const tbody = document.getElementById('crTableBody');
+    if (!thead || !tbody) return;
     
     const htmlObj = RegUI.renderChangeTable(RegApp.crOriginalData, RegApp.crCurrentSelections, 'RegApp.crChangeSelection');
     thead.innerHTML = htmlObj.thead;
@@ -449,6 +469,7 @@ const RegApp = {
       }
     }
     const btn = document.getElementById('crSubmitBtn');
+    if (!btn) return;
     if (isDiff) {
       btn.disabled = false;
       btn.style.background = 'var(--primary)';
@@ -463,29 +484,30 @@ const RegApp = {
   submitChangeRequest: async () => {
     if (RegApp.isSubmittingChange) return;
     const empId = RegApp.crOriginalData.empId.toLowerCase();
-    const phone = RegApp.crOriginalData.empPhone;
+    const phone = RegApp.crOriginalData.empPhone || '';
 
-    const lastChangeReqTime = localStorage.getItem('agr_last_change_req_' + empId);
+    const lastChangeReqTime = localStorage.getItem(`agr_last_change_req_${empId}`);
     if (lastChangeReqTime) {
        const timeDiff = Date.now() - parseInt(lastChangeReqTime);
        if (timeDiff < 24 * 60 * 60 * 1000) {
-          Utils.showToast('Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ 24h để gửi lại.', 'error');
+          if (typeof Utils !== 'undefined') Utils.showToast('Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ 24h để gửi lại.', 'error');
           return;
        }
     }
 
-    const pendingKey = 'agr_pending_req_' + empId;
+    const pendingKey = `agr_pending_req_${empId}`;
     if (localStorage.getItem(pendingKey)) {
-        Utils.showToast('Yêu cầu đang được xử lý, vui lòng không click liên tục!', 'warning');
+        if (typeof Utils !== 'undefined') Utils.showToast('Yêu cầu đang được xử lý, vui lòng không click liên tục!', 'warning');
         return;
     }
     localStorage.setItem(pendingKey, 'true');
 
     RegApp.isSubmittingChange = true;
     const btn = document.getElementById('crSubmitBtn');
-    btn.disabled = true;
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '<svg class="spinner" width="20" height="20" viewBox="0 0 50 50" style="vertical-align:middle; margin-right:8px;"><circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="31.4 1000" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/></circle></svg> Đang gửi yêu cầu...';
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="spinner" width="20" height="20" viewBox="0 0 50 50" style="vertical-align:middle; margin-right:8px;"><circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-dasharray="31.4 1000" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/></circle></svg> Đang gửi yêu cầu...';
+    }
     
     try {
       const payload = {
@@ -503,21 +525,23 @@ const RegApp = {
       const result = await RegAPI.submitChangeRequest(payload);
       
       if (result.success) {
-        localStorage.setItem('agr_last_change_req_' + empId, Date.now());
+        localStorage.setItem(`agr_last_change_req_${empId}`, Date.now());
         localStorage.setItem("agr_empId", RegApp.crOriginalData.empId);
         localStorage.setItem("agr_empName", RegApp.crOriginalData.empName);
         localStorage.setItem("agr_empPhone", phone);
         
-        Utils.showGenericSuccessModal('Gửi yêu cầu thành công!', 'Hệ thống đã ghi nhận yêu cầu thay đổi lịch của bạn. Vui lòng chờ Admin xác nhận.', '📝');
+        if (typeof Utils !== 'undefined') Utils.showGenericSuccessModal('Gửi yêu cầu thành công!', 'Hệ thống đã ghi nhận yêu cầu thay đổi lịch của bạn. Vui lòng chờ Admin xác nhận.', '📝');
         RegApp.closeChangeRequestModal();
       } else {
         throw new Error(result.error);
       }
     } catch(e) {
       console.error(e);
-      Utils.showToast('Lỗi: ' + e.message, 'error');
-      btn.disabled = false;
-      btn.innerHTML = 'Gửi yêu cầu thay đổi';
+      if (typeof Utils !== 'undefined') Utils.showToast(`Lỗi: ${e.message}`, 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = 'Gửi yêu cầu thay đổi';
+      }
     } finally {
       localStorage.removeItem(pendingKey);
       RegApp.isSubmittingChange = false;
@@ -533,7 +557,7 @@ const ViewScheduleApp = {
     if (!area) return;
 
     if (!empId) {
-      Utils.showToast('Vui lòng nhập mã nhân viên', 'error');
+      if (typeof Utils !== 'undefined') Utils.showToast('Vui lòng nhập mã nhân viên', 'error');
       return;
     }
 
@@ -542,15 +566,17 @@ const ViewScheduleApp = {
     const allRegs = await RegAPI.getRegistrations(empId);
 
     if (allRegs.length === 0) {
-      area.innerHTML = '<div class="vs-empty-state">'
-        + '<div class="vs-empty-icon">🔍</div>'
-        + '<div>Không tìm thấy lịch đăng ký cho mã: <strong>' + empId.toUpperCase() + '</strong></div>'
-        + '<div style="font-size:12px;margin-top:8px;color:var(--text-muted)">Bạn có thể chưa đăng ký lịch hoặc nhập sai mã nhân viên.</div>'
-        + '</div>';
+      area.innerHTML = `
+        <div class="vs-empty-state">
+          <div class="vs-empty-icon">🔍</div>
+          <div>Không tìm thấy lịch đăng ký cho mã: <strong>${empId.toUpperCase()}</strong></div>
+          <div style="font-size:12px;margin-top:8px;color:var(--text-muted)">Bạn có thể chưa đăng ký lịch hoặc nhập sai mã nhân viên.</div>
+        </div>
+      `;
       return;
     }
 
-    let html = '<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">Lịch của: <strong style="color:var(--text-primary)">' + empId.toUpperCase() + '</strong></div>';
+    let html = `<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">Lịch của: <strong style="color:var(--text-primary)">${empId.toUpperCase()}</strong></div>`;
     
     html += RegUI.renderViewScheduleTable(allRegs, (typeof State !== 'undefined' ? State.shifts : []));
     

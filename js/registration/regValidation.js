@@ -1,4 +1,4 @@
-﻿// js/registration/regValidation.js
+// js/registration/regValidation.js
 /**
  * Validation logic for Registration module
  * Can be used in Node.js tests or browser
@@ -15,6 +15,11 @@ const RegValidation = {
     return (typeof CONFIG !== 'undefined' && CONFIG.PHONE_REGEX) 
       ? CONFIG.PHONE_REGEX 
       : /^(03|05|07|08|09)\d{8}$/;
+  },
+  
+  normalizeEmpId(empId) {
+    if (!empId) return '';
+    return empId.trim().toLowerCase();
   },
   
   validateEmployeeId(empId) {

@@ -1,4 +1,4 @@
-﻿// js/registration/regUI.js
+// js/registration/regUI.js
 /**
  * UI Rendering logic using Template Literals
  */
@@ -7,20 +7,20 @@ const RegUI = {
   renderShiftList(shifts, onShiftSelectStr) {
     if (!shifts || shifts.length === 0) return '';
     
-    return shifts.map(shift => 
-      <div class="reg-shift-card" onclick="('')">
-        <div class="rsc-icon" style="background:22; color:;">
-          
+    return shifts.map(shift => `
+      <div class="reg-shift-card" onclick="${onShiftSelectStr}('${shift.id}')">
+        <div class="rsc-icon" style="background:${shift.color}22; color:${shift.color};">
+          ${shift.icon}
         </div>
         <div class="rsc-info">
-          <div class="rsc-name"></div>
-          <div class="rsc-time" style="color:; background:1A; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: bold; border: 1px solid 33;">
-            
+          <div class="rsc-name">${shift.label}</div>
+          <div class="rsc-time" style="color:${shift.color}; background:${shift.color}1A; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; font-weight: bold; border: 1px solid ${shift.color}33;">
+            ${shift.displayTime || shift.id}
           </div>
         </div>
         <div class="rsc-arrow">→</div>
       </div>
-    ).join('');
+    `).join('');
   },
 
   renderDateTable(dates, selectedShift) {
@@ -35,7 +35,7 @@ const RegUI = {
     let tbodyHtml = '';
 
     if (selectedShift.id === 'CA_NGAY') {
-      theadHtml = 
+      theadHtml = `
         <tr>
           <th>Ngày</th>
           <th style="color:#43e97b; min-width:80px">Ca OS Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-15:00</small></th>
@@ -43,31 +43,31 @@ const RegUI = {
           <th style="color:#ffb347; min-width:80px">Ca Chiều<br><small style="font-weight:normal;opacity:0.8">15:00-22:00</small></th>
           <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
         </tr>
-      ;
-      tbodyHtml = dates.map((d, i) => 
+      `;
+      tbodyHtml = dates.map((d, i) => `
         <tr>
-          <td></td>
-          <td><input type="radio" class="reg-radio" name="regDay_" value="06:00-15:00" data-date=""></td>
-          <td><input type="radio" class="reg-radio" name="regDay_" value="06:00-10:00" data-date=""></td>
-          <td><input type="radio" class="reg-radio" name="regDay_" value="15:00-22:00" data-date=""></td>
-          <td><input type="radio" class="reg-radio" name="regDay_" value="OFF" data-date=""></td>
+          <td>${d.label}</td>
+          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-15:00" data-date="${d.iso}"></td>
+          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-10:00" data-date="${d.iso}"></td>
+          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="15:00-22:00" data-date="${d.iso}"></td>
+          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF" data-date="${d.iso}"></td>
         </tr>
-      ).join('');
+      `).join('');
     } else {
-      theadHtml = 
+      theadHtml = `
         <tr>
           <th>Ngày</th>
           <th id="regColShift">Ca làm việc</th>
           <th>OFF (Không đăng ký)</th>
         </tr>
-      ;
-      tbodyHtml = dates.map((d, i) => 
+      `;
+      tbodyHtml = dates.map((d, i) => `
         <tr>
-          <td></td>
-          <td><input type="radio" class="reg-radio" name="regDay_" value="WORK" data-date=""></td>
-          <td><input type="radio" class="reg-radio" name="regDay_" value="OFF"  data-date=""></td>
+          <td>${d.label}</td>
+          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="WORK" data-date="${d.iso}"></td>
+          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF"  data-date="${d.iso}"></td>
         </tr>
-      ).join('');
+      `).join('');
     }
 
     return { thead: theadHtml, tbody: tbodyHtml };
@@ -78,7 +78,7 @@ const RegUI = {
     
     let theadHtml = '';
     if (isCaNgay) {
-      theadHtml = 
+      theadHtml = `
         <tr>
           <th>Ngày</th>
           <th style="color:#43e97b; min-width:80px">Ca OS Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-15:00</small></th>
@@ -86,32 +86,32 @@ const RegUI = {
           <th style="color:#ffb347; min-width:80px">Ca Chiều<br><small style="font-weight:normal;opacity:0.8">15:00-22:00</small></th>
           <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
         </tr>
-      ;
+      `;
     } else {
-      theadHtml = 
+      theadHtml = `
         <tr>
           <th>Ngày</th>
           <th style="color:var(--primary); min-width:80px">Đăng Ký Làm</th>
           <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
         </tr>
-      ;
+      `;
     }
     
     let tbodyHtml = currentSelections.map((sel, index) => {
-      let row = <tr><td></td>;
+      let row = `<tr><td>${sel.label}</td>`;
       if (isCaNgay) {
-        row += 
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_" value="06:00-15:00"  onchange="(, this.value)"><span></span></label></td>
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_" value="06:00-10:00"  onchange="(, this.value)"><span></span></label></td>
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_" value="15:00-22:00"  onchange="(, this.value)"><span></span></label></td>
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_" value="OFF"  onchange="(, this.value)"><span></span></label></td>
-        ;
+        row += `
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="06:00-15:00" ${sel.choice === '06:00-15:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="06:00-10:00" ${sel.choice === '06:00-10:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="15:00-22:00" ${sel.choice === '15:00-22:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="OFF" ${sel.choice === 'OFF' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+        `;
       } else {
         const valShift = originalData.shiftId;
-        row += 
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_" value=""  onchange="(, this.value)"><span></span></label></td>
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_" value="OFF"  onchange="(, this.value)"><span></span></label></td>
-        ;
+        row += `
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="${valShift}" ${sel.choice === valShift ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="OFF" ${sel.choice === 'OFF' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+        `;
       }
       row += '</tr>';
       return row;
@@ -126,34 +126,34 @@ const RegUI = {
     return allRegs.map(reg => {
       const shiftObj = shiftsData ? (shiftsData.find(s => s.id === reg.shiftId) || {}) : {};
       
-      let html = 
+      let html = `
         <div class="view-schedule-result">
           <div class="vsr-header">
-            <div class="vsr-name"> </div>
-            <div class="vsr-meta"> &nbsp;|&nbsp; </div>
+            <div class="vsr-name">${shiftObj.icon || '📅'} ${reg.shiftLabel || reg.shiftId}</div>
+            <div class="vsr-meta">${reg.shiftId} &nbsp;|&nbsp; ${reg.empName || reg.empId}</div>
           </div>
           <table class="vsr-table">
-      ;
+      `;
 
       html += (reg.selections || []).map(sel => {
         const isOff = sel.choice === 'OFF';
-        return 
+        return `
           <tr>
-            <td class="vsr-date"></td>
-            <td class="vsr-shift ">
-              
+            <td class="vsr-date">${sel.label}</td>
+            <td class="vsr-shift ${isOff ? 'off' : 'working'}">
+              ${isOff ? '— OFF' : (reg.shiftLabel || reg.shiftId)}
             </td>
           </tr>
-        ;
+        `;
       }).join('');
       
-      html += 
+      html += `
           </table>
           <div style="margin-top:12px;font-size:12px;color:var(--text-muted)">
-            Cập nhật: 
+            Cập nhật: ${new Date(reg.timestamp || Date.now()).toLocaleString('vi-VN')}
           </div>
         </div>
-      ;
+      `;
       return html;
     }).join('');
   }

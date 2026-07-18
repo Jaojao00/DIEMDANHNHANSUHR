@@ -1,4 +1,4 @@
-﻿// js/registration/regAPI.js
+// js/registration/regAPI.js
 /**
  * API and Firebase interaction logic
  */
@@ -13,7 +13,7 @@ const RegAPI = {
       const apiLink = this.getApiLink();
       if (!apiLink) return;
 
-      const res = await fetch(${apiLink}?action=get_reg_config, { method: 'GET' });
+      const res = await fetch(`${apiLink}?action=get_reg_config`, { method: 'GET' });
       if (res.ok) {
         const data = await res.json();
         if (data && !data.error) {
@@ -31,12 +31,13 @@ const RegAPI = {
   
   async getRegistrations(empId) {
     let allRegs = [];
+    const normalizedEmpId = empId.toLowerCase();
     
     try {
       const db = window.FirebaseDB?.db;
       if (db) {
         const { collection, query, where, getDocs } = window.FirebaseDB;
-        const q = query(collection(db, "registrations"), where("empId", "==", empId));
+        const q = query(collection(db, "registrations"), where("empId", "==", normalizedEmpId));
         const qSnap = await getDocs(q);
         const data = qSnap.docs.map(d => d.data());
         if (data.length > 0) {
@@ -47,13 +48,15 @@ const RegAPI = {
       // Fallback to Google Sheets
       const apiLink = this.getApiLink();
       if (apiLink) {
-        const url = apiLink + '?action=get_registration&empId=' + encodeURIComponent(empId);
+        const url = `${apiLink}?action=get_registration&empId=${encodeURIComponent(normalizedEmpId)}`;
         const resp = await fetch(url);
-        const data = await resp.json();
-        if (Array.isArray(data)) {
-          return data;
-        } else if (data.error) {
-          throw new Error(data.error);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data)) {
+            return data;
+          } else if (data.error) {
+            throw new Error(data.error);
+          }
         }
       }
     } catch (e) { 
@@ -62,7 +65,7 @@ const RegAPI = {
 
     // Fallback: localStorage
     if (allRegs.length === 0) {
-      const key = 'agr_reg_' + empId;
+      const key = `agr_reg_${normalizedEmpId}`;
       allRegs = JSON.parse(localStorage.getItem(key) || '[]');
     }
     return allRegs;
@@ -73,9 +76,16 @@ const RegAPI = {
     if (!apiLink) return [];
     
     try {
-      const resReq = await fetch(apiLink, { method: 'POST', body: JSON.stringify({ action: 'get_change_requests' }) });
-      const reqData = await resReq.json();
-      return reqData.data || [];
+      const resReq = await fetch(apiLink, { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get_change_requests' }) 
+      });
+      if (resReq.ok) {
+        const reqData = await resReq.json();
+        return reqData.data || [];
+      }
+      return [];
     } catch(e) {
       console.warn("Lỗi get_change_requests:", e);
       return [];
@@ -92,7 +102,7 @@ const RegAPI = {
       const regRef = collection(db, "registrations");
       
       // Double check on Firebase to prevent cross-device duplicate quickly
-      const q = query(regRef, where("empId", "==", payload.empId), where("period", "==", payload.period), where("shiftId", "==", payload.shiftId));
+      const q = query(regRef, where("empId", "==", payload.empId.toLowerCase()), where("period", "==", payload.period), where("shiftId", "==", payload.shiftId));
       const qSnap = await getDocs(q);
       if (!qSnap.empty) {
         // This is a critical validation error, should throw
@@ -115,9 +125,15 @@ const RegAPI = {
 
     try {
       const resp = await fetch(apiLink, {
-        method:  'POST',
-        body:    JSON.stringify(payload)
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
+      
+      if (!resp.ok) {
+         return { success: false, error: `HTTP Error ${resp.status}` };
+      }
+      
       const result = await resp.json();
       if (result.error) {
         return { success: false, error: result.error };
@@ -129,6 +145,9 @@ const RegAPI = {
   },
 
   async submitRegistration(payload) {
+    // Normalize empId for payload
+    payload.empId = payload.empId.toLowerCase();
+
     // 1. Gửi lên Firebase (có Error Boundary)
     const fbResult = await this.submitToFirebase(payload);
     if (!fbResult.success && fbResult.error === 'Bạn đã đăng ký ca này rồi, không được đăng ký lại!') {
@@ -149,11 +168,20 @@ const RegAPI = {
     const apiLink = this.getApiLink();
     if (!apiLink) return { success: false, error: 'Lỗi kết nối máy chủ!' };
     
+    // Normalize empId
+    payload.empId = payload.empId.toLowerCase();
+    
     try {
       const res = await fetch(apiLink, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      
+      if (!res.ok) {
+         return { success: false, error: `HTTP Error ${res.status}` };
+      }
+      
       const data = await res.json();
       
       if (data.status === 'success') {
