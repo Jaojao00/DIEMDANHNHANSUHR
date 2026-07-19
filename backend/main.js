@@ -231,7 +231,10 @@ function doGet(e) {
           
           if (headersList.length >= 7 && (headersList[5] === "Ca" || headersList[5] === "Shift") && (headersList[1] === "Mã NV" || headersList[1] === "MÃ NV" || headersList[1] === "M NV")) {
             var sShiftId = "";
-            if (vals.length > 1 && vals[1][5]) {
+            var match = sName.match(/^T\d+_(.+)_\d+$/);
+            if (match) {
+               sShiftId = match[1];
+            } else if (vals.length > 1 && vals[1][5]) {
                sShiftId = vals[1][5];
             } else {
                var nm = sName.toLowerCase();
