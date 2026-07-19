@@ -104,16 +104,18 @@ Object.assign(AdminApp, {
         if (isAutoOff) rowClass = "auto-off-row";
 
         let confirmCell = "";
+        const onclickAttr = `onclick="AdminApp.changeConfirmStatus('${escapeHTML(emp.id)}', '${emp.status || ''}')" style="cursor: pointer;"`;
+        
         if (isOff) {
-          confirmCell = `<span class="xin-off-badge">📋 Xin Off</span>`;
+          confirmCell = `<span class="xin-off-badge" ${onclickAttr}>📋 Xin Off</span>`;
         } else if (isAutoOff) {
-          confirmCell = `<span class="auto-off-badge">OFF CHƯA ĐIỂM DANH</span>`;
-        } else if (isExtra) {
-          confirmCell = `<span class="xin-len-ca-badge">⬆️ Xin Lên Ca</span>`;
+          confirmCell = `<span class="auto-off-badge" ${onclickAttr}>OFF CHƯA ĐIỂM DANH</span>`;
+        } else if (isExtra || emp.status === "xin lên ca") {
+          confirmCell = `<span class="xin-len-ca-badge" ${onclickAttr}>⬆️ Xin Lên Ca</span>`;
         } else if (emp.status === "confirmed") {
-          confirmCell = `<div class="confirm-badge confirmed" title="Đã điểm danh lúc ${emp.timestamp}">✓</div>`;
+          confirmCell = `<div class="confirm-badge confirmed" title="Đã điểm danh lúc ${emp.timestamp || ''}" ${onclickAttr}>✓</div>`;
         } else {
-          confirmCell = `<div class="confirm-badge pending"></div>`;
+          confirmCell = `<div class="confirm-badge pending" ${onclickAttr}></div>`;
         }
 
         const posCells = shift
