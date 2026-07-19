@@ -60,14 +60,12 @@ const EmployeeApp = {
 
   startClock: () => {
     const update = () => {
-      const savedDate = localStorage.getItem("agr_schedule_date");
-      const d = savedDate ? new Date(savedDate) : new Date();
       const empDateEl = document.getElementById("empDate");
       const empTimeEl = document.getElementById("empTime");
       const attClockSmEl = document.getElementById("attClockSm");
-      if (empDateEl) empDateEl.textContent = Utils.formatDate(d);
-
       const now = new Date();
+      
+      if (empDateEl) empDateEl.textContent = Utils.formatDate(now);
       if (empTimeEl) empTimeEl.textContent = Utils.formatTime(now);
       if (attClockSmEl) attClockSmEl.textContent = Utils.formatTime(now);
     };

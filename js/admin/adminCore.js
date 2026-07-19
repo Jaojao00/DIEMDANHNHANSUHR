@@ -807,13 +807,10 @@ const AdminApp = {
 
   startClock: () => {
     const update = () => {
-      const savedDate = localStorage.getItem("agr_schedule_date");
-      const d = savedDate ? new Date(savedDate) : new Date();
       const dateEl = document.getElementById("currentDate");
       const timeEl = document.getElementById("currentTime");
-      if (dateEl) dateEl.textContent = Utils.formatDate(d);
-
       const now = new Date();
+      if (dateEl) dateEl.textContent = Utils.formatDate(now);
       if (timeEl) timeEl.textContent = Utils.formatTime(now);
     };
     update();
