@@ -1,179 +1,141 @@
-<p align="center">
-  <strong style="font-size:32px">🏢 AGR</strong>
-</p>
+<div align="center">
+  <img src="https://img.shields.io/badge/AGR-Operations-blue?style=for-the-badge&logo=appveyor" alt="Logo">
+  <h1 align="center">Hệ Thống Điểm Danh & Quản Lý Nhân Sự AGR</h1>
 
-<h1 align="center">Hệ Thống Điểm Danh & Quản Lý Nhân Sự</h1>
+  <p align="center">
+    <strong>Giải pháp quản lý lịch làm việc, điểm danh tự động và đăng ký ca thông minh.</strong>
+  </p>
 
-<p align="center">
-  <em>Web app quản lý lịch làm việc, điểm danh tự động và đăng ký ca — chạy trên <strong>GitHub Pages</strong>, backend <strong>Google Apps Script</strong> + <strong>Google Sheets</strong>.</em>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.0-blue?style=flat-square" alt="version">
-  <img src="https://img.shields.io/badge/platform-GitHub%20Pages-brightgreen?style=flat-square" alt="platform">
-  <img src="https://img.shields.io/badge/backend-Google%20Apps%20Script-yellow?style=flat-square" alt="backend">
-  <img src="https://img.shields.io/badge/license-Private-red?style=flat-square" alt="license">
-</p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/version-3.2.0-blue?style=flat-square" alt="version">
+    <img src="https://img.shields.io/badge/platform-GitHub%20Pages-brightgreen?style=flat-square" alt="platform">
+    <img src="https://img.shields.io/badge/backend-Google%20Apps%20Script-yellow?style=flat-square" alt="backend">
+    <img src="https://img.shields.io/badge/database-Google%20Sheets-success?style=flat-square" alt="database">
+    <img src="https://img.shields.io/badge/license-Private-red?style=flat-square" alt="license">
+  </p>
+</div>
 
 ---
 
 ## 📖 Mục Lục
 
-- [Tổng Quan](#-tổng-quan)
-- [Kiến Trúc Hệ Thống](#-kiến-trúc-hệ-thống)
-- [Cấu Trúc File](#-cấu-trúc-file)
-- [Tính Năng Chi Tiết](#-tính-năng-chi-tiết)
-- [Hệ Thống Ca Làm Việc](#-hệ-thống-ca-làm-việc)
-- [API Reference](#-api-reference)
-- [Hướng Dẫn Deploy](#-hướng-dẫn-deploy)
-- [Cấu Hình Google Sheets](#-cấu-hình-google-sheets)
-- [Validation & Bảo Mật](#-validation--bảo-mật)
-- [Xử Lý Sự Cố](#-xử-lý-sự-cố)
+- [🌟 Tổng Quan](#-tổng-quan)
+- [✨ Tính Năng Nổi Bật](#-tính-năng-nổi-bật)
+- [🏗 Kiến Trúc Hệ Thống](#-kiến-trúc-hệ-thống)
+- [📁 Cấu Trúc Mã Nguồn](#-cấu-trúc-mã-nguồn)
+- [🚀 Hướng Dẫn Triển Khai (Deploy)](#-hướng-dẫn-triển-khai-deploy)
+- [🛡 Bảo Mật & Xác Thực](#-bảo-mật--xác-thực)
+- [💡 Ghi Chú Phát Triển](#-ghi-chú-phát-triển)
 
 ---
 
 ## 🌟 Tổng Quan
 
-**AGR Attendance System** là hệ thống điểm danh và quản lý lịch làm việc dành cho nhân sự vận hành (Operations). Hệ thống chia làm **2 luồng chính**:
+**AGR Attendance System** là ứng dụng web toàn diện được thiết kế đặc biệt cho bộ phận Vận hành (Operations). Ứng dụng giúp số hóa hoàn toàn quy trình điểm danh, đăng ký lịch làm việc và quản lý nhân sự một cách nhanh chóng, chính xác. 
 
-| Luồng | Đối tượng | Giao diện | Mô tả |
-|-------|-----------|-----------|-------|
-| **Employee View** | Nhân viên | Mobile-first | Điểm danh, xin nghỉ/lên ca, đăng ký lịch, xem lịch đã đăng ký |
-| **Admin View** | Quản trị viên | Desktop | Quản lý lịch ca, theo dõi điểm danh realtime, cài đặt khung giờ, duyệt yêu cầu |
+Hệ thống được chia làm **2 giao diện chính** để tối ưu hóa trải nghiệm người dùng:
+
+| Phân hệ | Đối tượng | Nền tảng ưu tiên | Tính năng cốt lõi |
+|---------|-----------|------------------|-------------------|
+| 📱 **Employee UI** | Nhân viên | Mobile-first | Điểm danh, xin nghỉ/lên ca, đăng ký & tra cứu lịch |
+| 💻 **Admin UI** | Quản trị viên | Desktop-first | Quản lý lịch ca tổng, duyệt yêu cầu, thêm nhân sự, dashboard realtime |
+
+---
+
+## ✨ Tính Năng Nổi Bật
+
+### 👨‍💼 Dành Cho Nhân Viên (Employee)
+- **⚡ Điểm Danh Nhanh:** Nhập Mã NV, Họ Tên, SĐT Zalo. Kiểm tra hợp lệ realtime.
+- **📅 Đăng Ký Lịch Thông Minh:** Giao diện ma trận (Matrix UI) giúp chọn ca làm việc dễ dàng, trực quan.
+- **🔍 Tra Cứu Trạng Thái:** Xem nhanh lịch đã đăng ký và vị trí làm việc.
+- **📝 Gửi Yêu Cầu Nhanh:** Hỗ trợ gửi form xin Off hoặc xin lên ca với thao tác 1 chạm.
+- **📋 Copy Hàng Loạt:** Sao chép danh sách mã NV để dán vào báo cáo Excel cực nhanh.
+
+### 👑 Dành Cho Quản Trị Viên (Admin)
+- **🔐 Quản Lý Đăng Nhập:** Bảo vệ dữ liệu bằng xác thực tài khoản an toàn.
+- **📊 Bảng Điều Khiển (Dashboard):** Thống kê số lượng nhân sự, trạng thái điểm danh theo thời gian thực (Realtime).
+- **⚙️ Quản Lý Linh Hoạt:** Thêm, sửa, cập nhật trạng thái nhân sự trực tiếp trên giao diện lưới (Grid).
+- **🤖 Tự Động Hóa (Cron Jobs):** Đồng bộ dữ liệu ca làm việc, xử lý đơn xin nghỉ/lên ca vào lúc 00:00 hằng ngày thông qua Script tự động.
+- **📈 Chế Độ Kế Hoạch (Plan vs Actual):** Theo dõi sát sao lượng nhân sự dự kiến so với thực tế để kịp thời điều phối.
 
 ---
 
 ## 🏗 Kiến Trúc Hệ Thống
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    FRONTEND (GitHub Pages)                   │
-│                                                             │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │ Employee UI  │  │   Admin UI   │  │ Registration UI   │  │
-│  │  (Mobile)    │  │  (Desktop)   │  │   (Mobile)        │  │
-│  └──────┬───────┘  └──────┬───────┘  └────────┬──────────┘  │
-│         │                 │                    │             │
-│         └────────┬────────┴────────────────────┘             │
-│                  │                                           │
-│           ┌──────┴──────┐                                    │
-│           │   config.js │  ← URL API, validation rules       │
-│           └──────┬──────┘                                    │
-└──────────────────┼──────────────────────────────────────────┘
-                   │ HTTPS (fetch)
-                   ▼
-┌──────────────────────────────────────────────────────────────┐
-│              BACKEND (Google Apps Script)                     │
-│                                                              │
-│   doGet()                        doPost()                    │
-│   ├─ action=load                 ├─ action=save              │
-│   ├─ action=load_requests        ├─ action=checkin           │
-│   ├─ action=get_registration     ├─ action=request           │
-│   └─ action=get_shift_regs       ├─ action=submit_reg        │
-│                                  ├─ action=admin_login       │
-│                                  └─ action=reset_regs        │
-└──────────────────┬───────────────────────────────────────────┘
-                   │
-                   ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    Google Sheets (Database)                   │
-│                                                              │
-│   ┌────────────────┐  ┌────────────┐  ┌──────────────────┐   │
-│   │ Ca_0600_1000   │  │  XIN_OFF   │  │ LỊCHT6_22:00-... │   │
-│   │ Ca_0600_1500   │  │ (Yêu cầu) │  │ (Đăng ký lịch)   │   │
-│   │ Ca_1500_2200   │  └────────────┘  └──────────────────┘   │
-│   │ Ca_1800_2200   │                                         │
-│   │ Ca_2200_0600   │                                         │
-│   └────────────────┘                                         │
-└──────────────────────────────────────────────────────────────┘
+Dự án sử dụng mô hình Serverless nhẹ nhàng nhưng hiệu quả cao, tiết kiệm chi phí vận hành:
+
+```mermaid
+graph TD;
+    A[Giao diện Người dùng (GitHub Pages)] -->|HTTPS / Fetch API| B(Google Apps Script - Backend);
+    B -->|Xử lý Data| C[(Google Sheets - Database)];
+    C -->|Trigger tự động| D[Xử lý định kỳ 00:00];
+    
+    subgraph Frontend
+    A1[Employee UI] -.-> A;
+    A2[Admin UI] -.-> A;
+    A3[Registration UI] -.-> A;
+    end
 ```
 
 ---
 
-## 📁 Cấu Trúc File
+## 📁 Cấu Trúc Mã Nguồn
 
-```
-DIEMDANHNHANSUHR/
-│
-├── index.html                # Trang web chính (UI chung cho Employee, Admin, Registration)
-├── style.css                 # Giao diện Dark mode AGR
-├── utils.js                  # Các tiện ích dùng chung (hiển thị Toast, Loading, format ngày)
-├── dataManager.js            # Quản lý trạng thái (State) và gọi dữ liệu (API calls)
-├── employee.js               # Giao diện và logic dành cho Nhân sự (Điểm danh, xin off/lên ca)
-├── admin.js                  # Giao diện và logic dành cho Admin (Duyệt lịch, booking)
-├── app.js                    # File khởi chạy (Bootstrapper) gọi các module khi trang tải xong
-├── registration.js           # Module đăng ký lịch & Tra cứu lịch làm việc
-├── config.js                 # Cấu hình hệ thống (API URL, Hằng số)
-├── google-apps-script.js     # Backend Google Apps Script (doGet/doPost)
-├── scripts/                  # Chứa các script Python hỗ trợ dọn dẹp, patch lỗi, automation
-└── archive/                  # Lưu trữ mã nguồn cũ, các file patch JS đã hết hạn
+```text
+📦 DIEMDANHNHANSUHR
+ ┣ 📂 js
+ ┃ ┣ 📂 admin          # Logic phân hệ Quản trị viên (Giao diện, xử lý, API)
+ ┃ ┣ 📂 registration   # Logic phân hệ Đăng ký & Tra cứu lịch
+ ┃ ┗ 📂 ui             # Các component dùng chung (Modal, thông báo)
+ ┣ 📂 backend
+ ┃ ┗ 📜 handlers.js    # Mã nguồn Google Apps Script (doGet, doPost, Trigger)
+ ┣ 📜 index.html       # Entry point duy nhất (Single Page App)
+ ┣ 📜 style.css        # File giao diện chính (Dark mode chủ đạo)
+ ┣ 📜 app.js           # File khởi chạy hệ thống (Bootstrapper)
+ ┣ 📜 dataManager.js   # Quản lý State toàn cục & giao tiếp API
+ ┣ 📜 employee.js      # Logic dành riêng cho giao diện điểm danh
+ ┣ 📜 utils.js         # Các hàm tiện ích (Format thời gian, Toast, Error Handlers)
+ ┣ 📜 config.js        # File cấu hình (API URL, Tùy chỉnh hằng số)
+ ┣ 📜 README.md        # Tài liệu hướng dẫn (Bạn đang đọc nó)
+ ┗ 📜 SECURITY.md      # Chính sách và quy định bảo mật
 ```
 
 ---
 
-## ✨ Tính Năng Chi Tiết
+## 🚀 Hướng Dẫn Triển Khai (Deploy)
 
-### 👤 Nhân Viên (Employee View — Mobile)
+### 1. Triển khai Backend (Google Apps Script)
+1. Tạo một file Google Sheets mới để làm cơ sở dữ liệu.
+2. Trên thanh menu Sheets, chọn **Tiện ích mở rộng (Extensions) > Apps Script**.
+3. Copy toàn bộ nội dung file `backend/handlers.js` (hoặc `google-apps-script.js`) dán vào Editor.
+4. Chạy hàm `setupAutoTriggers()` một lần duy nhất để cài đặt các Cron Jobs tự động.
+5. Nhấn **Deploy > New deployment**, chọn kiểu **Web App**.
+6. Mục "Execute as", chọn **Me**. Mục "Who has access", chọn **Anyone**.
+7. Lấy URL Web App được tạo ra ở bước cuối cùng.
 
-| # | Tính năng | Mô tả |
-|---|-----------|-------|
-| 1 | **Chọn ca làm việc** | Giao diện card hiển thị 5 ca, nhấn để vào điểm danh |
-| 2 | **Điểm danh thủ công** | Nhập Mã NV + Họ tên + SĐT Zalo → Xác nhận |
-| 3 | **Xem vị trí làm việc** | Sau khi điểm danh → hiển thị vị trí cố định, sau giờ nghỉ, 4h-6h |
-| 4 | **Xin Nghỉ / Xin Off** | Gửi yêu cầu xin off với lý do |
-| 5 | **Xin Lên Ca** | Đăng ký thêm ca, chọn ca mục tiêu (kèm tự động gán vào danh sách Ca mới) |
-| 6 | **Đăng ký lịch (Matrix UI)** | Gom 3 Ca Ngày thành một nút duy nhất, hiển thị dạng Ma trận (Radio Button). Tự động phân luồng dữ liệu trả về đúng Sheet trên Backend. |
-| 7 | **Xem lịch đã đăng ký** | Tra cứu bằng mã NV → hiển thị lịch tất cả ca |
-| 8 | **Sao chép nhanh (Copy)**| Tích chọn danh sách và sao chép định dạng chuẩn (Mã NV, Tên) để dán ra Excel. |
-| 9 | **Nút Xóa Cache Nhanh** | Nổi bật góc màn hình để refresh tức thì và sửa lỗi treo máy |
-
-### 🔧 Quản Trị Viên (Admin View — Desktop)
-
-| # | Tính năng | Mô tả |
-|---|-----------|-------|
-| 1 | **Đăng nhập bảo mật** | Xác thực email + mật khẩu qua API |
-| 2 | **Bảng lịch ca động** | Hiển thị danh sách NV theo từng ca, cột vị trí tùy biến |
-| 3 | **Thống kê realtime** | Tổng NV / Đã điểm danh / Chưa điểm danh / Xin Off |
-| 4 | **Đồng bộ Robot 00:00**| Tự động lên lịch, cập nhật trực tiếp dữ liệu "Xin Nghỉ/Xin Lên Ca" mỗi rạng sáng |
-| 5 | **Tìm kiếm & Lọc** | Lọc theo mã NV, họ tên, trạng thái |
-| 6 | **Chế độ Kế Hoạch (PLAN)**| Quản lý và theo dõi số lượng nhân sự dự kiến so với thực tế (ACTUAL) |
+### 2. Triển khai Frontend (GitHub Pages)
+1. Mở file `config.js` trong thư mục gốc của dự án.
+2. Cập nhật biến `CONFIG.API_URL` bằng đường dẫn Web App vừa lấy ở trên.
+3. Commit và Push code lên GitHub.
+4. Bật **GitHub Pages** từ nhánh `main`. Truy cập link để sử dụng ứng dụng.
 
 ---
 
-## 🛡 Validation & Bảo Mật
+## 🛡 Bảo Mật & Xác Thực
 
-### Mã Nhân Viên
-Format: `Ops` (hoặc `OPS`, `ops`) + **5-6 chữ số**
-```
-✅ Ops224190    ✅ OPS193039    ✅ ops143922
-❌ Op224190     ❌ ABC123456
-```
+Hệ thống có nhiều cơ chế kiểm soát nhằm hạn chế thao tác sai lệch hoặc gian lận:
 
-### Chống Gian Lận & Quy Trình
+- **Định dạng Mã NV:** Phải khớp với khuôn dạng chuẩn (Ví dụ: `Ops` hoặc `OPS` kèm 5-6 chữ số).
+- **Chống điểm danh trùng:** Hệ thống sẽ chặn nếu nhân viên cố gắng điểm danh nhiều lần trong cùng một ca.
+- **Chặn theo khung giờ:** 
+  - Khóa gửi yêu cầu xin nghỉ (Off) từ 18:00 đến 06:00 sáng hôm sau.
+  - Phân quyền giới hạn thời gian mở/đóng ca điểm danh tự động.
+- **Giới hạn yêu cầu (Rate Limiting):** Chặn các thao tác spam (ví dụ nhập sai thông tin liên tiếp).
 
-| Biện pháp | Mô tả |
-|-----------|-------|
-| **Chặn điểm danh trùng** | Mỗi NV chỉ được điểm danh 1 lần/ca |
-| **Kiểm tra khung giờ** | Nhân viên chỉ được điểm danh đúng vào khung giờ đăng ký hoặc giờ chốt ca. (VD Ca Sáng điểm danh trước 19h ngày hôm trước hoặc sau 15h ra ca) |
-| **Khóa xin off ban đêm** | Không cho gửi yêu cầu off từ 18:00 – 06:00 |
-| **Rate limiting** | Tối đa 10 lần thử, khóa 5 phút khi vượt giới hạn |
-
-> Chi tiết các chính sách an toàn, vui lòng xem tại file `SECURITY.md`.
+> Xem thêm chi tiết tại [SECURITY.md](SECURITY.md)
 
 ---
 
-## 🚀 Hướng Dẫn Deploy
-
-### Cập nhật Google Apps Script Backend
-1. Mở Google Sheet → **Extensions → Apps Script**
-2. Dán nội dung file `google-apps-script.js` vào editor
-3. Chạy hàm `setupAutoTriggers()` để cấu hình Robot tự động chạy điểm danh lúc 00:00 mỗi đêm.
-4. Nhấn **Deploy → New deployment** dưới dạng Web App (Quyền "Anyone").
-5. Copy URL dán vào file `config.js` trên Frontend.
-
----
-
-<p align="center">
-  <strong>AGR Attendance System v3.1.0</strong><br>
-  <sub>Built with ❤️ for AGR Operations Team</sub>
-</p>
+<div align="center">
+  <p>Được thiết kế và phát triển với ❤️ dành riêng cho đội ngũ Vận hành AGR.</p>
+</div>

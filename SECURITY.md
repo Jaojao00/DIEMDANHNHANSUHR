@@ -1,40 +1,60 @@
-# Security Policy
+# 🛡 Chính Sách Bảo Mật & An Toàn Hệ Thống
 
-## Supported Versions
-
-Chúng tôi liên tục cập nhật và duy trì hệ thống để đảm bảo an toàn thông tin cho mọi dữ liệu của người dùng. Dưới đây là danh sách các phiên bản đang được hỗ trợ:
-
-| Phiên bản | Trạng thái Hỗ trợ |
-| :--- | :--- |
-| **3.x.x** (Bản hiện tại) | ✅ Được hỗ trợ đầy đủ |
-| 2.x.x | ❌ Ngừng hỗ trợ |
-| 1.x.x | ❌ Ngừng hỗ trợ |
-
-Tất cả các bản vá bảo mật và tính năng chống gian lận mới nhất chỉ được triển khai trên nhánh **`3.x.x`** trở lên. Vui lòng đảm bảo bạn đang sử dụng mã nguồn mới nhất trên nhánh `main`.
+Tài liệu này cung cấp các hướng dẫn về quy trình báo cáo lỗ hổng, các phiên bản được hỗ trợ, và liệt kê các cơ chế bảo mật mà hệ thống **AGR Attendance** đang áp dụng để bảo vệ dữ liệu.
 
 ---
 
-## Reporting a Vulnerability (Báo Cáo Lỗ Hổng Bảo Mật)
+## 📦 Các Phiên Bản Được Hỗ Trợ
 
-Nếu bạn phát hiện ra bất kỳ lỗi hổng bảo mật nào trong hệ thống, vui lòng TUYỆT ĐỐI KHÔNG công khai lỗi đó lên phần Issues của GitHub để tránh việc kẻ gian lợi dụng.
+Chúng tôi liên tục cập nhật và duy trì hệ thống để đảm bảo tính ổn định và an toàn thông tin cao nhất. 
 
-Vui lòng báo cáo lỗi bảo mật theo quy trình sau:
+| Phiên bản | Trạng thái Hỗ trợ | Cập nhật bảo mật |
+| :--- | :---: | :---: |
+| **3.x.x** (Phiên bản hiện tại) | ✅ Đang Hỗ Trợ | Nhận bản vá mới nhất |
+| **2.x.x** | ❌ Ngừng Hỗ Trợ | Không |
+| **1.x.x** | ❌ Ngừng Hỗ Trợ | Không |
 
-1. **Email báo cáo**: Gửi thông tin chi tiết về lỗ hổng vào email quản trị hệ thống hoặc liên hệ trực tiếp với đội ngũ phát triển nội bộ.
-2. **Nội dung email**:
-   - Mô tả chi tiết lỗ hổng bạn tìm thấy.
-   - Các bước tái hiện lỗi (Càng chi tiết càng tốt).
-   - Video hoặc ảnh chụp màn hình minh họa (nếu có).
-3. **Quy trình xử lý**:
-   - Đội ngũ quản trị sẽ xác nhận đã nhận được báo cáo của bạn trong vòng 24 giờ.
-   - Chúng tôi sẽ đánh giá mức độ nghiêm trọng và phát hành bản vá nóng (hotfix) trong vòng 48 giờ.
-   - Lỗi sẽ được giữ bí mật cho đến khi bản vá được triển khai toàn diện trên hệ thống.
+> **Lưu ý:** Tất cả các bản vá bảo mật, tính năng chống gian lận (Anti-fraud), và nâng cấp hiệu suất chỉ được triển khai trên nhánh **`3.x.x`** trở lên. Khuyến nghị người dùng luôn sử dụng mã nguồn mới nhất trên nhánh `main`.
 
-### Các Cơ Chế Bảo Mật Đang Được Áp Dụng:
-- **Chống gian lận điểm danh**: Khóa chức năng điểm danh nếu nhân viên nhập sai thông tin liên tiếp (Rate limiting).
-- **Phân quyền truy cập**: Toàn bộ dữ liệu điểm danh, quản lý ca và thông tin liên lạc được bảo vệ sau lớp xác thực tài khoản Admin (`admin_login`).
-- **Khóa chống Spam cấp độ Ca (Shift-level Lock)**: Nới lỏng khóa chống trùng lặp Firebase từ cấp độ "Kỳ đăng ký" xuống cấp độ "Ca làm việc", cho phép nhân sự linh hoạt đăng ký nhiều ca khác nhau trong ngày (VD: Ca Ngày + Ca Đêm) một cách an toàn mà vẫn ngăn chặn tuyệt đối việc spam gửi cùng một ca.
-- **Data Obfuscation**: Dữ liệu nhân viên được xác thực chéo với máy chủ Google Apps Script.
-- **Xác thực khung giờ**: Nhân viên bị ràng buộc bởi các thiết lập thời gian (Không được điểm danh ngoài giờ quy định, cấm gửi đơn xin nghỉ từ 18:00 đến 06:00).
+---
 
-Cảm ơn bạn đã đóng góp vào việc bảo vệ an toàn cho hệ thống AGR Attendance!
+## 🚨 Báo Cáo Lỗ Hổng Bảo Mật (Reporting a Vulnerability)
+
+An toàn dữ liệu là ưu tiên hàng đầu. Nếu bạn phát hiện ra bất kỳ lỗi hổng bảo mật nào trong hệ thống, vui lòng **TUYỆT ĐỐI KHÔNG công khai lỗi đó lên phần Issues của GitHub** để tránh việc kẻ gian lợi dụng trước khi lỗi được khắc phục.
+
+Vui lòng tuân thủ quy trình báo cáo sau:
+
+1. **Email báo cáo**: Gửi thông tin chi tiết về lỗ hổng thông qua hệ thống nội bộ của đội ngũ phát triển.
+2. **Nội dung báo cáo cần có**:
+   - Mô tả chi tiết về lỗ hổng, vị trí xảy ra lỗi (Frontend/Backend).
+   - Các bước tái hiện lỗi (Step-to-reproduce) càng chi tiết càng tốt.
+   - Bằng chứng đi kèm: Ảnh chụp màn hình, Video minh họa, hoặc đoạn mã gây lỗi (nếu có).
+3. **Quy trình tiếp nhận và xử lý**:
+   - Đội ngũ Quản trị/Dev sẽ phản hồi xác nhận tiếp nhận thông tin trong vòng **24 giờ**.
+   - Mức độ nghiêm trọng của lỗi sẽ được đánh giá. Một bản vá khẩn cấp (Hotfix) sẽ được tung ra trong vòng **48 giờ**.
+   - Chi tiết về lỗ hổng sẽ được giữ bảo mật nội bộ cho đến khi bản vá được triển khai toàn diện và an toàn trên môi trường Production.
+
+---
+
+## 🔒 Các Cơ Chế Bảo Mật Tích Hợp
+
+Hệ thống được thiết kế với nhiều lớp bảo vệ ở cả Frontend và Backend để chống lại các hành vi thao túng dữ liệu:
+
+### 1. Phân Quyền Truy Cập (Access Control)
+- Phân tách rõ ràng giữa giao diện dành cho **Nhân viên** và **Quản trị viên**.
+- Toàn bộ dữ liệu nhạy cảm (thông tin cá nhân, danh sách lịch ca tổng) được bảo vệ bằng lớp xác thực Admin (`admin_login`) kết nối an toàn với cơ sở dữ liệu.
+
+### 2. Chống Gian Lận & Hạn Chế Thao Tác (Anti-Fraud & Rate Limiting)
+- **Khóa điểm danh trùng lặp**: Ngăn chặn 1 nhân viên điểm danh nhiều lần trong cùng một ca.
+- **Giới hạn số lần thử (Rate Limiting)**: Tự động khóa tính năng nếu người dùng liên tục nhập sai thông tin hoặc có dấu hiệu spam API.
+- **Khóa chống Spam cấp độ Ca (Shift-level Lock)**: Nới lỏng giới hạn chống trùng lặp từ "Cả kỳ" xuống "Ca làm việc", cho phép nhân sự linh hoạt đăng ký nhiều ca (VD: Sáng + Tối) nhưng vẫn triệt tiêu hoàn toàn khả năng submit spam cùng một ca.
+
+### 3. Kiểm Soát Quy Trình (Process Validation)
+- **Xác thực khung giờ tự động**: 
+  - Khóa gửi yêu cầu xin nghỉ từ 18:00 đến 06:00 sáng hôm sau.
+  - Ngăn chặn điểm danh ngoài khung giờ hợp lệ đã được cấu hình trên hệ thống.
+- **Xác thực chéo dữ liệu (Data Obfuscation & Validation)**: Dữ liệu gửi đi từ thiết bị của nhân viên sẽ được Backend kiểm tra lại một lần nữa trước khi ghi vào Database, tránh việc giả mạo request (Request Forgery).
+
+---
+
+Cảm ơn bạn đã luôn đồng hành và đóng góp vào việc xây dựng hệ thống AGR Attendance an toàn, bảo mật!
