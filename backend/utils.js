@@ -20,3 +20,22 @@ function buildEmployeeIndex(values, idColIndex) {
   }
   return index;
 }
+
+
+function sendErrorResponse(errorMsg, statusCode) {
+  var obj = { success: false, error: errorMsg };
+  if (statusCode) obj.statusCode = statusCode;
+  return sendJsonResponse(obj);
+}
+
+
+function sendSuccessResponse(data, message) {
+  var obj = { success: true };
+  if (data) {
+    for (var key in data) {
+      obj[key] = data[key];
+    }
+  }
+  if (message) obj.message = message;
+  return sendJsonResponse(obj);
+}

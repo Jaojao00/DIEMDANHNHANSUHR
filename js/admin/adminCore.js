@@ -979,9 +979,9 @@ Object.assign(AdminApp, {
       background: '#151928',
       color: '#fff',
       html:
-        '<input id="swal-input1" class="swal2-input" placeholder="Mã Nhân Viên" style="background:#2a3149; color:#fff; border:1px solid #3a4169; width:80%; margin-bottom: 10px;">' +
-        '<input id="swal-input2" class="swal2-input" placeholder="Họ Tên" style="background:#2a3149; color:#fff; border:1px solid #3a4169; width:80%; margin-bottom: 10px;">' +
-        `<select id="swal-input3" class="swal2-input" style="background:#2a3149; color:#fff; border:1px solid #3a4169; width:80%; height:45px;">
+        '<input id="swal-input1" class="agr-swal-input" placeholder="Mã Nhân Viên">' +
+        '<input id="swal-input2" class="agr-swal-input" placeholder="Họ Tên">' +
+        `<select id="swal-input3" class="agr-swal-input">
            <option value="">-- Chọn ca làm việc --</option>
            ${shiftOptions}
          </select>`,
@@ -989,8 +989,12 @@ Object.assign(AdminApp, {
       showCancelButton: true,
       confirmButtonText: "Xác nhận",
       cancelButtonText: "Hủy",
-      confirmButtonColor: '#4facf7',
-      cancelButtonColor: '#ff5c5c',
+      customClass: {
+        popup: 'agr-swal-popup',
+        title: 'agr-swal-title',
+        confirmButton: 'agr-swal-confirm',
+        cancelButton: 'agr-swal-cancel'
+      },
       preConfirm: () => {
         const id = document.getElementById('swal-input1').value.trim();
         const name = document.getElementById('swal-input2').value.trim();
@@ -1084,15 +1088,12 @@ Object.assign(AdminApp, {
       showCancelButton: true,
       confirmButtonText: "Cập nhật",
       cancelButtonText: "Hủy",
-      confirmButtonColor: '#4facf7',
-      cancelButtonColor: '#ff5c5c',
-      didOpen: () => {
-        const select = Swal.getInput();
-        if(select) {
-           select.style.background = '#2a3149';
-           select.style.color = '#fff';
-           select.style.borderColor = '#3a4169';
-        }
+      customClass: {
+        popup: 'agr-swal-popup',
+        title: 'agr-swal-title',
+        confirmButton: 'agr-swal-confirm',
+        cancelButton: 'agr-swal-cancel',
+        input: 'agr-swal-input'
       }
     });
 

@@ -822,7 +822,7 @@ function handleSyncRoster(data, shiftId, sheet) {
 }
 function handleAdminLogin(data) {
   var email = (data.email || "").toLowerCase().trim();
-  var pass = data.pass || "";
+  var pass = data.pass || data.password || "";
   
   var scriptProperties = PropertiesService.getScriptProperties();
   var adminsStr = scriptProperties.getProperty("ADMIN_CREDS");

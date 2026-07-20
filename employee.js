@@ -547,21 +547,33 @@ const EmployeeApp = {
 
           // Hiển thị thông tin lên bảng thông báo thành công
           if (typeof ModalManager !== 'undefined') {
+            const isOff = type === "XIN OFF";
+            const reqTypeName = isOff ? "OFF" : "LÊN CA";
+            const reqTypeColor = isOff ? "#ffbe00" : "#4fc3f7";
+
             const details = [
-              { label: 'Loại', value: type },
-              { label: 'Mã NV', value: empId.toUpperCase() },
-              { label: 'Họ tên', value: name },
-              { label: 'Số ĐT', value: phone },
-              { label: 'Ngày', value: dateFormatted },
-              { label: 'Lý Do', value: reason }
+              { label: 'Mã Nhân Viên', value: empId.toUpperCase(), valueColor: '#ff5c5c', isHighlight: true },
+              { label: 'Họ và Tên', value: name },
+              { label: 'Số Điện Thoại', value: phone },
+              { label: 'Loại Yêu Cầu', value: type, valueColor: reqTypeColor, isHighlight: true },
+              { label: 'Ngày Yêu Cầu', value: dateFormatted },
+              { label: 'Lý Do', value: reason || 'Không có', isLongText: true }
             ];
+
             if (note) {
-              details.push({ label: 'Ghi chú', value: note });
+              details.push({ label: 'Ghi Chú', value: note });
             }
+
             ModalManager.showModal('success', {
-              title: 'Gửi yêu cầu thành công',
-              message: 'Hệ thống đã ghi nhận yêu cầu thay đổi lịch của bạn. Vui lòng chờ Admin xác nhận.',
+              title: 'ĐĂNG KÝ THÀNH CÔNG!',
+              message: `Bạn đã đăng ký <span style="font-weight:700;color:${reqTypeColor}">${reqTypeName}</span> thành công!`,
+              warning: '⚠️ Vui lòng chụp màn hình này và gửi kèm chứng từ xác minh (ví dụ: giấy khám bệnh, hình ảnh...) cho Admin. Đơn sẽ chỉ được duyệt nếu chứng từ hợp lệ.',
               details: details
+            }, { 
+              icon: '🎉',
+              titleColor: '#00e676',
+              btnText: '✓ Đóng và về trang chủ',
+              btnStyle: 'background: linear-gradient(135deg, #ff7e5f, #feb47b); border: none; color: white;'
             });
           }
 
