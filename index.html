@@ -1,24 +1,49 @@
-<!DOCTYPE html><html lang="vi"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HR Consulting | Điểm Danh</title>
-    <meta name="description" content="Hệ thống điểm danh Tyler Nguyen HR Consulting">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="logo.png">
-    <link rel="apple-touch-icon" href="logo.png">
+    <meta
+      name="description"
+      content="Hệ thống điểm danh Tyler Nguyen HR Consulting"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png" />
 
-    <meta name="theme-color" content="#0b0b14">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=1782499999">
+    <meta name="theme-color" content="#0b0b14" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css?v=1782499999" />
   </head>
   <body>
     <!-- Nút sửa chữa / Clear Cache nổi -->
-    <button id="repairBtn" class="floating-repair-btn" title="Xóa Cache / Sửa Lỗi">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button
+      id="repairBtn"
+      class="floating-repair-btn"
+      title="Xóa Cache / Sửa Lỗi"
+    >
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
         <path d="M3 3v5h5"></path>
       </svg>
@@ -32,7 +57,13 @@
       <section id="phaseShift" class="emp-phase active">
         <header class="emp-header">
           <div class="emp-brand">
-            <img src="logo.png" alt="HR Consulting" class="emp-logo-img" loading="lazy" decoding="async">
+            <img
+              src="logo.png"
+              alt="HR Consulting"
+              class="emp-logo-img"
+              loading="lazy"
+              decoding="async"
+            />
             <span class="emp-app-name">Điểm Danh</span>
           </div>
           <div class="emp-clock-wrap">
@@ -64,7 +95,9 @@
               <span class="action-btn-icon">⬆️</span>
               <div class="action-btn-text">
                 <span class="action-btn-title">Xin Lên Ca</span>
-                <span class="action-btn-sub">Gửi yêu cầu lịch làm việc thêm ca</span>
+                <span class="action-btn-sub"
+                  >Gửi yêu cầu lịch làm việc thêm ca</span
+                >
               </div>
             </button>
           </div>
@@ -72,7 +105,14 @@
 
         <div class="emp-footer">
           <button class="admin-link-btn" id="adminAccessBtn">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
@@ -84,8 +124,19 @@
       <!-- PHASE 2: ATTENDANCE FORM -->
       <section id="phaseAttendance" class="emp-phase hidden">
         <div class="att-topbar">
-          <button class="att-back-btn" id="backToShifts" aria-label="Quay lại chọn ca">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <button
+            class="att-back-btn"
+            id="backToShifts"
+            aria-label="Quay lại chọn ca"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
           </button>
@@ -102,39 +153,95 @@
           <div class="att-manual-box" id="attPanel-manual">
             <form class="mob-form" id="attendanceForm" novalidate="">
               <div class="form-group">
-                <label for="employeeId">Mã Nhân Viên <span class="required">*</span></label>
+                <label for="employeeId"
+                  >Mã Nhân Viên <span class="required">*</span></label
+                >
                 <div class="input-wrapper">
-                  <input type="text" id="employeeId" placeholder="VD: Ops224190" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off">
+                  <input
+                    type="text"
+                    id="employeeId"
+                    placeholder="VD: Ops224190"
+                    autocomplete="off"
+                    spellcheck="false"
+                    autocorrect="off"
+                    autocapitalize="off"
+                  />
                   <span class="input-icon" id="idValidIcon"></span>
                 </div>
                 <span class="form-hint">Dạng: Ops + 5-6 chữ số</span>
-                <span class="form-error hidden" id="idError" role="alert"></span>
+                <span
+                  class="form-error hidden"
+                  id="idError"
+                  role="alert"
+                ></span>
               </div>
 
               <div class="form-group">
-                <label for="employeeName">Họ và Tên <span class="required">*</span></label>
+                <label for="employeeName"
+                  >Họ và Tên <span class="required">*</span></label
+                >
                 <div class="input-wrapper">
-                  <input type="text" id="employeeName" placeholder="Nhập họ và tên đầy đủ" autocomplete="name">
+                  <input
+                    type="text"
+                    id="employeeName"
+                    placeholder="Nhập họ và tên đầy đủ"
+                    autocomplete="name"
+                  />
                   <span class="input-icon" id="nameValidIcon"></span>
                 </div>
-                <span class="form-error hidden" id="nameError" role="alert"></span>
+                <span
+                  class="form-error hidden"
+                  id="nameError"
+                  role="alert"
+                ></span>
               </div>
 
               <div class="form-group">
-                <label for="employeePhone">Số Điện Thoại Zalo <span class="required">*</span></label>
+                <label for="employeePhone"
+                  >Số Điện Thoại Zalo <span class="required">*</span></label
+                >
                 <div class="input-wrapper">
-                  <input type="tel" id="employeePhone" placeholder="VD: 0901234567" maxlength="10" autocomplete="tel" pattern="[0-9]{10}" inputmode="numeric" aria-label="Số điện thoại Zalo" required="true">
+                  <input
+                    type="tel"
+                    id="employeePhone"
+                    placeholder="VD: 0901234567"
+                    maxlength="10"
+                    autocomplete="tel"
+                    pattern="[0-9]{10}"
+                    inputmode="numeric"
+                    aria-label="Số điện thoại Zalo"
+                    required="true"
+                  />
                   <span class="input-icon" id="phoneValidIcon"></span>
                 </div>
-                <span class="form-hint">🛡️ Chỉ dùng để xác minh khi cần, không hiển thị công
-                  khai</span>
-                <span class="form-error hidden" id="phoneError" role="alert"></span>
+                <span class="form-hint"
+                  >🛡️ Chỉ dùng để xác minh khi cần, không hiển thị công
+                  khai</span
+                >
+                <span
+                  class="form-error hidden"
+                  id="phoneError"
+                  role="alert"
+                ></span>
               </div>
 
-              <button type="submit" class="btn btn-primary btn-full btn-xl" id="submitBtn">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <button
+                type="submit"
+                class="btn btn-primary btn-full btn-xl"
+                id="submitBtn"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <polyline points="9 11 12 14 22 4"></polyline>
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                  <path
+                    d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+                  ></path>
                 </svg>
                 Xác Nhận Điểm Danh
               </button>
@@ -148,8 +255,18 @@
         <div class="success-screen">
           <div class="success-anim-wrap">
             <svg class="success-svg" viewBox="0 0 52 52" aria-hidden="true">
-              <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"></circle>
-              <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"></path>
+              <circle
+                class="checkmark-circle"
+                cx="26"
+                cy="26"
+                r="25"
+                fill="none"
+              ></circle>
+              <path
+                class="checkmark-check"
+                fill="none"
+                d="M14.1 27.2l7.1 7.2 16.7-16.8"
+              ></path>
             </svg>
           </div>
           <h2 class="success-heading">Điểm Danh Thành Công!</h2>
@@ -189,56 +306,138 @@
     <!-- /#employeeView -->
 
     <!-- REQUEST MODAL -->
-    <div id="requestModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div
+      id="requestModal"
+      class="modal-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+    >
       <div class="modal request-modal modal-responsive">
         <div class="modal-header">
           <h3 id="requestModalTitle">📋 Gửi Yêu Cầu</h3>
-          <button class="modal-close-btn" id="requestModalCloseBtn" aria-label="Đóng hộp thoại">
+          <button
+            class="modal-close-btn"
+            id="requestModalCloseBtn"
+            aria-label="Đóng hộp thoại"
+          >
             ×
           </button>
         </div>
         <div class="modal-body" style="padding: 20px">
           <form id="requestForm" autocomplete="off">
             <div class="form-group">
-              <label class="form-label" for="employeeId">Mã Nhân Viên (Mã OPS)
-                <span aria-label="bắt buộc" class="required-star">*</span></label>
-              <input type="text" id="req_empId" class="form-input" placeholder="VD: Ops123456" style="text-transform: uppercase">
+              <label class="form-label" for="employeeId"
+                >Mã Nhân Viên (Mã OPS)
+                <span aria-label="bắt buộc" class="required-star"
+                  >*</span
+                ></label
+              >
+              <input
+                type="text"
+                id="req_empId"
+                class="form-input"
+                placeholder="VD: Ops123456"
+                style="text-transform: uppercase"
+              />
             </div>
             <div class="form-group">
-              <label class="form-label" for="employeeName">Họ và Tên (viết in hoa)
-                <span aria-label="bắt buộc" class="required-star">*</span></label>
-              <input type="text" id="req_name" class="form-input" placeholder="VD: NGUYỄN VĂN A">
+              <label class="form-label" for="employeeName"
+                >Họ và Tên (viết in hoa)
+                <span aria-label="bắt buộc" class="required-star"
+                  >*</span
+                ></label
+              >
+              <input
+                type="text"
+                id="req_name"
+                class="form-input"
+                placeholder="VD: NGUYỄN VĂN A"
+              />
             </div>
             <div class="form-group">
-              <label class="form-label">Số Điện Thoại <span aria-label="bắt buộc" class="required-star">*</span></label>
-              <input type="tel" id="req_phone" class="form-input" placeholder="VD: 0901234567" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" required="true">
+              <label class="form-label"
+                >Số Điện Thoại
+                <span aria-label="bắt buộc" class="required-star"
+                  >*</span
+                ></label
+              >
+              <input
+                type="tel"
+                id="req_phone"
+                class="form-input"
+                placeholder="VD: 0901234567"
+                maxlength="10"
+                pattern="[0-9]{10}"
+                inputmode="numeric"
+                required="true"
+              />
             </div>
             <div class="form-group">
-              <label class="form-label">Ngày Xin Nghỉ / Xin Lên Ca
-                <span aria-label="bắt buộc" class="required-star">*</span></label>
-              <input type="date" id="req_date" class="form-input">
+              <label class="form-label"
+                >Ngày Xin Nghỉ / Xin Lên Ca
+                <span aria-label="bắt buộc" class="required-star"
+                  >*</span
+                ></label
+              >
+              <input type="date" id="req_date" class="form-input" />
             </div>
-            <div class="form-group" id="req_target_shift_group" style="display: none">
-              <label class="form-label" id="req_target_shift_label">Chọn Ca <span aria-label="bắt buộc" class="required-star">*</span></label>
+            <div
+              class="form-group"
+              id="req_target_shift_group"
+              style="display: none"
+            >
+              <label class="form-label" id="req_target_shift_label"
+                >Chọn Ca
+                <span aria-label="bắt buộc" class="required-star"
+                  >*</span
+                ></label
+              >
               <select id="req_target_shift" class="form-input">
                 <option value="ALL">Tất cả các ca (Nghỉ trọn ngày)</option>
-                <option value="06:00-10:00" disabled>Ca Sáng (06:00-10:00) - Tạm khóa</option>
-                <option value="06:00-15:00" disabled>Ca OS Sáng (06:00-15:00) - Tạm khóa</option>
-                <option value="15:00-22:00" disabled>Ca Chiều (15:00-22:00) - Tạm khóa</option>
+                <option value="06:00-10:00" disabled>
+                  Ca Sáng (06:00-10:00) - Tạm khóa
+                </option>
+                <option value="06:00-15:00" disabled>
+                  Ca OS Sáng (06:00-15:00) - Tạm khóa
+                </option>
+                <option value="15:00-22:00" disabled>
+                  Ca Chiều (15:00-22:00) - Tạm khóa
+                </option>
                 <option value="18:00-22:00">Ca Tối (18:00-22:00)</option>
                 <option value="22:00-06:00">Ca Đêm (22:00-06:00)</option>
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label" id="req_reason_label">Lý Do <span aria-label="bắt buộc" class="required-star">*</span></label>
-              <textarea id="req_reason" class="form-input" rows="3" placeholder="Nhập lý do cụ thể..." style="resize: vertical"></textarea>
+              <label class="form-label" id="req_reason_label"
+                >Lý Do
+                <span aria-label="bắt buộc" class="required-star"
+                  >*</span
+                ></label
+              >
+              <textarea
+                id="req_reason"
+                class="form-input"
+                rows="3"
+                placeholder="Nhập lý do cụ thể..."
+                style="resize: vertical"
+              ></textarea>
             </div>
             <div class="form-group">
               <label class="form-label">Ghi Chú (tùy chọn)</label>
-              <input type="text" id="req_note" class="form-input" placeholder="Thêm ghi chú nếu có...">
+              <input
+                type="text"
+                id="req_note"
+                class="form-input"
+                placeholder="Thêm ghi chú nếu có..."
+              />
             </div>
-            <input type="hidden" id="req_type" value="XIN OFF">
-            <button type="submit" class="btn btn-primary btn-full" id="requestSubmitBtn" style="margin-top: 8px">
+            <input type="hidden" id="req_type" value="XIN OFF" />
+            <button
+              type="submit"
+              class="btn btn-primary btn-full"
+              id="requestSubmitBtn"
+              style="margin-top: 8px"
+            >
               📤 Gửi Yêu Cầu
             </button>
           </form>
@@ -247,53 +446,146 @@
     </div>
 
     <!-- REQUEST SUCCESS MODAL -->
-    
 
     <!-- REQUEST REJECT MODAL -->
-    <div id="reqRejectModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div
+      id="reqRejectModal"
+      class="modal-overlay hidden"
+      role="dialog"
+      aria-modal="true"
+    >
       <div class="modal request-success-modal modal-responsive">
         <div class="modal-body" style="padding: 24px; text-align: center">
-          <div class="success-anim-wrap" style="margin-bottom: 20px;">
-            <svg class="success-svg" viewBox="0 0 52 52" aria-hidden="true" style="stroke: #ff5c5c;">
-              <circle cx="26" cy="26" r="25" fill="none" style="stroke: #ff5c5c; stroke-width: 2;"></circle>
-              <path fill="none" d="M16 16 36 36 M36 16 16 36" style="stroke: #ff5c5c; stroke-width: 4; stroke-linecap: round;"></path>
+          <div class="success-anim-wrap" style="margin-bottom: 20px">
+            <svg
+              class="success-svg"
+              viewBox="0 0 52 52"
+              aria-hidden="true"
+              style="stroke: #ff5c5c"
+            >
+              <circle
+                cx="26"
+                cy="26"
+                r="25"
+                fill="none"
+                style="stroke: #ff5c5c; stroke-width: 2"
+              ></circle>
+              <path
+                fill="none"
+                d="M16 16 36 36 M36 16 16 36"
+                style="stroke: #ff5c5c; stroke-width: 4; stroke-linecap: round"
+              ></path>
             </svg>
           </div>
 
-          <h2 class="success-heading" style="color: #ff5c5c; margin-bottom: 20px;">Từ Chối Xin OFF!</h2>
-          
-          <div class="position-result-card" style="text-align: left; background: rgba(255, 92, 92, 0.05); border: 1px solid rgba(255, 92, 92, 0.2);">
-            <div class="prc-header" style="background: rgba(255, 92, 92, 0.1); border-bottom: 1px solid rgba(255, 92, 92, 0.1); color: #ff5c5c;">
+          <h2
+            class="success-heading"
+            style="color: #ff5c5c; margin-bottom: 20px"
+          >
+            Từ Chối Xin OFF!
+          </h2>
+
+          <div
+            class="position-result-card"
+            style="
+              text-align: left;
+              background: rgba(255, 92, 92, 0.05);
+              border: 1px solid rgba(255, 92, 92, 0.2);
+            "
+          >
+            <div
+              class="prc-header"
+              style="
+                background: rgba(255, 92, 92, 0.1);
+                border-bottom: 1px solid rgba(255, 92, 92, 0.1);
+                color: #ff5c5c;
+              "
+            >
               <span>⚠️</span>
               <span>Lý do không hợp lệ</span>
             </div>
-            <div style="padding: 16px; font-size: 0.95rem; line-height: 1.5; color: var(--text-secondary);">
-              <p style="margin-bottom: 12px; color: var(--text-primary);">
-                Hệ thống <b>không thể phê duyệt</b> yêu cầu của bạn vì lý do Xin OFF chưa phù hợp. Theo quy định, Xin OFF đột xuất khi đã có lịch chỉ áp dụng cho <b>các trường hợp bất khả kháng</b>.
+            <div
+              style="
+                padding: 16px;
+                font-size: 0.95rem;
+                line-height: 1.5;
+                color: var(--text-secondary);
+              "
+            >
+              <p style="margin-bottom: 12px; color: var(--text-primary)">
+                Hệ thống <b>không thể phê duyệt</b> yêu cầu của bạn vì lý do Xin
+                OFF chưa phù hợp. Theo quy định, Xin OFF đột xuất khi đã có lịch
+                chỉ áp dụng cho <b>các trường hợp bất khả kháng</b>.
               </p>
-              
-              <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 8px; margin-bottom: 12px;">
-                <span style="color: #4fc3f7; font-weight: 600; display: block; margin-bottom: 6px;">✅ Lý do hợp lệ:</span>
-                <ul style="margin: 0; padding-left: 20px; color: #e0e0e0;">
+
+              <div
+                style="
+                  background: rgba(255, 255, 255, 0.03);
+                  padding: 12px;
+                  border-radius: 8px;
+                  margin-bottom: 12px;
+                "
+              >
+                <span
+                  style="
+                    color: #4fc3f7;
+                    font-weight: 600;
+                    display: block;
+                    margin-bottom: 6px;
+                  "
+                  >✅ Lý do hợp lệ:</span
+                >
+                <ul style="margin: 0; padding-left: 20px; color: #e0e0e0">
                   <li>Ốm đau, tai nạn, cấp cứu, nhập viện</li>
                   <li>Gia đình có tang sự, đám hiếu</li>
                 </ul>
               </div>
 
-              <div style="background: rgba(255, 92, 92, 0.05); padding: 12px; border-radius: 8px;">
-                <span style="color: #ff5c5c; font-weight: 600; display: block; margin-bottom: 6px;">❌ Lý do bị từ chối:</span>
-                <ul style="margin: 0; padding-left: 20px; color: #e0e0e0;">
+              <div
+                style="
+                  background: rgba(255, 92, 92, 0.05);
+                  padding: 12px;
+                  border-radius: 8px;
+                "
+              >
+                <span
+                  style="
+                    color: #ff5c5c;
+                    font-weight: 600;
+                    display: block;
+                    margin-bottom: 6px;
+                  "
+                  >❌ Lý do bị từ chối:</span
+                >
+                <ul style="margin: 0; padding-left: 20px; color: #e0e0e0">
                   <li>Về quê, việc cá nhân, đi chơi, bận đột xuất...</li>
                 </ul>
               </div>
-              
-              <p style="margin-top: 12px; font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
-                Vui lòng tuân thủ lịch làm việc đã chốt để không ảnh hưởng đến vận hành. Cảm ơn bạn!
+
+              <p
+                style="
+                  margin-top: 12px;
+                  font-size: 0.85rem;
+                  color: var(--text-muted);
+                  font-style: italic;
+                "
+              >
+                Vui lòng tuân thủ lịch làm việc đã chốt để không ảnh hưởng đến
+                vận hành. Cảm ơn bạn!
               </p>
             </div>
           </div>
 
-          <button class="btn btn-primary btn-full btn-xl" id="reqRejectCloseBtn" style="background: #333; color: white; margin-top: 20px; border-color: #444;">
+          <button
+            class="btn btn-primary btn-full btn-xl"
+            id="reqRejectCloseBtn"
+            style="
+              background: #333;
+              color: white;
+              margin-top: 20px;
+              border-color: #444;
+            "
+          >
             Đã Hiểu &amp; Đóng
           </button>
         </div>
@@ -307,7 +599,13 @@
       <header class="header">
         <div class="header-left">
           <div class="logo-container">
-            <img src="logo.png" alt="Tyler Nguyen HR" class="logo-badge-img" loading="lazy" decoding="async">
+            <img
+              src="logo.png"
+              alt="Tyler Nguyen HR"
+              class="logo-badge-img"
+              loading="lazy"
+              decoding="async"
+            />
             <div class="header-title">
               <h1>Hệ Thống Điểm Danh</h1>
               <span class="header-subtitle">Tyler Nguyen HR Consulting</span>
@@ -315,33 +613,61 @@
           </div>
         </div>
         <div class="header-right">
-          <button class="btn btn-secondary" id="adminLogBtn" title="Lịch sử chỉnh sửa" style="
+          <button
+            class="btn btn-secondary"
+            id="adminLogBtn"
+            title="Lịch sử chỉnh sửa"
+            style="
               position: relative;
               margin-right: 15px;
               border-radius: 50%;
               padding: 10px;
               border: 1px solid var(--border);
-            ">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            "
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
               <line x1="16" y1="17" x2="8" y2="17"></line>
               <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
           </button>
-          <button class="btn btn-secondary" id="adminNotifBtn" title="Thông báo" style="
+          <button
+            class="btn btn-secondary"
+            id="adminNotifBtn"
+            title="Thông báo"
+            style="
               position: relative;
               margin-right: 15px;
               border-radius: 50%;
               padding: 10px;
               border: 1px solid var(--border);
-            ">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            "
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-            <span id="adminNotifBadge" style="
+            <span
+              id="adminNotifBadge"
+              style="
                 display: none;
                 position: absolute;
                 top: -2px;
@@ -352,13 +678,19 @@
                 font-weight: bold;
                 border-radius: 10px;
                 padding: 2px 5px;
-              ">0</span>
+              "
+              >0</span
+            >
           </button>
           <div class="datetime-display">
             <div class="current-date" id="currentDate"></div>
             <div class="current-time" id="currentTime"></div>
           </div>
-          <button class="btn btn-secondary" id="settingsBtn" title="Cài đặt Khung Giờ">
+          <button
+            class="btn btn-secondary"
+            id="settingsBtn"
+            title="Cài đặt Khung Giờ"
+          >
             ⚙️
           </button>
           <div class="status-indicator">
@@ -366,7 +698,14 @@
             <span id="connectionText">Đang kết nối...</span>
           </div>
           <button class="btn btn-ghost exit-admin-btn" id="exitAdminBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
               <polyline points="16 17 21 12 16 7"></polyline>
               <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -387,7 +726,9 @@
             </h2>
 
             <!-- Toggle Chế độ xem Admin -->
-            <div class="admin-view-toggle" style="
+            <div
+              class="admin-view-toggle"
+              style="
                 margin-left: 24px;
                 display: flex;
                 gap: 8px;
@@ -395,41 +736,72 @@
                 padding: 4px;
                 border-radius: 8px;
                 border: 1px solid var(--border);
-              ">
-              <button class="btn btn-sm" id="viewModeFinal" style="
+              "
+            >
+              <button
+                class="btn btn-sm"
+                id="viewModeFinal"
+                style="
                   background: var(--primary);
                   color: white;
                   border: none;
                   font-size: 13px;
-                ">
-                Lịch Làm Việc
+                "
+              >
+                Vị Trí Làm Việc
               </button>
-              <button class="btn btn-sm btn-ghost" id="viewModeReg" style="
+              <button
+                class="btn btn-sm btn-ghost"
+                id="viewModeReg"
+                style="
                   color: var(--text-secondary);
                   border: none;
                   font-size: 13px;
-                ">
+                "
+              >
                 Lịch Làm Việc
               </button>
-              <button class="btn btn-sm btn-ghost" id="viewModeBooking" style="
+              <button
+                class="btn btn-sm btn-ghost"
+                id="viewModeBooking"
+                style="
                   color: var(--text-secondary);
                   border: none;
                   font-size: 13px;
-                ">
+                "
+              >
                 Booking
               </button>
             </div>
             <div class="panel-actions">
               <button class="btn-icon" id="refreshBtn" title="Làm mới">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <path d="M23 4v6h-6M1 20v-6h6"></path>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  <path
+                    d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                  ></path>
                 </svg>
               </button>
               <div class="search-box">
-                <input type="search" id="adminQuerySearch" placeholder="Tìm mã NV hoặc họ tên..." aria-label="Tìm kiếm" autocomplete="off" spellcheck="false">
+                <input
+                  type="search"
+                  id="adminQuerySearch"
+                  placeholder="Tìm mã NV hoặc họ tên..."
+                  aria-label="Tìm kiếm"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
               </div>
-              <select id="statusFilter" class="status-filter-select" aria-label="Lọc trạng thái">
+              <select
+                id="statusFilter"
+                class="status-filter-select"
+                aria-label="Lọc trạng thái"
+              >
                 <option value="all">⚡ Tất cả trạng thái</option>
                 <option value="confirmed">✅ Đã điểm danh</option>
                 <option value="pending">⏳ Chưa điểm danh</option>
@@ -442,36 +814,81 @@
           <!-- Shift Tabs -->
           <div class="shift-tabs-row">
             <div class="shift-tabs-list" id="shiftTabsList"></div>
-            <select id="regPeriodSelect" class="status-filter-select" style="
+            <select
+              id="regPeriodSelect"
+              class="status-filter-select"
+              style="
                 display: none;
                 margin-left: 8px;
                 margin-right: 8px;
                 max-width: 150px;
                 padding-right: 28px;
-              " aria-label="Chọn kỳ lịch làm việc"></select>
+              "
+              aria-label="Chọn kỳ lịch làm việc"
+            ></select>
             <button class="manager-toggle-btn" id="managerBtn">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
               <span>Quản Lý Lịch</span>
             </button>
-            <button class="manager-toggle-btn" id="regManagerBtn" style="display: none; margin-left: 8px; background: var(--primary); color: white; border-color: transparent;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <button
+              class="manager-toggle-btn"
+              id="regManagerBtn"
+              style="
+                display: none;
+                margin-left: 8px;
+                background: var(--primary);
+                color: white;
+                border-color: transparent;
+              "
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                ></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <line x1="12" y1="18" x2="12" y2="12"></line>
                 <line x1="9" y1="15" x2="15" y2="15"></line>
               </svg>
               <span>Nhập Lịch Thủ Công</span>
             </button>
-            <button class="manager-toggle-btn" id="addPersonnelBtn" onclick="AdminApp.promptAddPersonnel()" style="
+            <button
+              class="manager-toggle-btn"
+              id="addPersonnelBtn"
+              onclick="AdminApp.promptAddPersonnel()"
+              style="
                 margin-left: 8px;
                 background: #3b82f6;
                 color: white;
                 border-color: transparent;
-              ">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              "
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                 <circle cx="8.5" cy="7" r="4"></circle>
                 <line x1="20" y1="8" x2="20" y2="14"></line>
@@ -479,23 +896,40 @@
               </svg>
               <span>Thêm Nhân Sự</span>
             </button>
-            <button class="manager-toggle-btn" id="syncRegistrationBtn" style="
+            <button
+              class="manager-toggle-btn"
+              id="syncRegistrationBtn"
+              style="
                 margin-left: 8px;
                 background: var(--success);
                 color: white;
                 border-color: transparent;
-              ">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              "
+            >
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
                 <polyline points="23 4 23 10 17 10"></polyline>
                 <polyline points="1 20 1 14 7 14"></polyline>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                <path
+                  d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                ></path>
               </svg>
               <span>Chốt Lịch (Tự Động)</span>
             </button>
           </div>
 
           <!-- Schedule Date Display -->
-          <div class="schedule-date-bar" style="
+          <div
+            class="schedule-date-bar"
+            style="
               display: flex;
               align-items: center;
               margin: -5px 20px 15px 20px;
@@ -503,20 +937,34 @@
               padding: 8px 15px;
               border-radius: 8px;
               border: 1px solid var(--border);
-            ">
+            "
+          >
             <div style="display: flex; align-items: center; gap: 8px">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--primary)">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                style="color: var(--primary)"
+              >
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                 <line x1="16" y1="2" x2="16" y2="6"></line>
                 <line x1="8" y1="2" x2="8" y2="6"></line>
                 <line x1="3" y1="10" x2="21" y2="10"></line>
               </svg>
-              <span style="
+              <span
+                style="
                   color: var(--text-muted);
                   font-size: 0.9rem;
                   font-weight: 500;
-                ">Ngày Lịch Đang Mở:</span>
-              <span id="mainScheduleDateInput" style="
+                "
+                >Ngày Lịch Đang Mở:</span
+              >
+              <span
+                id="mainScheduleDateInput"
+                style="
                   background: rgba(0, 0, 0, 0.2);
                   border: 1px solid rgba(255, 255, 255, 0.1);
                   color: var(--primary);
@@ -526,8 +974,11 @@
                   font-family: monospace;
                   font-size: 1.05rem;
                   letter-spacing: 1px;
-                "></span>
-              <button id="btnCopySelected" style="
+                "
+              ></span>
+              <button
+                id="btnCopySelected"
+                style="
                   display: none;
                   margin-left: 15px;
                   background: #28a745;
@@ -540,20 +991,32 @@
                   cursor: pointer;
                   align-items: center;
                   gap: 5px;
-                ">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                "
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  ></path>
                 </svg>
                 Copy <span id="copySelectedCount">0</span> NV
               </button>
             </div>
-            <div style="
+            <div
+              style="
                 margin-left: auto;
                 font-size: 0.8rem;
                 color: var(--text-muted);
                 opacity: 0.7;
-              ">
+              "
+            >
               * Ngày hệ thống vẫn chạy theo thời gian thực.
             </div>
           </div>
@@ -573,7 +1036,12 @@
               <span class="stat-label">Chưa điểm danh</span>
             </div>
             <div class="stat-item xinoff">
-              <span class="stat-number" id="xinOffCountTop" style="color: #ff9f43">0</span>
+              <span
+                class="stat-number"
+                id="xinOffCountTop"
+                style="color: #ff9f43"
+                >0</span
+              >
               <span class="stat-label">Xin Off</span>
             </div>
           </div>
@@ -609,8 +1077,13 @@
           </div>
 
           <!-- Booking Table Container -->
-          <div class="table-container" id="bookingTableContainer" style="display: none">
-            <div style="
+          <div
+            class="table-container"
+            id="bookingTableContainer"
+            style="display: none"
+          >
+            <div
+              style="
                 display: flex;
                 gap: 8px;
                 margin-bottom: 12px;
@@ -619,11 +1092,21 @@
                 border-radius: 8px;
                 flex-wrap: wrap;
                 align-items: center;
-              ">
-              <input type="date" id="bookingDateFilter" class="status-filter-select" style="min-width: 140px">
-              <select id="bookingShiftFilter" class="status-filter-select" onchange="
+              "
+            >
+              <input
+                type="date"
+                id="bookingDateFilter"
+                class="status-filter-select"
+                style="min-width: 140px"
+              />
+              <select
+                id="bookingShiftFilter"
+                class="status-filter-select"
+                onchange="
                   if (typeof App !== 'undefined') AdminApp.renderBookingTable();
-                ">
+                "
+              >
                 <option value="">Tất cả Ca</option>
                 <option value="22:00-06:00">22:00-06:00</option>
                 <option value="06:00-15:00">06:00-15:00</option>
@@ -633,38 +1116,103 @@
                 <option value="07:00-16:00">07:00-16:00</option>
                 <option value="09:00-18:00">09:00-18:00</option>
               </select>
-              <select id="bookingTotalReqFilter" class="status-filter-select" onchange="
-                  if (typeof AdminApp !== 'undefined') AdminApp.renderBookingTable();
-                ">
+              <select
+                id="bookingTotalReqFilter"
+                class="status-filter-select"
+                onchange="
+                  if (typeof AdminApp !== 'undefined')
+                    AdminApp.renderBookingTable();
+                "
+              >
                 <option value="">Tất cả Total Request</option>
                 <option value=">0">&gt; 0</option>
                 <option value="0">= 0</option>
               </select>
-              <button id="btnCopySelectedBooking" style="display: none; margin-left: 8px; background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; align-items: center; gap: 5px; height: 32px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <button
+                id="btnCopySelectedBooking"
+                style="
+                  display: none;
+                  margin-left: 8px;
+                  background: #28a745;
+                  color: white;
+                  border: none;
+                  padding: 6px 12px;
+                  border-radius: 6px;
+                  font-size: 0.85rem;
+                  font-weight: 600;
+                  cursor: pointer;
+                  align-items: center;
+                  gap: 5px;
+                  height: 32px;
+                "
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path
+                    d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                  ></path>
+                </svg>
                 Copy <span id="copySelectedBookingCount">0</span>
               </button>
-              <input type="text" id="bookingSearch" placeholder="Tìm Ticket, Bộ phận, SOC..." class="status-filter-select" style="min-width: 180px; flex: 1" oninput="
+              <input
+                type="text"
+                id="bookingSearch"
+                placeholder="Tìm Ticket, Bộ phận, SOC..."
+                class="status-filter-select"
+                style="min-width: 180px; flex: 1"
+                oninput="
                   if (typeof App !== 'undefined') AdminApp.renderBookingTable();
-                ">
-              <button class="btn btn-sm" id="bookingRefreshBtn" style="
+                "
+              />
+              <button
+                class="btn btn-sm"
+                id="bookingRefreshBtn"
+                style="
                   background: var(--surface);
                   color: var(--text);
                   border: 1px solid var(--border);
                   padding: 8px 12px;
                   border-radius: 6px;
                   cursor: pointer;
-                ">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle">
+                "
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  style="vertical-align: middle"
+                >
                   <path d="M23 4v6h-6M1 20v-6h6"></path>
-                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  <path
+                    d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                  ></path>
                 </svg>
               </button>
             </div>
             <table class="schedule-table" id="bookingTable">
               <thead id="bookingHead">
                 <tr>
-                  <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAllBooking" onchange="if (typeof AdminApp !== 'undefined') AdminApp.toggleAllBooking(this.checked)" style="cursor:pointer"></th>
+                  <th style="width: 40px; text-align: center">
+                    <input
+                      type="checkbox"
+                      id="selectAllBooking"
+                      onchange="
+                        if (typeof AdminApp !== 'undefined')
+                          AdminApp.toggleAllBooking(this.checked);
+                      "
+                      style="cursor: pointer"
+                    />
+                  </th>
                   <th style="min-width: 60px">Commit &gt;= Req</th>
                   <th>Ticket Number</th>
                   <th>Ngày fulfill</th>
@@ -725,7 +1273,13 @@
     <!-- ==============================================================
      ADMIN LOGIN MODAL
      ============================================================== -->
-    <div class="modal-overlay hidden" id="adminLoginModal" role="dialog" aria-modal="true" aria-labelledby="adminLoginTitle">
+    <div
+      class="modal-overlay hidden"
+      id="adminLoginModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="adminLoginTitle"
+    >
       <div class="modal">
         <div class="modal-header">
           <div class="modal-icon">🔐</div>
@@ -738,14 +1292,21 @@
           </p>
 
           <div class="form-group" style="margin-top: 14px; position: relative">
-            <label for="adminEmailInput" style="
+            <label
+              for="adminEmailInput"
+              style="
                 font-size: 12px;
                 font-weight: 600;
                 color: var(--text-secondary);
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
-              ">Email</label>
-            <button id="changeAdminAccountBtn" class="hidden" style="
+              "
+              >Email</label
+            >
+            <button
+              id="changeAdminAccountBtn"
+              class="hidden"
+              style="
                 position: absolute;
                 right: 0;
                 top: 0;
@@ -755,32 +1316,56 @@
                 font-size: 12px;
                 cursor: pointer;
                 font-weight: 600;
-              ">
+              "
+            >
               Đổi tài khoản
             </button>
             <div class="input-wrapper" style="margin-top: 6px">
-              <input type="email" id="adminEmailInput" placeholder="VD: admin@gmail.com" autocomplete="email">
+              <input
+                type="email"
+                id="adminEmailInput"
+                placeholder="VD: admin@gmail.com"
+                autocomplete="email"
+              />
             </div>
           </div>
 
           <div class="form-group" style="margin-top: 14px">
-            <label for="adminPasswordInput" style="
+            <label
+              for="adminPasswordInput"
+              style="
                 font-size: 12px;
                 font-weight: 600;
                 color: var(--text-secondary);
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
-              ">Mật khẩu</label>
+              "
+              >Mật khẩu</label
+            >
             <div class="input-wrapper" style="margin-top: 6px">
-              <input type="password" id="adminPasswordInput" placeholder="Nhập mật khẩu admin..." autocomplete="current-password">
+              <input
+                type="password"
+                id="adminPasswordInput"
+                placeholder="Nhập mật khẩu admin..."
+                autocomplete="current-password"
+              />
             </div>
-            <span class="form-error hidden" id="adminLoginError" role="alert">Email hoặc mật khẩu không đúng</span>
+            <span class="form-error hidden" id="adminLoginError" role="alert"
+              >Email hoặc mật khẩu không đúng</span
+            >
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" id="adminLoginCancelBtn">Hủy</button>
           <button class="btn btn-primary" id="adminLoginSubmitBtn">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
               <polyline points="10 17 15 12 10 7"></polyline>
               <line x1="15" y1="12" x2="3" y2="12"></line>
@@ -794,13 +1379,29 @@
     <!-- ==============================================================
      MANAGER MODAL (Admin only — update schedule)
      ============================================================== -->
-    <div class="modal-overlay hidden" id="managerModal" role="dialog" aria-modal="true">
+    <div
+      class="modal-overlay hidden"
+      id="managerModal"
+      role="dialog"
+      aria-modal="true"
+    >
       <div class="modal manager-modal">
         <div class="modal-header">
           <div class="modal-icon">📅</div>
           <h3 class="modal-title">Cập Nhật Lịch Làm Việc</h3>
-          <button class="btn-icon" id="managerLogoutBtn" style="margin-left: auto" title="Đóng" aria-label="Đóng">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button
+            class="btn-icon"
+            id="managerLogoutBtn"
+            style="margin-left: auto"
+            title="Đóng"
+            aria-label="Đóng"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
@@ -814,53 +1415,98 @@
           <div class="manager-section">
             <label class="manager-label">
               📋 Dán dữ liệu từ Google Sheets
-              <span class="manager-hint-inline">Ctrl+A → Ctrl+C → Dán vào đây</span>
+              <span class="manager-hint-inline"
+                >Ctrl+A → Ctrl+C → Dán vào đây</span
+              >
             </label>
-            <textarea id="pasteDataArea" class="paste-area" rows="6" placeholder="Dán dữ liệu lịch từ Google Sheets...
-Định dạng: STT | Mã CTV | Họ tên | Định danh | Vị trí | Sau giờ nghỉ | 4h-6h | Màu (red/yellow)"></textarea>
-            <div class="manager-actions-row" style="justify-content: space-between; align-items: center">
+            <textarea
+              id="pasteDataArea"
+              class="paste-area"
+              rows="6"
+              placeholder="Dán dữ liệu lịch từ Google Sheets...
+Định dạng: STT | Mã CTV | Họ tên | Định danh | Vị trí | Sau giờ nghỉ | 4h-6h | Màu (red/yellow)"
+            ></textarea>
+            <div
+              class="manager-actions-row"
+              style="justify-content: space-between; align-items: center"
+            >
               <div style="display: flex; gap: 8px">
                 <button class="btn btn-secondary" id="parsePasteBtn">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline
+                      points="22 12 18 12 15 21 9 3 6 12 2 12"
+                    ></polyline>
                   </svg>
                   Phân tích dữ liệu
                 </button>
                 <button class="btn btn-ghost" id="clearPasteBtn">Xóa</button>
               </div>
               <div style="display: flex; align-items: center; gap: 8px">
-                <label style="
+                <label
+                  style="
                     font-size: 11px;
                     color: var(--text-muted);
                     font-weight: 500;
-                  ">Ngày Lịch:</label>
-                <input type="date" id="scheduleDatePicker" class="form-input" style="
+                  "
+                  >Ngày Lịch:</label
+                >
+                <input
+                  type="date"
+                  id="scheduleDatePicker"
+                  class="form-input"
+                  style="
                     padding: 6px 10px;
                     width: auto;
                     font-size: 12px;
                     background: var(--bg-lighter);
-                  ">
+                  "
+                />
               </div>
             </div>
           </div>
           <div class="manager-preview hidden" id="previewContainer">
-            <label class="manager-label">👁️ Xem trước <span class="preview-count" id="previewCount"></span></label>
+            <label class="manager-label"
+              >👁️ Xem trước <span class="preview-count" id="previewCount"></span
+            ></label>
             <div class="preview-scroll" id="previewTableWrap"></div>
           </div>
         </div>
         <div class="modal-footer manager-footer">
-          <button class="btn btn-ghost" id="clearScheduleBtn" style="color: var(--error); border-color: rgba(255, 71, 87, 0.25)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button
+            class="btn btn-ghost"
+            id="clearScheduleBtn"
+            style="color: var(--error); border-color: rgba(255, 71, 87, 0.25)"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              ></path>
             </svg>
             Xóa lịch ca
           </button>
           <div style="display: flex; gap: 8px">
             <button class="btn btn-ghost" id="managerCloseBtn">Đóng</button>
             <button class="btn btn-success" id="saveScheduleBtn" disabled="">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+                ></path>
                 <polyline points="17 21 17 13 7 13 7 21"></polyline>
                 <polyline points="7 3 7 8 15 8"></polyline>
               </svg>
@@ -874,7 +1520,13 @@
     <!-- ==============================================================
      CONFIRM ATTENDANCE MODAL
      ============================================================== -->
-    <div class="modal-overlay hidden" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div
+      class="modal-overlay hidden"
+      id="confirmModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+    >
       <div class="modal">
         <div class="modal-header">
           <div class="modal-icon" id="modalIcon">👤</div>
@@ -883,16 +1535,20 @@
         <div class="modal-body">
           <div class="employee-card-preview">
             <div class="preview-item">
-              <span class="preview-label">Mã NV</span><span class="preview-value code" id="previewId"></span>
+              <span class="preview-label">Mã NV</span
+              ><span class="preview-value code" id="previewId"></span>
             </div>
             <div class="preview-item">
-              <span class="preview-label">Họ tên</span><span class="preview-value" id="previewName"></span>
+              <span class="preview-label">Họ tên</span
+              ><span class="preview-value" id="previewName"></span>
             </div>
             <div class="preview-item">
-              <span class="preview-label">Vị trí</span><span class="preview-value" id="previewPosition"></span>
+              <span class="preview-label">Vị trí</span
+              ><span class="preview-value" id="previewPosition"></span>
             </div>
             <div class="preview-item">
-              <span class="preview-label">Thời gian</span><span class="preview-value" id="previewTime"></span>
+              <span class="preview-label">Thời gian</span
+              ><span class="preview-value" id="previewTime"></span>
             </div>
             <div class="preview-item" id="previewPhoneRow">
               <span class="preview-label">SDT Zalo</span>
@@ -904,7 +1560,12 @@
         <div class="modal-footer">
           <button class="btn btn-ghost" id="cancelModal">Hủy</button>
           <button class="btn btn-success" id="confirmAttendance">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
             Xác nhận có mặt
@@ -922,13 +1583,20 @@
         </div>
         <div class="modal-body" style="padding: 16px">
           <div class="setting-group" style="margin-top: 15px">
-            <label style="
+            <label
+              style="
                 display: block;
                 margin-bottom: 5px;
                 color: var(--text-muted);
                 font-size: 13px;
-              ">Liên Kết Hệ Thống (Google Apps Script API)</label>
-            <input type="text" id="apiLinkInput" placeholder="Dán Web App URL vào đây..." style="
+              "
+              >Liên Kết Hệ Thống (Google Apps Script API)</label
+            >
+            <input
+              type="text"
+              id="apiLinkInput"
+              placeholder="Dán Web App URL vào đây..."
+              style="
                 width: 100%;
                 padding: 8px;
                 border-radius: 4px;
@@ -936,7 +1604,8 @@
                 background: rgba(255, 255, 255, 0.05);
                 color: white;
                 font-family: inherit;
-              ">
+              "
+            />
             <div style="font-size: 11px; color: #aaa; margin-top: 5px">
               Hệ thống sẽ đồng bộ Realtime nếu có link này. (Để trống để dùng
               thử Offline).
@@ -947,14 +1616,16 @@
           <div class="reg-date-config">
             <label>📅 Cấu Hình Ngày Lịch Làm Việc Lịch</label>
             <div class="reg-date-row">
-              <input type="date" id="regDateFrom" title="Từ ngày">
+              <input type="date" id="regDateFrom" title="Từ ngày" />
               <span>đến</span>
-              <input type="date" id="regDateTo" title="Đến ngày">
+              <input type="date" id="regDateTo" title="Đến ngày" />
             </div>
             <div style="font-size: 11px; color: #aaa; margin-top: 6px">
               Nhân sự chỉ được lịch làm việc trong khoảng ngày này.
             </div>
-            <button id="btnResetRegistrations" style="
+            <button
+              id="btnResetRegistrations"
+              style="
                 margin-top: 12px;
                 background: #dc3545;
                 color: white;
@@ -967,15 +1638,27 @@
                 display: flex;
                 align-items: center;
                 gap: 6px;
-              ">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              "
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                ></path>
               </svg>
               Xóa toàn bộ lịch làm việc cũ
             </button>
           </div>
         </div>
-        <div class="modal-footer" style="
+        <div
+          class="modal-footer"
+          style="
             display: flex;
             justify-content: flex-end;
             align-items: center;
@@ -983,7 +1666,8 @@
             border-top: 1px solid var(--border);
             background: var(--bg-panel);
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-          ">
+          "
+        >
           <div style="display: flex; gap: 10px">
             <button class="btn btn-ghost" id="settingsCancelBtn">Hủy</button>
             <button class="btn btn-primary" id="settingsSaveBtn">
@@ -1011,19 +1695,37 @@
         </div>
 
         <div style="padding: 20px; text-align: center">
-          <button class="btn btn-outline" onclick="Utils.showGenericAlertModal('Tính Năng Đã Khóa', 'Chức năng yêu cầu thay đổi lịch hiện đang được tạm khóa theo yêu cầu. Vui lòng liên hệ Admin để biết thêm chi tiết.', '🔒')" style="
+          <button
+            class="btn btn-outline"
+            onclick="
+              Utils.showGenericAlertModal(
+                'Tính Năng Đã Khóa',
+                'Chức năng yêu cầu thay đổi lịch hiện đang được tạm khóa theo yêu cầu. Vui lòng liên hệ Admin để biết thêm chi tiết.',
+                '🔒',
+              )
+            "
+            style="
               width: 100%;
               border-radius: 12px;
               padding: 14px;
               font-weight: 600;
               opacity: 0.5;
               cursor: not-allowed;
-            ">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="
+            "
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              style="
                 vertical-align: middle;
                 margin-right: 6px;
                 margin-top: -2px;
-              ">
+              "
+            >
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
@@ -1035,8 +1737,18 @@
       <!-- STEP 1.5: Yêu Cầu Thay Đổi Lịch -->
       <div id="regChangeRequest" style="display: none">
         <div class="reg-header">
-          <button class="reg-header-back" onclick="RegApp.closeChangeRequestModal()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <button
+            class="reg-header-back"
+            onclick="RegApp.closeChangeRequestModal()"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
           </button>
@@ -1053,74 +1765,143 @@
             <div class="form-group" style="margin-bottom: 12px">
               <label>Chọn Ca Muốn Đổi</label>
               <div class="cr-shift-cards">
-                <div class="reg-shift-card selected" onclick="RegApp.selectCRShift('CA_NGAY', this)" data-shift="CA_NGAY" data-name="CA NGÀY" style="margin-bottom: 10px">
-                  <div class="reg-shift-icon" style="background: rgba(255, 179, 71, 0.15); color: #ffb347">
+                <div
+                  class="reg-shift-card selected"
+                  onclick="RegApp.selectCRShift('CA_NGAY', this)"
+                  data-shift="CA_NGAY"
+                  data-name="CA NGÀY"
+                  style="margin-bottom: 10px"
+                >
+                  <div
+                    class="reg-shift-icon"
+                    style="background: rgba(255, 179, 71, 0.15); color: #ffb347"
+                  >
                     ☀️
                   </div>
                   <div class="reg-shift-info">
                     <div class="reg-shift-name">CA NGÀY</div>
-                    <div class="reg-shift-time" style="
+                    <div
+                      class="reg-shift-time"
+                      style="
                         color: #ffb347;
                         border-color: rgba(255, 179, 71, 0.2);
-                      ">
+                      "
+                    >
                       06:00-22:00
                     </div>
                   </div>
                   <div class="reg-shift-arrow checkmark">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#28a745"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                   </div>
                 </div>
 
-                <div class="reg-shift-card" onclick="RegApp.selectCRShift('18:00-22:00', this)" data-shift="18:00-22:00" data-name="Ca Tối" style="margin-bottom: 10px">
-                  <div class="reg-shift-icon" style="
+                <div
+                  class="reg-shift-card"
+                  onclick="RegApp.selectCRShift('18:00-22:00', this)"
+                  data-shift="18:00-22:00"
+                  data-name="Ca Tối"
+                  style="margin-bottom: 10px"
+                >
+                  <div
+                    class="reg-shift-icon"
+                    style="
                       background: rgba(150, 150, 255, 0.15);
                       color: #a3a3ff;
-                    ">
+                    "
+                  >
                     🌃
                   </div>
                   <div class="reg-shift-info">
                     <div class="reg-shift-name">Ca Tối</div>
-                    <div class="reg-shift-time" style="
+                    <div
+                      class="reg-shift-time"
+                      style="
                         color: #a3a3ff;
                         border-color: rgba(150, 150, 255, 0.2);
-                      ">
+                      "
+                    >
                       18:00-22:00
                     </div>
                   </div>
                   <div class="reg-shift-arrow checkmark" style="display: none">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#28a745"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                   </div>
-                  <div class="reg-shift-arrow arrow-icon" style="color: var(--text-muted)">
+                  <div
+                    class="reg-shift-arrow arrow-icon"
+                    style="color: var(--text-muted)"
+                  >
                     →
                   </div>
                 </div>
 
-                <div class="reg-shift-card" onclick="RegApp.selectCRShift('22:00-06:00', this)" data-shift="22:00-06:00" data-name="Ca Đêm" style="margin-bottom: 10px">
-                  <div class="reg-shift-icon" style="
+                <div
+                  class="reg-shift-card"
+                  onclick="RegApp.selectCRShift('22:00-06:00', this)"
+                  data-shift="22:00-06:00"
+                  data-name="Ca Đêm"
+                  style="margin-bottom: 10px"
+                >
+                  <div
+                    class="reg-shift-icon"
+                    style="
                       background: rgba(180, 150, 255, 0.15);
                       color: #c4a3ff;
-                    ">
+                    "
+                  >
                     🌙
                   </div>
                   <div class="reg-shift-info">
                     <div class="reg-shift-name">Ca Đêm</div>
-                    <div class="reg-shift-time" style="
+                    <div
+                      class="reg-shift-time"
+                      style="
                         color: #c4a3ff;
                         border-color: rgba(180, 150, 255, 0.2);
-                      ">
+                      "
+                    >
                       22:00-06:00
                     </div>
                   </div>
                   <div class="reg-shift-arrow checkmark" style="display: none">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#28a745"
+                      stroke-width="3"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                   </div>
-                  <div class="reg-shift-arrow arrow-icon" style="color: var(--text-muted)">
+                  <div
+                    class="reg-shift-arrow arrow-icon"
+                    style="color: var(--text-muted)"
+                  >
                     →
                   </div>
                 </div>
@@ -1130,11 +1911,22 @@
             <div class="form-group" style="margin-bottom: 12px">
               <label for="crEmpId">Mã Nhân Viên</label>
               <div class="input-wrapper">
-                <input type="text" id="crEmpId" placeholder="VD: Ops224190" autocomplete="off" autocapitalize="none" style="text-transform: uppercase">
+                <input
+                  type="text"
+                  id="crEmpId"
+                  placeholder="VD: Ops224190"
+                  autocomplete="off"
+                  autocapitalize="none"
+                  style="text-transform: uppercase"
+                />
               </div>
             </div>
 
-            <button class="reg-submit-btn" onclick="RegApp.searchChangeRequest()" style="margin-bottom: 0">
+            <button
+              class="reg-submit-btn"
+              onclick="RegApp.searchChangeRequest()"
+              style="margin-bottom: 0"
+            >
               🔍 Tra cứu lịch
             </button>
           </div>
@@ -1147,7 +1939,11 @@
               </div>
               <div class="ri-item">
                 <span class="ri-label">Ca đang chọn</span>
-                <span class="ri-val" id="crShiftName" style="color: var(--primary)"></span>
+                <span
+                  class="ri-val"
+                  id="crShiftName"
+                  style="color: var(--primary)"
+                ></span>
               </div>
             </div>
 
@@ -1162,7 +1958,10 @@
               </table>
             </div>
 
-            <button id="crSubmitBtn" class="btn" style="
+            <button
+              id="crSubmitBtn"
+              class="btn"
+              style="
                 width: 100%;
                 padding: 14px;
                 font-weight: bold;
@@ -1170,7 +1969,10 @@
                 border-radius: 12px;
                 background: var(--text-muted);
                 cursor: not-allowed;
-              " disabled="" onclick="RegApp.submitChangeRequest()">
+              "
+              disabled=""
+              onclick="RegApp.submitChangeRequest()"
+            >
               Gửi yêu cầu thay đổi
             </button>
           </div>
@@ -1181,7 +1983,14 @@
       <div id="regStep2" style="display: none">
         <div class="reg-header">
           <button class="reg-header-back" id="regBackToStep1">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
               <path d="M19 12H5M12 19l-7-7 7-7"></path>
             </svg>
           </button>
@@ -1204,43 +2013,87 @@
           <div class="reg-info-section">
             <div class="reg-section-title">Thông tin cá nhân</div>
             <div class="form-group">
-              <label for="regEmpId">Mã Nhân Viên <span class="required">*</span></label>
+              <label for="regEmpId"
+                >Mã Nhân Viên <span class="required">*</span></label
+              >
               <div class="input-wrapper">
-                <input type="text" id="regEmpId" placeholder="VD: Ops224190" autocomplete="off" autocapitalize="none">
+                <input
+                  type="text"
+                  id="regEmpId"
+                  placeholder="VD: Ops224190"
+                  autocomplete="off"
+                  autocapitalize="none"
+                />
               </div>
             </div>
             <div class="form-group">
-              <label for="regEmpName">Họ và Tên <span class="required">*</span></label>
+              <label for="regEmpName"
+                >Họ và Tên <span class="required">*</span></label
+              >
               <div class="input-wrapper">
-                <input type="text" id="regEmpName" placeholder="Nguyễn Văn A" autocomplete="off">
+                <input
+                  type="text"
+                  id="regEmpName"
+                  placeholder="Nguyễn Văn A"
+                  autocomplete="off"
+                />
               </div>
             </div>
             <div class="form-group">
-              <label for="regEmpPhone">Số điện thoại <span class="required">*</span></label>
+              <label for="regEmpPhone"
+                >Số điện thoại <span class="required">*</span></label
+              >
               <div class="input-wrapper">
-                <input type="tel" id="regEmpPhone" placeholder="0912 345 678" autocomplete="tel">
+                <input
+                  type="tel"
+                  id="regEmpPhone"
+                  placeholder="0912 345 678"
+                  autocomplete="tel"
+                />
               </div>
             </div>
             <div class="form-group">
-              <label>Bạn là OS NAM hay OS NỮ? <span class="required">*</span></label>
+              <label
+                >Bạn là OS NAM hay OS NỮ? <span class="required">*</span></label
+              >
               <div style="display: flex; gap: 20px; margin-top: 10px">
-                <label style="
+                <label
+                  style="
                     display: flex;
                     align-items: center;
                     gap: 8px;
                     cursor: pointer;
-                  ">
-                  <input type="radio" name="regOsGender" value="OS NAM" style="width: 18px; height: 18px" required="">
-                  <span style="font-size: 15px; color: var(--text-main)">OS NAM</span>
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="regOsGender"
+                    value="OS NAM"
+                    style="width: 18px; height: 18px"
+                    required=""
+                  />
+                  <span style="font-size: 15px; color: var(--text-main)"
+                    >OS NAM</span
+                  >
                 </label>
-                <label style="
+                <label
+                  style="
                     display: flex;
                     align-items: center;
                     gap: 8px;
                     cursor: pointer;
-                  ">
-                  <input type="radio" name="regOsGender" value="OS NỮ" style="width: 18px; height: 18px" required="">
-                  <span style="font-size: 15px; color: var(--text-main)">OS NỮ</span>
+                  "
+                >
+                  <input
+                    type="radio"
+                    name="regOsGender"
+                    value="OS NỮ"
+                    style="width: 18px; height: 18px"
+                    required=""
+                  />
+                  <span style="font-size: 15px; color: var(--text-main)"
+                    >OS NỮ</span
+                  >
                 </label>
               </div>
             </div>
@@ -1253,7 +2106,10 @@
                 Lịch làm việc ca làm việc <span class="required">*</span>
               </div>
             </div>
-            <div class="reg-table-wrap" style="border: none; border-radius: 0; margin-bottom: 0">
+            <div
+              class="reg-table-wrap"
+              style="border: none; border-radius: 0; margin-bottom: 0"
+            >
               <table class="reg-table" id="regTable">
                 <thead>
                   <tr>
@@ -1293,10 +2149,20 @@
           <div class="form-group" style="margin-bottom: 12px">
             <label for="vsEmpId">Mã Nhân Viên</label>
             <div class="input-wrapper">
-              <input type="text" id="vsEmpId" placeholder="VD: Ops224190" autocomplete="off" autocapitalize="none">
+              <input
+                type="text"
+                id="vsEmpId"
+                placeholder="VD: Ops224190"
+                autocomplete="off"
+                autocapitalize="none"
+              />
             </div>
           </div>
-          <button class="reg-submit-btn" id="vsLookupBtn" style="margin-bottom: 0">
+          <button
+            class="reg-submit-btn"
+            id="vsLookupBtn"
+            style="margin-bottom: 0"
+          >
             🔍 Tra cứu lịch
           </button>
         </div>
@@ -1310,19 +2176,35 @@
     </div>
 
     <!-- Toast Notifications -->
-    <div class="toast-container" id="toastContainer" aria-live="assertive"></div>
+    <div
+      class="toast-container"
+      id="toastContainer"
+      aria-live="assertive"
+    ></div>
 
     <!-- BOTTOM NAVIGATION BAR -->
     <nav class="emp-bottom-nav" id="empBottomNav">
-      <button class="emp-nav-item active" id="navDiemDanh" onclick="EmpNav.show('diemDanh')">
+      <button
+        class="emp-nav-item active"
+        id="navDiemDanh"
+        onclick="EmpNav.show('diemDanh')"
+      >
         <span class="nav-icon">📍</span>
         <span>Điểm danh</span>
       </button>
-      <button class="emp-nav-item" id="navDangKy" onclick="EmpNav.show('dangKy')">
+      <button
+        class="emp-nav-item"
+        id="navDangKy"
+        onclick="EmpNav.show('dangKy')"
+      >
         <span class="nav-icon">📅</span>
         <span>Lịch làm việc lịch</span>
       </button>
-      <button class="emp-nav-item" id="navXemLich" onclick="EmpNav.show('xemLich')">
+      <button
+        class="emp-nav-item"
+        id="navXemLich"
+        onclick="EmpNav.show('xemLich')"
+      >
         <span class="nav-icon">🔍</span>
         <span>Xem lịch</span>
       </button>
@@ -1331,16 +2213,27 @@
     <!-- ==============================================================
      GENERIC SUCCESS MODAL
      ============================================================== -->
-    
 
     <!-- ==============================================================
      ADMIN NOTIFICATION MODAL
      ============================================================== -->
-    <div class="modal-overlay hidden" id="adminNotifModal" role="dialog" aria-modal="true">
+    <div
+      class="modal-overlay hidden"
+      id="adminNotifModal"
+      role="dialog"
+      aria-modal="true"
+    >
       <div class="modal" style="max-width: 600px">
         <div class="modal-header">
           <div class="modal-icon" style="background: #ff4b4b22; color: #ff4b4b">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
@@ -1350,11 +2243,13 @@
         </div>
         <div class="modal-body">
           <div id="adminNotifList">
-            <p style="
+            <p
+              style="
                 text-align: center;
                 color: var(--text-muted);
                 padding: 20px;
-              ">
+              "
+            >
               Không có yêu cầu nào đang chờ duyệt.
             </p>
           </div>
@@ -1365,12 +2260,26 @@
     <!-- ==============================================================
      ADMIN LOG MODAL
      ============================================================== -->
-    <div class="modal-overlay hidden" id="adminLogModal" role="dialog" aria-modal="true">
-      <div class="modal" style="max-width: 800px; width: 90%;">
+    <div
+      class="modal-overlay hidden"
+      id="adminLogModal"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div class="modal" style="max-width: 800px; width: 90%">
         <div class="modal-header">
           <div class="modal-icon" style="background: #e2e8f0; color: #475569">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+              ></path>
               <polyline points="14 2 14 8 20 8"></polyline>
               <line x1="16" y1="13" x2="8" y2="13"></line>
               <line x1="16" y1="17" x2="8" y2="17"></line>
@@ -1380,21 +2289,38 @@
           <h3 class="modal-title">Lịch Sử Chỉnh Sửa File</h3>
           <button class="modal-close" id="closeAdminLogModal">×</button>
         </div>
-        <div class="modal-body" style="padding: 0;">
-          <div style="overflow-x: auto; max-height: 400px; padding-bottom: 20px;">
-            <table class="reg-table" id="adminLogTable" style="margin: 0; min-width: 700px; margin-bottom: 0;">
-              <thead style="position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">
+        <div class="modal-body" style="padding: 0">
+          <div
+            style="overflow-x: auto; max-height: 400px; padding-bottom: 20px"
+          >
+            <table
+              class="reg-table"
+              id="adminLogTable"
+              style="margin: 0; min-width: 700px; margin-bottom: 0"
+            >
+              <thead
+                style="
+                  position: sticky;
+                  top: 0;
+                  background: var(--bg-surface);
+                  z-index: 1;
+                "
+              >
                 <tr>
-                  <th style="padding: 12px 16px;">THỜI GIAN</th>
-                  <th style="padding: 12px 16px;">TÊN SHEET</th>
-                  <th style="padding: 12px 16px;">Ô</th>
-                  <th style="padding: 12px 16px;">TỪ (CŨ)</th>
-                  <th style="padding: 12px 16px;">THÀNH (MỚI)</th>
-                  <th style="padding: 12px 16px;">NGƯỜI SỬA</th>
+                  <th style="padding: 12px 16px">THỜI GIAN</th>
+                  <th style="padding: 12px 16px">TÊN SHEET</th>
+                  <th style="padding: 12px 16px">Ô</th>
+                  <th style="padding: 12px 16px">TỪ (CŨ)</th>
+                  <th style="padding: 12px 16px">THÀNH (MỚI)</th>
+                  <th style="padding: 12px 16px">NGƯỜI SỬA</th>
                 </tr>
               </thead>
               <tbody id="adminLogTableBody">
-                <tr><td colspan="6" style="text-align: center; padding: 20px;">Đang tải dữ liệu...</td></tr>
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 20px">
+                    Đang tải dữ liệu...
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -1405,38 +2331,69 @@
     <!-- ==============================================================
      ADMIN APPROVAL MODAL
      ============================================================== -->
-    <div class="modal-overlay hidden" id="adminApproveModal" role="dialog" aria-modal="true">
+    <div
+      class="modal-overlay hidden"
+      id="adminApproveModal"
+      role="dialog"
+      aria-modal="true"
+    >
       <div class="modal">
         <div class="modal-header">
           <div class="modal-icon" style="background: #43e97b22; color: #43e97b">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
           </div>
           <h3 class="modal-title">Duyệt Yêu Cầu</h3>
-          <button class="modal-close" id="closeAdminApproveModal">
-            ×
-          </button>
+          <button class="modal-close" id="closeAdminApproveModal">×</button>
         </div>
         <div class="modal-body" style="text-align: center">
           <p>
             Bạn có chắc chắn muốn duyệt yêu cầu thay đổi lịch của nhân sự này
             không?
           </p>
-          <p style="
+          <p
+            style="
               font-size: 13px;
               color: var(--text-muted);
               margin-bottom: 20px;
-            ">
+            "
+          >
             Dữ liệu sẽ được ghi đè trực tiếp lên Google Sheets và không thể hoàn
             tác.
           </p>
-          <div id="adminApproveDetails" style="text-align: left; margin: 15px 0; max-height: 250px; overflow-y: auto; background: var(--bg-dark); padding: 10px; border-radius: 8px;"></div>
+          <div
+            id="adminApproveDetails"
+            style="
+              text-align: left;
+              margin: 15px 0;
+              max-height: 250px;
+              overflow-y: auto;
+              background: var(--bg-dark);
+              padding: 10px;
+              border-radius: 8px;
+            "
+          ></div>
           <div style="display: flex; gap: 10px; justify-content: center">
-            <button class="btn btn-primary" id="confirmApproveBtn" style="padding: 10px 30px">
+            <button
+              class="btn btn-primary"
+              id="confirmApproveBtn"
+              style="padding: 10px 30px"
+            >
               Duyệt
             </button>
-            <button class="btn btn-outline" id="rejectApproveBtn" style="padding: 10px 30px; border-color: #ff4b4b; color: #ff4b4b">
+            <button
+              class="btn btn-outline"
+              id="rejectApproveBtn"
+              style="padding: 10px 30px; border-color: #ff4b4b; color: #ff4b4b"
+            >
               Từ chối
             </button>
           </div>
@@ -1447,10 +2404,9 @@
     <!-- ==============================================================
      GENERIC ALERT MODAL
      ============================================================== -->
-    
 
     <!-- Scripts -->
-    
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script defer="" src="config.js?v=3"></script>
@@ -1462,83 +2418,164 @@
     <script defer="" src="js/admin/adminUI.js?v=1784750999999"></script>
     <script defer="" src="js/admin/adminRequests.js?v=1784750999999"></script>
     <script defer="" src="js/admin/adminBooking.js?v=1784750999999"></script>
-    <script defer="" src="js/admin/adminRegistration.js?v=1784750999999"></script>
+    <script
+      defer=""
+      src="js/admin/adminRegistration.js?v=1784750999999"
+    ></script>
     <script defer="" src="js/admin/adminManager.js?v=1784750999999"></script>
     <script defer="" src="js/admin/adminLogs.js?v=1784750999999"></script>
     <script defer="" src="app.js?v=5"></script>
     <!-- Registration Module -->
-    <script defer="" src="js/registration/regValidation.js?v=1784750999999"></script>
+    <script
+      defer=""
+      src="js/registration/regValidation.js?v=1784750999999"
+    ></script>
     <script defer="" src="js/registration/regUI.js?v=1784750999999"></script>
     <script defer="" src="js/registration/regAPI.js?v=1784750999999"></script>
     <script defer="" src="js/registration/regApp.js?v=1784750999999"></script>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js').then(registration => {
-            console.log('SW registered: ', registration);
-          }).catch(registrationError => {
-            console.log('SW registration failed: ', registrationError);
-          });
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .then((registration) => {
+              console.log("SW registered: ", registration);
+            })
+            .catch((registrationError) => {
+              console.log("SW registration failed: ", registrationError);
+            });
         });
       }
     </script>
-  
+
     <!-- ==============================================================
      REGISTRATION MANAGER MODAL
      ============================================================== -->
-    <div class="modal-overlay hidden" id="regManagerModal" role="dialog" aria-modal="true" aria-labelledby="regManagerTitle">
-      <div class="modal" style="max-width: 900px; width: 95%;">
+    <div
+      class="modal-overlay hidden"
+      id="regManagerModal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="regManagerTitle"
+    >
+      <div class="modal" style="max-width: 900px; width: 95%">
         <div class="modal-header">
           <div class="modal-icon">📝</div>
-          <h3 class="modal-title" id="regManagerTitle">Nhập Dữ Liệu Lịch Làm Việc Thủ Công</h3>
+          <h3 class="modal-title" id="regManagerTitle">
+            Nhập Dữ Liệu Lịch Làm Việc Thủ Công
+          </h3>
         </div>
-        <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
-          
-          
-          
-          <div class="manager-section" style="margin-bottom: 20px;">
-            <label class="manager-label" style="text-transform: uppercase; font-weight: 600; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; display: block; letter-spacing: 0.5px;">Chọn ca cần cập nhật:</label>
+        <div class="modal-body" style="max-height: 80vh; overflow-y: auto">
+          <div class="manager-section" style="margin-bottom: 20px">
+            <label
+              class="manager-label"
+              style="
+                text-transform: uppercase;
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin-bottom: 12px;
+                display: block;
+                letter-spacing: 0.5px;
+              "
+              >Chọn ca cần cập nhật:</label
+            >
             <div class="manager-shift-btns" id="regManagerShiftBtns"></div>
           </div>
-          <div class="manager-section" style="margin-bottom: 10px;">
-            <label class="manager-label" style="text-transform: uppercase; font-weight: 600; font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+          <div class="manager-section" style="margin-bottom: 10px">
+            <label
+              class="manager-label"
+              style="
+                text-transform: uppercase;
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--text-secondary);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+              "
+            >
               📋 Dán dữ liệu từ Google Sheets
-              <span class="manager-hint-inline" style="font-size: 12px; color: #6c757d; font-weight: normal; text-transform: none;">Ctrl+A → Ctrl+C → Dán vào đây</span>
+              <span
+                class="manager-hint-inline"
+                style="
+                  font-size: 12px;
+                  color: #6c757d;
+                  font-weight: normal;
+                  text-transform: none;
+                "
+                >Ctrl+A → Ctrl+C → Dán vào đây</span
+              >
             </label>
           </div>
 
           <div class="paste-area">
-            <textarea id="regPasteInput" class="paste-input" placeholder="Dán dữ liệu lịch làm việc tại đây (Ctrl+V)..."></textarea>
+            <textarea
+              id="regPasteInput"
+              class="paste-input"
+              placeholder="Dán dữ liệu lịch làm việc tại đây (Ctrl+V)..."
+            ></textarea>
             <div class="paste-actions">
-                <button class="btn btn-secondary" id="parseRegPasteBtn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    Đọc dữ liệu
-                </button>
-                <button class="btn btn-ghost" id="clearRegPasteBtn">Xóa</button>
+              <button class="btn btn-secondary" id="parseRegPasteBtn">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  ></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Đọc dữ liệu
+              </button>
+              <button class="btn btn-ghost" id="clearRegPasteBtn">Xóa</button>
             </div>
           </div>
-          
+
           <div id="regPreviewArea" class="preview-area hidden">
-            <h4>Xem trước dữ liệu lịch làm việc (<span id="regPreviewCount">0</span> dòng)</h4>
-            <div class="table-responsive" style="max-height: 300px;">
-                <table class="table" id="regPreviewTable">
-                    <thead></thead>
-                    <tbody></tbody>
-                </table>
+            <h4>
+              Xem trước dữ liệu lịch làm việc (<span id="regPreviewCount"
+                >0</span
+              >
+              dòng)
+            </h4>
+            <div class="table-responsive" style="max-height: 300px">
+              <table class="table" id="regPreviewTable">
+                <thead></thead>
+                <tbody></tbody>
+              </table>
             </div>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button class="btn btn-ghost" id="regManagerCloseBtn">Đóng</button>
           <button class="btn btn-success" id="saveRegBtn" disabled="">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"
+              ></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
             Áp dụng lên bảng Lịch Làm Việc
           </button>
         </div>
       </div>
     </div>
-
-  
-
-</body></html>
+  </body>
+</html>
