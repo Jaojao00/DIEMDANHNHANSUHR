@@ -506,6 +506,11 @@ const EmployeeApp = {
           return;
         }
 
+        if (!navigator.onLine) {
+          Utils.showToast("Mất kết nối mạng! Vui lòng kiểm tra lại Wifi/3G của bạn.", "error");
+          return;
+        }
+
         const btn = document.getElementById("requestSubmitBtn");
         try {
           if (btn) {

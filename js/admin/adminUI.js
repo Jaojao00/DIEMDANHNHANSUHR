@@ -122,7 +122,7 @@ Object.assign(AdminApp, {
           ? shift.colHeaders
               .map((_, idx) => {
                 const p = emp.positions ? emp.positions[idx] : "";
-                return `<td><span class="position-tag ${!p ? "empty" : ""}">${p || "Chưa xếp"}</span></td>`;
+                return `<td><span class="position-tag ${!p ? "empty" : ""}" style="cursor: pointer;" onclick="AdminCore.editPosition('${emp.id}', ${idx}, '${p || ""}')" title="Nhấn để cập nhật Vị trí làm việc">${p || "Chưa xếp"}</span></td>`;
               })
               .join("")
           : "";

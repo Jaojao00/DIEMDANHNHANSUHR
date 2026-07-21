@@ -1066,6 +1066,42 @@ Object.assign(AdminApp, {
     }
   },
 
+  editPosition: async (empId, colIndex, currentValue) => {
+    const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+    if (!shift || !shift.colHeaders || !shift.colHeaders[colIndex]) return;
+
+    const colName = shift.colHeaders[colIndex];
+    
+    const { value: newPosition } = await Swal.fire({
+      title: 'Cập Nhật Vị Trí Làm Việc',
+      html: `Nhập vị trí mới cho cột <b>${colName}</b>:<br><br><i>Để trống nếu muốn đặt là "Chưa xếp"</i>`,
+      input: 'text',
+      inputValue: currentValue,
+      background: '#151928',
+      color: '#fff',
+      showCancelButton: true,
+      confirmButtonText: "Cập nhật",
+      cancelButtonText: "Hủy",
+      customClass: {
+        popup: 'agr-swal-popup',
+        title: 'agr-swal-title',
+        confirmButton: 'agr-swal-confirm',
+        cancelButton: 'agr-swal-cancel',
+        input: 'agr-swal-input'
+      }
+    });
+
+    if (newPosition !== undefined) { // undefined means cancelled, empty string means clear
+      const emp = State.scheduleData.find(e => e.id.toLowerCase() === empId.toLowerCase());
+      if (emp) {
+        if (!emp.positions) emp.positions = [];
+        emp.positions[colIndex] = newPosition.trim();
+        AdminUI.renderSchedule();
+        DataManager.saveSchedule(State.selectedShiftId, State.scheduleData);
+      }
+    }
+  },
+
   changeConfirmStatus: async (empId, currentStatus) => {
     let defaultStatus = currentStatus;
     if (currentStatus === "xin off") defaultStatus = "xin off";
