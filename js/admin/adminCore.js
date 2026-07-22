@@ -474,6 +474,63 @@ const AdminApp = {
       });
     }
 
+    const exportRegExcelBtn = document.getElementById("exportRegExcelBtn");
+    if (exportRegExcelBtn) {
+      exportRegExcelBtn.addEventListener("click", () => {
+        if (!State.selectedShiftId) return;
+        
+        const dataList = AdminApp.allShiftRegs ? AdminApp.allShiftRegs.filter(r => r.shiftId === State.selectedShiftId) : [];
+        if (dataList.length === 0) {
+          Utils.showToast("Không có dữ liệu để xuất!", "warning");
+          return;
+        }
+
+        const escapeCSV = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
+        let csvContent = "\uFEFF"; // BOM for UTF-8 Excel support
+        
+        // Define Headers
+        const headers = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
+        const dates = AdminApp.regDates || [];
+        dates.forEach(d => {
+           headers.push(d.label || d.date);
+        });
+        csvContent += headers.map(escapeCSV).join(",") + "\n";
+
+        // Generate Rows
+        dataList.forEach(r => {
+           const row = [
+             r.timestamp || "",
+             r.empId || "",
+             r.name || r.empName || "",
+             r.empPhone || r.phone || "",
+             r.osGender || "",
+             r.shiftId || "",
+             r.shiftLabel || ""
+           ];
+           
+           dates.forEach((d, i) => {
+             let choice = "";
+             if (r.choices && Array.isArray(r.choices)) {
+                 choice = r.choices[i] || "";
+             } else if (r.selections && Array.isArray(r.selections)) {
+                 choice = r.selections[i]?.choice || "";
+             }
+             row.push(choice);
+           });
+           csvContent += row.map(escapeCSV).join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `LichLamViec_${State.selectedShiftId}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+    }
+
     if (parseRegPasteBtn) {
       parseRegPasteBtn.addEventListener("click", () => {
         const text = regPasteInput.value.trim();
