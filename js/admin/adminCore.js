@@ -479,20 +479,27 @@ const AdminApp = {
       exportRegExcelBtn.addEventListener("click", () => {
         if (!State.selectedShiftId) return;
         
-        const dataList = AdminApp.allShiftRegs ? AdminApp.allShiftRegs.filter(r => r.shiftId === State.selectedShiftId) : [];
-        if (dataList.length === 0) {
+        const payload = AdminApp.currentRegPayload;
+        if (!payload || !payload.data || payload.data.length === 0) {
           Utils.showToast("Không có dữ liệu để xuất!", "warning");
           return;
         }
 
+        const dataList = payload.data;
         const escapeCSV = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
         let csvContent = "\uFEFF"; // BOM for UTF-8 Excel support
         
         // Define Headers
         const headers = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-        const dates = AdminApp.regDates || [];
+        let dates = payload.headers || [];
+        
+        // Fallback if headers is empty but selections exist
+        if (dates.length === 0 && dataList[0].selections && Array.isArray(dataList[0].selections)) {
+            dates = dataList[0].selections.map(s => s.label || s.date);
+        }
+
         dates.forEach(d => {
-           headers.push(d.label || d.date);
+           headers.push(d);
         });
         csvContent += headers.map(escapeCSV).join(",") + "\n";
 
