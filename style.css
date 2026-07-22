@@ -2199,14 +2199,16 @@ textarea.form-input {
   transition:
     border-color 0.2s,
     background 0.2s,
-    transform 0.15s;
+    transform 0.15s,
+    box-shadow 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 .reg-shift-card:hover,
 .reg-shift-card:active {
-  border-color: var(--agr-red);
-  background: var(--bg-hover);
-  transform: translateY(-1px);
+  border-color: var(--card-color, var(--agr-red));
+  background: color-mix(in srgb, var(--card-color, var(--agr-red)) 8%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px color-mix(in srgb, var(--card-color, var(--agr-red)) 25%, transparent);
 }
 .reg-shift-card .rsc-icon {
   width: 44px;
@@ -2234,6 +2236,11 @@ textarea.form-input {
 .reg-shift-card .rsc-arrow {
   color: var(--text-muted);
   font-size: 18px;
+  transition: transform 0.2s, color 0.2s;
+}
+.reg-shift-card:hover .rsc-arrow {
+  color: var(--card-color, var(--agr-red));
+  transform: translateX(4px);
 }
 .reg-info-section {
   background: var(--bg-card);

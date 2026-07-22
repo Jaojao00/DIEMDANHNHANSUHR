@@ -78,7 +78,7 @@ const RegAPI = {
     try {
       const resReq = await fetch(apiLink, { 
         method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'get_change_requests' }) 
       });
       if (resReq.ok) {
@@ -126,7 +126,7 @@ const RegAPI = {
     try {
       const resp = await fetch(apiLink, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
       
@@ -174,7 +174,7 @@ const RegAPI = {
     try {
       const res = await fetch(apiLink, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
       
