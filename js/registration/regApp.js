@@ -98,23 +98,23 @@ const RegApp = {
     const container = document.getElementById('regShiftList');
     if (!container || typeof State === 'undefined' || !State.shifts) return;
 
-    const regShifts = [
-      { id: 'CA_NGAY', label: 'CA NGÀY', icon: '☀️', color: '#ffb347', displayTime: '06:00-22:00' },
-      State.shifts.find(s => s.id === '18:00-22:00'),
-      State.shifts.find(s => s.id === '22:00-06:00')
-    ].filter(Boolean);
+    const s1 = State.shifts.find(s => s.id === '18:00-22:00');
+    const s2 = State.shifts.find(s => s.id === '22:00-06:00');
 
+    const regShifts = [
+      { id: 'CA_NGAY', label: 'CA NGÀY', icon: '☀️', color: '#ffb347', displayTime: '06:00-22:00' }
+    ];
+
+    if (s1) regShifts.push({ ...s1, label: s1.name || 'Ca Tối', icon: '🌙', color: '#5c6bc0', displayTime: s1.id });
+    if (s2) regShifts.push({ ...s2, label: s2.name || 'Ca Đêm', icon: '🌌', color: '#7e57c2', displayTime: s2.id });
+
+    RegApp._cachedRegShifts = regShifts;
     container.innerHTML = RegUI.renderShiftList(regShifts, 'RegApp.selectShift');
   },
 
   selectShift: (shiftId) => {
-    let shift;
-    if (shiftId === 'CA_NGAY') {
-      shift = { id: 'CA_NGAY', label: 'CA NGÀY', icon: '☀️', color: '#ffb347', displayTime: '06:00-22:00' };
-    } else {
-      if (typeof State === 'undefined' || !State.shifts) return;
-      shift = State.shifts.find(s => s.id === shiftId);
-    }
+    if (!RegApp._cachedRegShifts) return;
+    const shift = RegApp._cachedRegShifts.find(s => s.id === shiftId);
     if (!shift) return;
     RegApp.selectedShift = shift;
 
@@ -125,8 +125,8 @@ const RegApp = {
 
     if (iconEl) { iconEl.textContent = shift.icon; iconEl.style.background = shift.color + '22'; }
     if (nameEl) nameEl.textContent = shift.label;
-    if (timeEl) timeEl.textContent = shift.id;
-    if (labelEl) labelEl.textContent = `${shift.label} – ${shift.id}`;
+    if (timeEl) timeEl.textContent = shift.displayTime || shift.id;
+    if (labelEl) labelEl.textContent = `${shift.label} – ${shift.displayTime || shift.id}`;
 
     RegApp.renderDateTable();
     RegApp.showStep(2);
