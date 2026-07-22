@@ -218,6 +218,11 @@ const RegApp = {
       return;
     }
 
+    if (!navigator.onLine) {
+      if (typeof Utils !== 'undefined') Utils.showToast('Mất kết nối mạng! Vui lòng kiểm tra lại Wifi/3G của bạn.', 'error');
+      return;
+    }
+
     const btn = document.getElementById('regSubmitBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang gửi...'; }
 
@@ -254,15 +259,41 @@ const RegApp = {
       localStorage.setItem("agr_empPhone", empPhone);
       localStorage.setItem("agr_osGender", osGender);
 
-      if (typeof Utils !== 'undefined') Utils.showToast('✅ Đăng ký lịch thành công!', 'success');
-      if (btn) { btn.disabled = false; btn.textContent = '🚀 Gửi Đăng Ký'; }
+      if (typeof ModalManager !== 'undefined') {
+        let details = [
+          { label: 'Mã Nhân Viên', value: empId.toUpperCase(), valueColor: '#ff5c5c', isHighlight: true },
+          { label: 'Họ và Tên', value: empName },
+          { label: 'Vị Trí', value: payload.shiftLabel, valueColor: '#4fc3f7', isHighlight: true },
+          { label: 'Giai Đoạn', value: currentPeriod }
+        ];
 
-      setTimeout(() => {
-        const vsInput = document.getElementById('vsEmpId');
-        if (vsInput) vsInput.value = empId;
-        EmpNav.show('xemLich');
-        ViewScheduleApp.lookup();
-      }, 800);
+        ModalManager.showModal('success', {
+          title: 'ĐĂNG KÝ THÀNH CÔNG!',
+          message: `Bạn đã gửi lịch làm việc cho vị trí <span style="font-weight:700;color:#4fc3f7">${payload.shiftLabel}</span> thành công!`,
+          details: details
+        }, {
+          icon: '🎉',
+          titleColor: '#00e676',
+          btnText: '✓ Đóng và xem lịch',
+          btnStyle: 'background: linear-gradient(135deg, #00e676, #1de9b6); border: none; color: white;',
+          onClose: () => {
+            const vsInput = document.getElementById('vsEmpId');
+            if (vsInput) vsInput.value = empId;
+            EmpNav.show('xemLich');
+            ViewScheduleApp.lookup();
+          }
+        });
+      } else {
+        if (typeof Utils !== 'undefined') Utils.showToast('🎉 Đăng ký lịch thành công!', 'success');
+        setTimeout(() => {
+          const vsInput = document.getElementById('vsEmpId');
+          if (vsInput) vsInput.value = empId;
+          EmpNav.show('xemLich');
+          ViewScheduleApp.lookup();
+        }, 800);
+      }
+      
+      if (btn) { btn.disabled = false; btn.textContent = '📤 Gửi Đăng Ký'; }
     } else {
       if (typeof Utils !== 'undefined') Utils.showToast(`Lỗi gửi đăng ký: ${result.error || 'Unknown error'}`, 'error');
       if (btn) { btn.disabled = false; btn.textContent = '🚀 Gửi Đăng Ký'; } // Fix the text recovery
