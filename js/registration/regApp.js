@@ -234,12 +234,9 @@ const RegApp = {
       empName:    empName,
       empPhone:   empPhone,
       osGender:   osGender,
-      shiftId:    window.Utils ? window.Utils.getActualSheetName(RegApp.selectedShift.id) : RegApp.selectedShift.id,
+      shiftId:    RegApp.selectedShift.id,
       shiftLabel: RegApp.selectedShift.label,
-      selections: selections.map(s => ({
-        ...s,
-        choice: window.Utils ? window.Utils.getActualSheetName(s.choice) : s.choice
-      })),
+      selections: selections,
       period:     currentPeriod,
       timestamp:  new Date().toISOString()
     };
@@ -549,17 +546,11 @@ const RegApp = {
         empId: RegApp.crOriginalData.empId,
         empName: RegApp.crOriginalData.empName,
         empPhone: phone,
-        shiftId: window.Utils ? window.Utils.getActualSheetName(RegApp.crOriginalData.shiftId) : RegApp.crOriginalData.shiftId,
+        shiftId: RegApp.crOriginalData.shiftId,
         shiftLabel: RegApp.crOriginalData.shiftLabel,
         period: RegApp.crOriginalData.period,
-        oldSelections: RegApp.crOriginalData.selections.map(s => ({
-          ...s,
-          choice: window.Utils ? window.Utils.getActualSheetName(s.choice) : s.choice
-        })),
-        selections: RegApp.crCurrentSelections.map(s => ({
-          ...s,
-          choice: window.Utils ? window.Utils.getActualSheetName(s.choice) : s.choice
-        }))
+        oldSelections: RegApp.crOriginalData.selections,
+        selections: RegApp.crCurrentSelections
       };
       
       const result = await RegAPI.submitChangeRequest(payload);
