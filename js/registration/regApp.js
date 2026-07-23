@@ -243,7 +243,7 @@ const RegApp = {
 
     const result = await RegAPI.submitRegistration(payload);
 
-    if (result.sheetSuccess) {
+    if (result.success || result.sheetSuccess) {
       // Save locally for offline view using standardized key
       const localKey = `agr_reg_${empId}`;
       const localExisting = JSON.parse(localStorage.getItem(localKey) || '[]');
