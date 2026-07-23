@@ -652,7 +652,7 @@ const AdminApp = {
 
         parsedRegData = {
           id: "manual_" + Date.now(),
-          name: "Nhập thủ công " + Utils.formatDateObj(new Date()),
+          name: "Nhập thủ công " + new Date().toLocaleString("vi-VN"),
           headers: dateHeaders,
           data: result
         };
@@ -676,6 +676,48 @@ const AdminApp = {
         regPreviewArea.classList.remove("hidden");
         saveRegBtn.disabled = false;
         Utils.showToast("Đọc thành công " + result.length + " dòng", "success");
+      });
+    }
+
+    // --- Xử lý tải file Excel lên ---
+    const uploadRegExcelBtn = document.getElementById("uploadRegExcelBtn");
+    const regExcelInput = document.getElementById("regExcelInput");
+    
+    if (uploadRegExcelBtn && regExcelInput) {
+      uploadRegExcelBtn.addEventListener("click", () => {
+        regExcelInput.click();
+      });
+      
+      regExcelInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // Chọn sheet đầu tiên
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            
+            // Chuyển đổi thành TSV để dùng lại logic Đọc dữ liệu có sẵn
+            const tsvContent = XLSX.utils.sheet_to_csv(worksheet, { FS: "\t" });
+            
+            if (regPasteInput) {
+               regPasteInput.value = tsvContent;
+               if (parseRegPasteBtn) parseRegPasteBtn.click();
+               Utils.showToast("Đã tải file Excel thành công", "success");
+            }
+          } catch (err) {
+             console.error("Lỗi đọc file Excel:", err);
+             Utils.showToast("Lỗi đọc file Excel. Vui lòng kiểm tra lại định dạng file.", "error");
+          }
+          // Reset input để có thể chọn lại file cũ
+          regExcelInput.value = "";
+        };
+        reader.readAsArrayBuffer(file);
       });
     }
 

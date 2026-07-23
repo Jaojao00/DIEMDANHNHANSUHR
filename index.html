@@ -2416,6 +2416,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script defer="" src="config.js?v=3"></script>
     <script defer="" src="utils.js"></script>
     <script defer="" src="js/ui/modalManager.js?v=1"></script>
@@ -2542,6 +2543,17 @@
                 </svg>
                 Đọc dữ liệu
               </button>
+              
+              <input type="file" id="regExcelInput" accept=".xlsx, .xls, .csv" style="display:none;" />
+              <button class="btn btn-primary" id="uploadRegExcelBtn" style="margin-left: 8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Tải lên File Excel
+              </button>
+              
               <button class="btn btn-outline" id="exportRegExcelBtn" style="color: #4CAF50; border-color: #4CAF50;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
