@@ -179,9 +179,9 @@ const FirestoreService = {
   },
 
   /**
-   * Lấy lịch đăng ký của nhân viên theo empId
+   * Lấy lịch đăng ký của nhân viên theo empId (Cho Employee View)
    * @param {string} empId
-   * @returns {{ periods: Array }}
+   * @returns {Array} Array of raw registration data
    */
   async getRegistrations(empId) {
     try {
@@ -196,48 +196,21 @@ const FirestoreService = {
       const snapshot = await fb.getDocs(q);
 
       if (snapshot.empty) {
-        return { periods: [] };
+        return [];
       }
 
-      const periods = [];
+      const results = [];
       snapshot.forEach((doc) => {
-        const data = doc.data();
-        // Tạo headers từ selections
-        const headers = [
-          "Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT",
-          "Giới tính OS", "Ca", "Tên Ca",
-        ];
-        const dateHeaders = (data.selections || []).map(
-          (s) => s.label || s.date
-        );
-        headers.push(...dateHeaders);
-
-        // Tạo data row
-        const row = [
-          data.timestamp || "",
-          data.empId || "",
-          data.empName || "",
-          data.empPhone || "",
-          data.osGender || "",
-          data.shiftId || "",
-          data.shiftLabel || "",
-        ];
-        (data.selections || []).forEach((s) => {
-          row.push(s.choice || "OFF");
-        });
-
-        periods.push({
+        results.push({
           id: doc.id,
-          name: `${data.shiftLabel || data.shiftId} (${data.period || ""})`,
-          headers: headers,
-          data: [row],
+          ...doc.data()
         });
       });
 
-      return { periods };
+      return results;
     } catch (err) {
       console.error("FirestoreService.getRegistrations error:", err);
-      return { periods: [] };
+      return [];
     }
   },
 

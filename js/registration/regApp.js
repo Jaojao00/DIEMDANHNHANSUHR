@@ -594,24 +594,29 @@ const ViewScheduleApp = {
 
     area.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted)">⏳ Đang tải...</div>';
 
-    const allRegs = await RegAPI.getRegistrations(empId);
+    try {
+      const allRegs = await RegAPI.getRegistrations(empId);
 
-    if (allRegs.length === 0) {
-      area.innerHTML = `
-        <div class="vs-empty-state">
-          <div class="vs-empty-icon">🔍</div>
-          <div>Không tìm thấy lịch đăng ký cho mã: <strong>${empId.toUpperCase()}</strong></div>
-          <div style="font-size:12px;margin-top:8px;color:var(--text-muted)">Bạn có thể chưa đăng ký lịch hoặc nhập sai mã nhân viên.</div>
-        </div>
-      `;
-      return;
+      if (!allRegs || allRegs.length === 0) {
+        area.innerHTML = `
+          <div class="vs-empty-state">
+            <div class="vs-empty-icon">🔍</div>
+            <div>Không tìm thấy lịch đăng ký cho mã: <strong>${empId.toUpperCase()}</strong></div>
+            <div style="font-size:12px;margin-top:8px;color:var(--text-muted)">Bạn có thể chưa đăng ký lịch hoặc nhập sai mã nhân viên.</div>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">Lịch của: <strong style="color:var(--text-primary)">${empId.toUpperCase()}</strong></div>`;
+      
+      html += RegUI.renderViewScheduleTable(allRegs, (typeof State !== 'undefined' ? State.shifts : []));
+      
+      area.innerHTML = html;
+    } catch (e) {
+      console.error(e);
+      area.innerHTML = `<div style="text-align:center;padding:30px;color:#ff5c5c">❌ Lỗi tải dữ liệu. Vui lòng thử lại.</div>`;
     }
-
-    let html = `<div style="margin-bottom:12px;font-size:13px;color:var(--text-muted)">Lịch của: <strong style="color:var(--text-primary)">${empId.toUpperCase()}</strong></div>`;
-    
-    html += RegUI.renderViewScheduleTable(allRegs, (typeof State !== 'undefined' ? State.shifts : []));
-    
-    area.innerHTML = html;
   }
 };
 

@@ -60,7 +60,7 @@ const RegAPI = {
     try {
       if (window.FirestoreService) {
         const result = await window.FirestoreService.getRegistrations(normalizedEmpId);
-        if (result.periods && result.periods.length > 0) {
+        if (result && result.length > 0) {
           return result;
         }
       }
@@ -92,7 +92,7 @@ const RegAPI = {
       if (cached) return cached;
     } catch (e) { /* ignore */ }
 
-    return { periods: [] };
+    return [];
   },
 
   /**
