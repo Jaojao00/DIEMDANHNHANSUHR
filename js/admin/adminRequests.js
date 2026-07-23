@@ -1,19 +1,9 @@
 Object.assign(AdminApp, {
 
   fetchChangeRequests: async () => {
-    try {
-      const apiLink =
-        typeof CONFIG !== "undefined" ? CONFIG.API_URL : "";
-      if (!apiLink) return;
-
-      const res = await fetch(apiLink, {
-        method: "POST",
-        body: JSON.stringify({ action: "get_change_requests", adminToken: localStorage.getItem("agr_admin_token") })
-      });
-      const data = await res.json();
-
-      if (data.status === "success" && data.data) {
-        AdminApp.pendingChangeRequests = data.data;
+      const reqs = await RegAPI.getChangeRequests();
+      if (reqs) {
+        AdminApp.pendingChangeRequests = reqs;
         AdminApp.updateNotifBadge();
         // Re-render table if we are on the registration view
         if (
@@ -122,19 +112,9 @@ Object.assign(AdminApp, {
       const req = AdminApp.pendingChangeRequests.find(r => r.id === reqId);
       if (!req) continue;
 
-      const payload = {
-        action: "approve_change_request",
-        reqId: req.id,
-        empId: req.empId,
-        shiftId: req.shiftId,
-        selections: req.selections,
-      };
-      const apiLink = typeof CONFIG !== "undefined" ? CONFIG.API_URL : "";
       try {
-        payload.adminToken = localStorage.getItem("agr_admin_token");
-        const resp = await fetch(apiLink, { method: "POST", body: JSON.stringify(payload) });
-        const resJson = await resp.json();
-        if (!resJson.error) successCount++;
+        const res = await window.FirestoreService.approveChangeRequest(req.id, req.empId, req.shiftId, req.selections);
+        if (res.success) successCount++;
       } catch (e) {
         console.error(e);
       }
@@ -159,13 +139,9 @@ Object.assign(AdminApp, {
     let successCount = 0;
     for (const check of checks) {
       const reqId = check.value;
-      const payload = { action: "reject_change_request", reqId: reqId };
-      const apiLink = typeof CONFIG !== "undefined" ? CONFIG.API_URL : "";
       try {
-        payload.adminToken = localStorage.getItem("agr_admin_token");
-        const resp = await fetch(apiLink, { method: "POST", body: JSON.stringify(payload) });
-        const resJson = await resp.json();
-        if (!resJson.error) successCount++;
+        const res = await window.FirestoreService.rejectChangeRequest(reqId);
+        if (res.success) successCount++;
       } catch (e) {
         console.error(e);
       }
@@ -242,43 +218,16 @@ Object.assign(AdminApp, {
         document.getElementById("confirmApproveBtn").textContent =
           "Đang xử lý...";
 
-        const payload = {
-          action: "approve_change_request",
-          reqId: req.id,
-          empId: req.empId,
-          shiftId: req.shiftId,
-          selections: req.selections,
-        };
-
-        const apiLink =
-          typeof CONFIG !== "undefined" ? CONFIG.API_URL : "";
-        payload.adminToken = localStorage.getItem("agr_admin_token");
-        const resp = await fetch(apiLink, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-        const resJson = await resp.json();
-
-        if (resJson.error) {
-          throw new Error(resJson.error);
-        }
+        const res = await window.FirestoreService.approveChangeRequest(req.id, req.empId, req.shiftId, req.selections);
+        if (!res.success) throw new Error(res.error);
 
           Utils.showGenericSuccessModal("Phê duyệt thành công", "Đã duyệt yêu cầu thay đổi lịch và cập nhật vào hệ thống.", "✅");
       } else {
         document.getElementById("rejectApproveBtn").textContent =
           "Đang xử lý...";
 
-        const payload = {
-          action: "reject_change_request",
-          reqId: req.id,
-        };
-        const apiLink =
-          typeof CONFIG !== "undefined" ? CONFIG.API_URL : "";
-        payload.adminToken = localStorage.getItem("agr_admin_token");
-        await fetch(apiLink, {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
+        const res = await window.FirestoreService.rejectChangeRequest(req.id);
+        if (!res.success) throw new Error(res.error);
 
           Utils.showGenericSuccessModal("Từ chối thành công", "Đã từ chối yêu cầu thay đổi lịch.", "❌");
       }

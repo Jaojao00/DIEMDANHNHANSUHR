@@ -83,42 +83,40 @@ Object.assign(AdminApp, {
             )
               return;
 
-            try {
-              const db = window.FirebaseDB?.db;
-              if (db) {
-                const { collection, query, where, getDocs, deleteDoc } =
-                  window.FirebaseDB;
-                const regRef = collection(db, "registrations");
+              try {
+                if (window.FirestoreService) {
+                  const fb = window.FirestoreService._getFirebase();
+                  const db = fb.db;
+                  const regRef = fb.collection(db, "registrations");
 
-                for (const cb of checked) {
-                  const empId = cb.value;
-                  const shiftId = cb.dataset.shift;
-                  // Delete from Firebase
-                  const q = query(
-                    regRef,
-                    where("empId", "==", empId),
-                    where("shiftId", "==", shiftId),
+                  for (const cb of checked) {
+                    const empId = cb.value;
+                    const shiftId = cb.dataset.shift;
+                    const q = fb.query(
+                      regRef,
+                      fb.where("empId", "==", empId),
+                      fb.where("shiftId", "==", shiftId),
+                    );
+                    const snap = await fb.getDocs(q);
+                    const deletePromises = snap.docs.map((doc) =>
+                      fb.deleteDoc(doc.ref),
+                    );
+                    await Promise.all(deletePromises);
+                  }
+                  Utils.showToast(
+                    `Đã xóa thành công ${checked.length} bản ghi trên hệ thống.`,
+                    "success",
                   );
-                  const snap = await getDocs(q);
-                  const deletePromises = snap.docs.map((doc) =>
-                    deleteDoc(doc.ref),
+                  AdminApp.loadData(); // Tải lại bảng
+                } else {
+                  Utils.showToast(
+                    "Không thể kết nối tới Firebase để xóa",
+                    "error",
                   );
-                  await Promise.all(deletePromises);
                 }
-                Utils.showToast(
-                  `Đã xóa thành công ${checked.length} bản ghi trên hệ thống.`,
-                  "success",
-                );
-                AdminApp.loadData(); // Tải lại bảng
-              } else {
-                Utils.showToast(
-                  "Không thể kết nối tới Firebase để xóa",
-                  "error",
-                );
+              } catch (e) {
+                Utils.showToast("Lỗi khi xóa: " + e.message, "error");
               }
-            } catch (e) {
-              Utils.showToast("Lỗi khi xóa: " + e.message, "error");
-            }
           });
       }
 
@@ -294,19 +292,10 @@ Object.assign(AdminApp, {
         '<span class="spinner" style="width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;"></span> Đang xóa...';
 
     try {
-      const url = State.apiLink;
-      if (!url)
-        throw new Error(
-          "Vui lòng thiết lập cấu hình CONFIG.API_URL trước khi xóa!",
-        );
-
-      const response = await fetch(url, {
-        method: "POST",
-        body: JSON.stringify({ action: "reset_registrations", adminToken: localStorage.getItem("agr_admin_token") }),
-      });
-
-      const result = await response.json();
-      if (result.error) throw new Error(result.error);
+      if (!window.FirestoreService) throw new Error("Firestore chưa được khởi tạo!");
+      
+      const result = await window.FirestoreService.resetRegistrations();
+      if (!result.success) throw new Error(result.error);
 
       alert("Đã dọn dẹp thành công! " + (result.message || ""));
     } catch (err) {

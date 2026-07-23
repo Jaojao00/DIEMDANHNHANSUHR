@@ -203,36 +203,21 @@ Object.assign(AdminApp, {
       }
     }
 
-    if (State.apiLink && (regDateFrom || regDateTo)) {
+    if (regDateFrom || regDateTo) {
       try {
-        const resp = await fetch(State.apiLink, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "save_reg_config",
-            regDateFrom: regDateFrom,
-            regDateTo: regDateTo,
-            adminToken: localStorage.getItem("agr_admin_token")
-          }),
-        });
-        const json = await resp.json();
-        if (json.error) {
-          Utils.showToast("Lỗi lưu cấu hình đăng ký: " + json.error, "error");
+        if (!window.FirestoreService) throw new Error("FirestoreService chưa được khởi tạo!");
+        const result = await window.FirestoreService.saveConfig(regDateFrom, regDateTo);
+        
+        if (!result.success) {
+          Utils.showToast("Lỗi lưu cấu hình đăng ký: " + result.error, "error");
           return; // Giữ modal mở để admin thử lại
         }
+        
         // Backend thành công → cập nhật localStorage
         if (regDateFrom) localStorage.setItem("agr_reg_date_from", regDateFrom);
         if (regDateTo) localStorage.setItem("agr_reg_date_to", regDateTo);
-
-        // Save to Firebase for employee registration screen sync
-        if (window.FirebaseDB?.db) {
-          const { doc, setDoc } = window.FirebaseDB;
-          const configRef = doc(window.FirebaseDB.db, "config", "admin");
-          setDoc(configRef, { regDateFrom, regDateTo }, { merge: true }).catch(
-            (e) => console.error("Firebase config save error:", e),
-          );
-        }
       } catch (err) {
-        Utils.showToast("Lỗi kết nối server: " + err.message, "error");
+        Utils.showToast("Lỗi lưu cấu hình: " + err.message, "error");
         return; // Giữ modal mở để admin thử lại
       }
     } else {

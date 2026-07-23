@@ -806,51 +806,38 @@ const AdminApp = {
   },
 
   listenToCheckins: () => {
-    if (!window.FirebaseDB?.db) return;
-    const { collection, query, where, onSnapshot } = window.FirebaseDB;
-    const db = window.FirebaseDB.db;
-
-    // We only want events that happen NOW onwards to update the UI
-    const startTime = Date.now() - 5000;
-
-    const q = query(
-      collection(db, "checkins"),
-      where("serverTimestamp", ">=", startTime),
-    );
+    if (!window.FirestoreService) return;
+    
     if (AdminApp.checkinUnsubscribe) {
       AdminApp.checkinUnsubscribe();
     }
-    AdminApp.checkinUnsubscribe = onSnapshot(q, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added" || change.type === "modified") {
-          const data = change.doc.data();
-          // If the admin is currently viewing the shift that got updated
-          if (
-            AdminApp.currentViewMode === "final" &&
-            State.selectedShiftId === data.shiftId
-          ) {
-            // Find employee in State.scheduleData
-            const emp = State.scheduleData.find((e) => {
-              const eId = (e.id || e.stt || "").toString().toLowerCase().trim();
-              const dId = (data.empId || "").toString().toLowerCase().trim();
-              return eId === dId;
-            });
+    
+    AdminApp.checkinUnsubscribe = window.FirestoreService.onCheckinChange(null, (data) => {
+      // If the admin is currently viewing the shift that got updated
+      if (
+        AdminApp.currentViewMode === "final" &&
+        State.selectedShiftId === data.shiftId
+      ) {
+        // Find employee in State.scheduleData
+        const emp = State.scheduleData.find((e) => {
+          const eId = (e.id || e.stt || "").toString().toLowerCase().trim();
+          const dId = (data.empId || "").toString().toLowerCase().trim();
+          return eId === dId;
+        });
 
-            if (emp) {
-              emp.status = "confirmed";
-              emp.timestamp = data.timestamp;
-              if (data.phone) emp.phone = data.phone;
-              // Save to local cache
-              DataManager.saveSchedule(
-                State.selectedShiftId,
-                State.scheduleData,
-              );
-              // Re-render
-              AdminApp.renderTable();
-            }
-          }
+        if (emp) {
+          emp.status = "confirmed";
+          emp.timestamp = data.timestamp;
+          if (data.phone) emp.phone = data.phone;
+          // Save to local cache
+          DataManager.saveSchedule(
+            State.selectedShiftId,
+            State.scheduleData,
+          );
+          // Re-render
+          AdminApp.renderTable();
         }
-      });
+      }
     });
   },
 
