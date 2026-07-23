@@ -99,3 +99,5 @@ const ModalManager = {
     }
   }
 };
+
+window.ModalManager = ModalManager;
