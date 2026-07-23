@@ -222,7 +222,20 @@ const RegApp = {
     if (typeof RegValidation !== 'undefined') {
       const shiftError = RegValidation.validateConsecutiveShifts(selections, RegApp.selectedShift.id);
       if (shiftError) {
-        if (typeof Utils !== 'undefined') Utils.showToast(shiftError, 'warning');
+        if (typeof ModalManager !== 'undefined') {
+          ModalManager.showModal('warning', {
+            title: 'CẢNH BÁO SỨC KHOẺ',
+            message: shiftError,
+            details: []
+          }, {
+            icon: '⚠️',
+            titleColor: '#ffb347',
+            btnText: 'Tôi đã hiểu',
+            btnStyle: 'background: linear-gradient(135deg, #ffb347, #ff7b00); border: none; color: white;'
+          });
+        } else if (typeof Utils !== 'undefined') {
+          Utils.showToast(shiftError, 'warning');
+        }
         return;
       }
     }
