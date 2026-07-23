@@ -402,6 +402,41 @@ const AdminApp = {
       });
     }
 
+    const deleteRegPeriodBtn = document.getElementById("deleteRegPeriodBtn");
+    if (deleteRegPeriodBtn) {
+      deleteRegPeriodBtn.addEventListener("click", async () => {
+        if (!regPeriodSelect || regPeriodSelect.value === "") return;
+        const idx = parseInt(regPeriodSelect.value, 10);
+        const periodData = AdminApp.allRegistrationPeriods[idx];
+        if (!periodData || !periodData.period) return;
+        
+        if (!confirm(`Bạn có chắc chắn muốn XÓA TOÀN BỘ ĐĂNG KÝ của: ${periodData.name}? Hành động này không thể hoàn tác.`)) return;
+        
+        const oldBtnHtml = deleteRegPeriodBtn.innerHTML;
+        deleteRegPeriodBtn.innerHTML = "⏳";
+        deleteRegPeriodBtn.disabled = true;
+        
+        try {
+          if (window.FirestoreService && window.FirestoreService.deletePeriodRegistrations) {
+            const res = await window.FirestoreService.deletePeriodRegistrations(State.selectedShiftId, periodData.period);
+            if (res.success) {
+              Utils.showToast("Đã xóa lịch đăng ký thành công", "success");
+              AdminApp.loadData();
+            } else {
+              Utils.showToast("Lỗi: " + res.error, "error");
+            }
+          }
+        } catch (err) {
+          console.error("Lỗi xóa lịch:", err);
+          Utils.showToast("Đã xảy ra lỗi khi xóa lịch", "error");
+        } finally {
+          deleteRegPeriodBtn.innerHTML = oldBtnHtml;
+          deleteRegPeriodBtn.disabled = false;
+        }
+      });
+    }
+
+
     // Manager Panel (Update Schedule)
     const managerBtn = document.getElementById("managerBtn");
     if (managerBtn) {
@@ -759,7 +794,7 @@ const AdminApp = {
              };
              
              try {
-                const res = await window.FirestoreService.submitRegistration(payload);
+                const res = await window.FirestoreService.submitRegistration(payload, true); // true for overwrite
                 if (res.success) {
                     successCount++;
                     // Fire-and-forget sync to GAS
@@ -999,8 +1034,9 @@ const AdminApp = {
         badge.style.background = `linear-gradient(135deg, ${shift.color}, #222)`;
       }
 
-      const filterSelect = document.getElementById("statusFilter");
+       const filterSelect = document.getElementById("statusFilter");
       const regPeriodSelect = document.getElementById("regPeriodSelect");
+      const deleteRegPeriodBtn = document.getElementById("deleteRegPeriodBtn");
 
       // 1. OPTIMISTIC UI: Render immediately from cache
       if (!isSilent) {
@@ -1008,6 +1044,7 @@ const AdminApp = {
           if (AdminApp.currentViewMode === "final") {
              if (filterSelect) filterSelect.style.display = "inline-block";
              if (regPeriodSelect) regPeriodSelect.style.display = "none";
+             if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "none";
              
              const stored = localStorage.getItem(Utils.getShiftStorageKey(State.selectedShiftId));
              if (stored) {
@@ -1024,10 +1061,12 @@ const AdminApp = {
                AdminApp.allRegistrationPeriods = cachedReg.periods || [];
                if (AdminApp.allRegistrationPeriods.length > 0) {
                  if (regPeriodSelect) regPeriodSelect.style.display = "inline-block";
+                 if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "inline-flex";
                  // Giữ nguyên logic hiển thị cho kỳ mới nhất
                  AdminApp.renderRegistrationTable(AdminApp.allRegistrationPeriods[AdminApp.allRegistrationPeriods.length - 1]);
                } else {
                  if (regPeriodSelect) regPeriodSelect.style.display = "none";
+                 if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "none";
                  AdminApp.renderRegistrationTable({ headers: [], data: [] });
                }
              }
@@ -1052,6 +1091,7 @@ const AdminApp = {
           regPeriodSelect.innerHTML = "";
           if (AdminApp.allRegistrationPeriods.length > 0) {
             regPeriodSelect.style.display = "inline-block";
+            if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "inline-flex";
             AdminApp.allRegistrationPeriods.forEach((p, idx) => {
               const opt = document.createElement("option");
               opt.value = idx;
@@ -1065,6 +1105,7 @@ const AdminApp = {
             );
           } else {
             regPeriodSelect.style.display = "none";
+            if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "none";
             AdminApp.renderRegistrationTable({ headers: [], data: [] });
           }
         } else {

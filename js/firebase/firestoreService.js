@@ -75,8 +75,9 @@ const FirestoreService = {
   /**
    * Đăng ký lịch làm việc
    * @param {Object} payload - { empId, empName, empPhone, osGender, shiftId, shiftLabel, selections, period, timestamp }
+   * @param {boolean} overwrite - Có ghi đè nếu đã tồn tại không
    */
-  async submitRegistration(payload) {
+  async submitRegistration(payload, overwrite = false) {
     try {
       const fb = this._getFirebase();
       const db = fb.db;
@@ -93,23 +94,35 @@ const FirestoreService = {
         fb.where("shiftId", "==", payload.shiftId)
       );
       const existing = await fb.getDocs(q);
-      if (!existing.empty) {
-        return {
-          success: false,
-          error: `Bạn đã đăng ký ca ${payload.shiftLabel || payload.shiftId} trong kỳ ${payload.period} rồi!`,
-        };
-      }
-
-      // Lưu đăng ký mới
+      
       const docData = {
         ...payload,
         empId: normalizedEmpId,
-        timestamp: new Date().toISOString(),
+        timestamp: payload.timestamp || new Date().toISOString(),
         syncedToSheets: false,
-        createdAt: fb.serverTimestamp(),
+        updatedAt: fb.serverTimestamp(),
       };
 
-      const docRef = await fb.addDoc(regRef, docData);
+      let docId = null;
+
+      if (!existing.empty) {
+        if (!overwrite) {
+            return {
+              success: false,
+              error: `Bạn đã đăng ký ca ${payload.shiftLabel || payload.shiftId} trong kỳ ${payload.period} rồi!`,
+            };
+        } else {
+            // Overwrite existing doc
+            const docToUpdate = existing.docs[0];
+            docId = docToUpdate.id;
+            await fb.updateDoc(docToUpdate.ref, docData);
+        }
+      } else {
+        // Add new doc
+        docData.createdAt = fb.serverTimestamp();
+        const docRef = await fb.addDoc(regRef, docData);
+        docId = docRef.id;
+      }
 
       // Lưu vào localStorage làm backup offline
       try {
@@ -129,12 +142,40 @@ const FirestoreService = {
       return {
         success: true,
         message: "Đăng ký thành công!",
-        docId: docRef.id,
+        docId: docId,
       };
     } catch (err) {
       console.error("FirestoreService.submitRegistration error:", err);
       return { success: false, error: err.message };
     }
+  },
+
+  /**
+   * Xóa tất cả đăng ký của một kỳ (Dành cho Admin)
+   */
+  async deletePeriodRegistrations(shiftId, period) {
+     try {
+       const fb = this._getFirebase();
+       const db = fb.db;
+       const regRef = fb.collection(db, "registrations");
+       const q = fb.query(
+         regRef,
+         fb.where("shiftId", "==", shiftId),
+         fb.where("period", "==", period)
+       );
+       const snapshot = await fb.getDocs(q);
+       
+       // Delete in batch
+       const batch = fb.writeBatch(db);
+       snapshot.forEach(doc => {
+          batch.delete(doc.ref);
+       });
+       await batch.commit();
+       return { success: true };
+     } catch (err) {
+       console.error("FirestoreService.deletePeriodRegistrations error:", err);
+       return { success: false, error: err.message };
+     }
   },
 
   /**
