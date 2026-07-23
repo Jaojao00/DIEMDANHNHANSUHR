@@ -213,6 +213,14 @@ Object.assign(AdminApp, {
           return; // Giữ modal mở để admin thử lại
         }
         
+        // Background sync to GAS
+        if (State.apiLink) {
+           fetch(State.apiLink, {
+             method: 'POST',
+             body: JSON.stringify({ action: 'save_reg_config', startDate: regDateFrom, endDate: regDateTo, adminToken: localStorage.getItem("agr_admin_token") })
+           }).catch(e => console.warn("Lỗi sync config lên GAS:", e));
+        }
+        
         // Backend thành công → cập nhật localStorage
         if (regDateFrom) localStorage.setItem("agr_reg_date_from", regDateFrom);
         if (regDateTo) localStorage.setItem("agr_reg_date_to", regDateTo);

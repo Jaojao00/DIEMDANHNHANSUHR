@@ -297,6 +297,14 @@ Object.assign(AdminApp, {
       const result = await window.FirestoreService.resetRegistrations();
       if (!result.success) throw new Error(result.error);
 
+      // Background sync to GAS
+      if (State.apiLink) {
+        fetch(State.apiLink, {
+          method: "POST",
+          body: JSON.stringify({ action: "reset_registrations", adminToken: localStorage.getItem("agr_admin_token") }),
+        }).catch(e => console.warn("Lỗi sync reset_registrations lên GAS:", e));
+      }
+
       alert("Đã dọn dẹp thành công! " + (result.message || ""));
     } catch (err) {
       console.error(err);

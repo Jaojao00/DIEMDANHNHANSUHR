@@ -115,7 +115,16 @@ Object.assign(AdminApp, {
 
       try {
         const res = await window.FirestoreService.approveChangeRequest(req.id, req.empId, req.shiftId, req.selections);
-        if (res.success) successCount++;
+        if (res.success) {
+          successCount++;
+          // Background sync to GAS
+          if (window.State && window.State.apiLink) {
+            fetch(window.State.apiLink, {
+              method: "POST",
+              body: JSON.stringify({ action: "approve_change_request", reqId: req.id, adminToken: localStorage.getItem("agr_admin_token") })
+            }).catch(e => console.warn("Lỗi sync approve_change_request lên GAS:", e));
+          }
+        }
       } catch (e) {
         console.error(e);
       }
@@ -142,7 +151,16 @@ Object.assign(AdminApp, {
       const reqId = check.value;
       try {
         const res = await window.FirestoreService.rejectChangeRequest(reqId);
-        if (res.success) successCount++;
+        if (res.success) {
+          successCount++;
+          // Background sync to GAS
+          if (window.State && window.State.apiLink) {
+            fetch(window.State.apiLink, {
+              method: "POST",
+              body: JSON.stringify({ action: "reject_change_request", reqId: reqId, adminToken: localStorage.getItem("agr_admin_token") })
+            }).catch(e => console.warn("Lỗi sync reject_change_request lên GAS:", e));
+          }
+        }
       } catch (e) {
         console.error(e);
       }
@@ -222,7 +240,15 @@ Object.assign(AdminApp, {
         const res = await window.FirestoreService.approveChangeRequest(req.id, req.empId, req.shiftId, req.selections);
         if (!res.success) throw new Error(res.error);
 
-          Utils.showGenericSuccessModal("Phê duyệt thành công", "Đã duyệt yêu cầu thay đổi lịch và cập nhật vào hệ thống.", "✅");
+        // Background sync to GAS
+        if (window.State && window.State.apiLink) {
+          fetch(window.State.apiLink, {
+            method: "POST",
+            body: JSON.stringify({ action: "approve_change_request", reqId: req.id, adminToken: localStorage.getItem("agr_admin_token") })
+          }).catch(e => console.warn("Lỗi sync approve_change_request lên GAS:", e));
+        }
+
+        Utils.showGenericSuccessModal("Phê duyệt thành công", "Đã duyệt yêu cầu thay đổi lịch và cập nhật vào hệ thống.", "✅");
       } else {
         document.getElementById("rejectApproveBtn").textContent =
           "Đang xử lý...";
@@ -230,7 +256,15 @@ Object.assign(AdminApp, {
         const res = await window.FirestoreService.rejectChangeRequest(req.id);
         if (!res.success) throw new Error(res.error);
 
-          Utils.showGenericSuccessModal("Từ chối thành công", "Đã từ chối yêu cầu thay đổi lịch.", "❌");
+        // Background sync to GAS
+        if (window.State && window.State.apiLink) {
+          fetch(window.State.apiLink, {
+            method: "POST",
+            body: JSON.stringify({ action: "reject_change_request", reqId: req.id, adminToken: localStorage.getItem("agr_admin_token") })
+          }).catch(e => console.warn("Lỗi sync reject_change_request lên GAS:", e));
+        }
+
+        Utils.showGenericSuccessModal("Từ chối thành công", "Đã từ chối yêu cầu thay đổi lịch.", "❌");
       }
 
       AdminApp.closeApproveModal();
