@@ -1,6 +1,7 @@
 Object.assign(AdminApp, {
 
   fetchChangeRequests: async () => {
+    try {
       const reqs = await RegAPI.getChangeRequests();
       if (reqs) {
         AdminApp.pendingChangeRequests = reqs;
