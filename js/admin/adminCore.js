@@ -513,63 +513,99 @@ const AdminApp = {
     if (exportRegExcelBtn) {
       exportRegExcelBtn.addEventListener("click", () => {
         if (!State.selectedShiftId) return;
-        
-        const payload = AdminApp.currentRegPayload;
-        if (!payload || !payload.data || payload.data.length === 0) {
-          Utils.showToast("Không có dữ liệu để xuất!", "warning");
-          return;
+
+        const buildAOA = (payload) => {
+          const aoa = [];
+          const headers = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
+          let dates = payload.headers || [];
+          if (dates.length === 0 && payload.data && payload.data.length > 0 && payload.data[0].selections) {
+              dates = payload.data[0].selections.map(s => s.label || s.date);
+          }
+          dates.forEach(d => headers.push(d));
+          aoa.push(headers);
+
+          if (payload.data) {
+            payload.data.forEach(r => {
+               const row = [
+                 r.timestamp || "",
+                 r.empId || "",
+                 r.name || r.empName || "",
+                 r.empPhone || r.phone || "",
+                 r.osGender || "",
+                 r.shiftId || "",
+                 r.shiftLabel || ""
+               ];
+               dates.forEach((d, i) => {
+                 let choice = "";
+                 if (r.choices && Array.isArray(r.choices)) {
+                     choice = r.choices[i] || "";
+                 } else if (r.selections && Array.isArray(r.selections)) {
+                     choice = r.selections[i]?.choice || "";
+                 }
+                 row.push(choice);
+               });
+               aoa.push(row);
+            });
+          }
+          return aoa;
+        };
+
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            title: 'Tuỳ chọn xuất Excel',
+            text: 'Bạn muốn xuất dữ liệu của đợt nào?',
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: 'Xuất tất cả các đợt',
+            denyButtonText: 'Chỉ đợt hiện tại',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#3085d6',
+            denyButtonColor: '#4caf50'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Export all
+              const periods = AdminApp.allRegistrationPeriods || [];
+              if (periods.length === 0) {
+                 Utils.showToast("Không có dữ liệu để xuất!", "warning");
+                 return;
+              }
+              const wb = XLSX.utils.book_new();
+              periods.forEach((p, idx) => {
+                 const aoa = buildAOA(p);
+                 const ws = XLSX.utils.aoa_to_sheet(aoa);
+                 let sheetName = p.name || p.period || `Dot_${idx + 1}`;
+                 sheetName = sheetName.replace(/[\[\]\*\\\/\?]/g, '').substring(0, 31);
+                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
+              });
+              XLSX.writeFile(wb, `TatCaLich_${State.selectedShiftId}.xlsx`);
+            } else if (result.isDenied) {
+              // Export current
+              const payload = AdminApp.currentRegPayload;
+              if (!payload || !payload.data || payload.data.length === 0) {
+                Utils.showToast("Không có dữ liệu để xuất!", "warning");
+                return;
+              }
+              const wb = XLSX.utils.book_new();
+              const aoa = buildAOA(payload);
+              const ws = XLSX.utils.aoa_to_sheet(aoa);
+              XLSX.utils.book_append_sheet(wb, ws, "Lich_Hien_Tai");
+              XLSX.writeFile(wb, `Lich_${State.selectedShiftId}.xlsx`);
+            }
+          });
+        } else {
+           // Fallback to current if Swal is somehow not loaded
+           const payload = AdminApp.currentRegPayload;
+           if (!payload || !payload.data || payload.data.length === 0) {
+             Utils.showToast("Không có dữ liệu để xuất!", "warning");
+             return;
+           }
+           const wb = XLSX.utils.book_new();
+           const aoa = buildAOA(payload);
+           const ws = XLSX.utils.aoa_to_sheet(aoa);
+           XLSX.utils.book_append_sheet(wb, ws, "Lich_Hien_Tai");
+           XLSX.writeFile(wb, `Lich_${State.selectedShiftId}.xlsx`);
         }
-
-        const dataList = payload.data;
-        const escapeCSV = (str) => `"${(str || '').toString().replace(/"/g, '""')}"`;
-        let csvContent = "\uFEFF"; // BOM for UTF-8 Excel support
-        
-        // Define Headers
-        const headers = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-        let dates = payload.headers || [];
-        
-        // Fallback if headers is empty but selections exist
-        if (dates.length === 0 && dataList[0].selections && Array.isArray(dataList[0].selections)) {
-            dates = dataList[0].selections.map(s => s.label || s.date);
-        }
-
-        dates.forEach(d => {
-           headers.push(d);
-        });
-        csvContent += headers.map(escapeCSV).join(",") + "\n";
-
-        // Generate Rows
-        dataList.forEach(r => {
-           const row = [
-             r.timestamp || "",
-             r.empId || "",
-             r.name || r.empName || "",
-             r.empPhone || r.phone || "",
-             r.osGender || "",
-             r.shiftId || "",
-             r.shiftLabel || ""
-           ];
-           
-           dates.forEach((d, i) => {
-             let choice = "";
-             if (r.choices && Array.isArray(r.choices)) {
-                 choice = r.choices[i] || "";
-             } else if (r.selections && Array.isArray(r.selections)) {
-                 choice = r.selections[i]?.choice || "";
-             }
-             row.push(choice);
-           });
-           csvContent += row.map(escapeCSV).join(",") + "\n";
-        });
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `LichLamViec_${State.selectedShiftId}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
       });
     }
 
