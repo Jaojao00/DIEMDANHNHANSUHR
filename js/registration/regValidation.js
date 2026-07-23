@@ -48,6 +48,35 @@ const RegValidation = {
     }
     
     return errors;
+  },
+
+  validateConsecutiveShifts(selections, selectedShiftId) {
+    const longShifts = ["06:00-15:00", "15:00-22:00", "22:00-06:00"];
+    let consecutive = 0;
+    
+    for (let i = 0; i < selections.length; i++) {
+      let choice = selections[i].choice;
+      let isLongShift = false;
+      
+      if (selectedShiftId === "CA_NGAY") {
+         isLongShift = longShifts.includes(choice);
+      } else {
+         if (choice === "WORK" || choice === selectedShiftId) {
+            isLongShift = longShifts.includes(selectedShiftId);
+         }
+      }
+      
+      if (isLongShift) {
+        consecutive++;
+        if (consecutive > 3) {
+           return "Vì sức khoẻ của bạn, không được đăng ký làm ca 8 tiếng quá 3 ngày liên tục. Hãy dành ít nhất 1 ngày OFF hoặc làm ca 4 tiếng sau 3 ngày cày cuốc nhé!";
+        }
+      } else {
+        consecutive = 0;
+      }
+    }
+    
+    return null;
   }
 };
 

@@ -197,6 +197,7 @@ const RegApp = {
         if (typeof Utils !== 'undefined') Utils.showToast(validationErrors[0], 'error');
         return;
       }
+
     }
 
     const dates = RegApp.getDateRange();
@@ -216,6 +217,14 @@ const RegApp = {
     if (!allFilled) {
       if (typeof Utils !== 'undefined') Utils.showToast('Vui lòng chọn ca hoặc OFF cho tất cả các ngày!', 'error');
       return;
+    }
+
+    if (typeof RegValidation !== 'undefined') {
+      const shiftError = RegValidation.validateConsecutiveShifts(selections, RegApp.selectedShift.id);
+      if (shiftError) {
+        if (typeof Utils !== 'undefined') Utils.showToast(shiftError, 'warning');
+        return;
+      }
     }
 
     if (!navigator.onLine) {
