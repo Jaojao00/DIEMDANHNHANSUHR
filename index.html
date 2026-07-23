@@ -28,7 +28,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=1784861695" />
+    <link rel="stylesheet" href="style.css?v=1784862831" />
   </head>
   <body>
     <!-- Nút sửa chữa / Clear Cache nổi -->
@@ -817,18 +817,20 @@
           <!-- Shift Tabs -->
           <div class="shift-tabs-row">
             <div class="shift-tabs-list" id="shiftTabsList"></div>
-            <select
-              id="regPeriodSelect"
-              class="status-filter-select"
-              style="
-                display: none;
-                margin-left: 8px;
-                margin-right: 8px;
-                max-width: 150px;
-                padding-right: 28px;
-              "
-              aria-label="Chọn kỳ lịch làm việc"
-            ></select>
+            <div style="display: flex; align-items: center; margin-left: 8px; margin-right: 8px;">
+              <select
+                id="regPeriodSelect"
+                class="status-filter-select"
+                style="display: none; max-width: 150px; padding-right: 28px; margin-right: 4px;"
+                aria-label="Chọn kỳ lịch làm việc"
+              ></select>
+              <button class="btn-icon" id="deleteRegPeriodBtn" style="display: none; color: #ff5c5c; padding: 4px;" title="Xóa đợt đăng ký này">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18"></path>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>
+            </div>
             <button class="manager-toggle-btn" id="managerBtn">
               <svg
                 width="13"
@@ -2414,36 +2416,36 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <!-- Firebase Init & Service Layer -->
-    <script src="js/firebase/firebaseInit.js?v=1784861695"></script>
-    <script src="js/firebase/firestoreService.js?v=1784861695"></script>
+    <script src="js/firebase/firebaseInit.js?v=1784862831"></script>
+    <script src="js/firebase/firestoreService.js?v=1784862831"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-    <script defer="" src="config.js?v=1784861695"></script>
+    <script defer="" src="config.js?v=1784862831"></script>
     <script defer="" src="utils.js"></script>
-    <script defer="" src="js/ui/modalManager.js?v=1784861695"></script>
+    <script defer="" src="js/ui/modalManager.js?v=1784862831"></script>
     <script defer="" src="dataManager.js"></script>
-    <script defer="" src="employee.js?v=1784861695"></script>
-    <script defer="" src="js/admin/adminCore.js?v=1784861695"></script>
-    <script defer="" src="js/admin/adminUI.js?v=1784861695"></script>
-    <script defer="" src="js/admin/adminRequests.js?v=1784861695"></script>
-    <script defer="" src="js/admin/adminBooking.js?v=1784861695"></script>
+    <script defer="" src="employee.js?v=1784862831"></script>
+    <script defer="" src="js/admin/adminCore.js?v=1784862831"></script>
+    <script defer="" src="js/admin/adminUI.js?v=1784862831"></script>
+    <script defer="" src="js/admin/adminRequests.js?v=1784862831"></script>
+    <script defer="" src="js/admin/adminBooking.js?v=1784862831"></script>
     <script
       defer=""
-      src="js/admin/adminRegistration.js?v=1784861695"
+      src="js/admin/adminRegistration.js?v=1784862831"
     ></script>
-    <script defer="" src="js/admin/adminManager.js?v=1784861695"></script>
-    <script defer="" src="js/admin/adminLogs.js?v=1784861695"></script>
-    <script defer="" src="app.js?v=1784861695"></script>
+    <script defer="" src="js/admin/adminManager.js?v=1784862831"></script>
+    <script defer="" src="js/admin/adminLogs.js?v=1784862831"></script>
+    <script defer="" src="app.js?v=1784862831"></script>
     <!-- Registration Module -->
     <script
       defer=""
-      src="js/registration/regValidation.js?v=1784861695"
+      src="js/registration/regValidation.js?v=1784862831"
     ></script>
-    <script defer="" src="js/registration/regUI.js?v=1784861695"></script>
-    <script defer="" src="js/registration/regAPI.js?v=1784861695"></script>
-    <script defer="" src="js/registration/regApp.js?v=1784861695"></script>
+    <script defer="" src="js/registration/regUI.js?v=1784862831"></script>
+    <script defer="" src="js/registration/regAPI.js?v=1784862831"></script>
+    <script defer="" src="js/registration/regApp.js?v=1784862831"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

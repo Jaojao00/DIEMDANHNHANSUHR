@@ -248,7 +248,7 @@ const RegApp = {
     const btn = document.getElementById('regSubmitBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang gửi...'; }
 
-    const currentPeriod = dates.length > 0 ? `${dates[0].iso}_${dates[dates.length-1].iso}` : 'unknown';
+    const currentPeriod = dates.length > 0 ? `${dates[0].label}_${dates[dates.length-1].label}` : 'unknown';
 
     const payload = {
       action:     'submit_registration',
