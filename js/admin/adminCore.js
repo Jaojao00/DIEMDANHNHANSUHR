@@ -1037,6 +1037,14 @@ const AdminApp = {
        const filterSelect = document.getElementById("statusFilter");
       const regPeriodSelect = document.getElementById("regPeriodSelect");
       const deleteRegPeriodBtn = document.getElementById("deleteRegPeriodBtn");
+      
+      let oldSelectedPeriodId = null;
+      if (regPeriodSelect && !isNaN(parseInt(regPeriodSelect.value, 10))) {
+         const oldIdx = parseInt(regPeriodSelect.value, 10);
+         if (AdminApp.allRegistrationPeriods && AdminApp.allRegistrationPeriods[oldIdx]) {
+            oldSelectedPeriodId = AdminApp.allRegistrationPeriods[oldIdx].period;
+         }
+      }
 
       // 1. OPTIMISTIC UI: Render immediately from cache
       if (!isSilent) {
@@ -1062,8 +1070,15 @@ const AdminApp = {
                if (AdminApp.allRegistrationPeriods.length > 0) {
                  if (regPeriodSelect) regPeriodSelect.style.display = "inline-block";
                  if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "inline-flex";
-                 // Giữ nguyên logic hiển thị cho kỳ mới nhất
-                 AdminApp.renderRegistrationTable(AdminApp.allRegistrationPeriods[AdminApp.allRegistrationPeriods.length - 1]);
+                 
+                 let targetIdx = AdminApp.allRegistrationPeriods.length - 1;
+                 if (oldSelectedPeriodId) {
+                     const foundIdx = AdminApp.allRegistrationPeriods.findIndex(p => p.period === oldSelectedPeriodId);
+                     if (foundIdx !== -1) targetIdx = foundIdx;
+                 }
+                 if (regPeriodSelect) regPeriodSelect.value = targetIdx;
+                 
+                 AdminApp.renderRegistrationTable(AdminApp.allRegistrationPeriods[targetIdx]);
                } else {
                  if (regPeriodSelect) regPeriodSelect.style.display = "none";
                  if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "none";
@@ -1092,16 +1107,22 @@ const AdminApp = {
           if (AdminApp.allRegistrationPeriods.length > 0) {
             regPeriodSelect.style.display = "inline-block";
             if (deleteRegPeriodBtn) deleteRegPeriodBtn.style.display = "inline-flex";
+            
+            let targetIdx = AdminApp.allRegistrationPeriods.length - 1;
+            if (oldSelectedPeriodId) {
+                const foundIdx = AdminApp.allRegistrationPeriods.findIndex(p => p.period === oldSelectedPeriodId);
+                if (foundIdx !== -1) targetIdx = foundIdx;
+            }
+            
             AdminApp.allRegistrationPeriods.forEach((p, idx) => {
               const opt = document.createElement("option");
               opt.value = idx;
               opt.textContent = p.name || p.id;
               regPeriodSelect.appendChild(opt);
             });
-            const defaultIdx = AdminApp.allRegistrationPeriods.length - 1;
-            regPeriodSelect.value = defaultIdx;
+            regPeriodSelect.value = targetIdx;
             AdminApp.renderRegistrationTable(
-              AdminApp.allRegistrationPeriods[defaultIdx],
+              AdminApp.allRegistrationPeriods[targetIdx],
             );
           } else {
             regPeriodSelect.style.display = "none";
