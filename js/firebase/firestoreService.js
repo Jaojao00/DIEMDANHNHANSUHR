@@ -228,26 +228,11 @@ const FirestoreService = {
           const dateHeaders = (data.selections || []).map((s) => s.label || s.date);
           periodMap[key] = {
             name: `${data.shiftLabel || data.shiftId} (${key})`,
-            headers: [
-              "Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT",
-              "Giới tính OS", "Ca", "Tên Ca", ...dateHeaders,
-            ],
+            headers: dateHeaders,
             data: [],
           };
         }
-        const row = [
-          data.timestamp || "",
-          data.empId || "",
-          data.empName || "",
-          data.empPhone || "",
-          data.osGender || "",
-          data.shiftId || "",
-          data.shiftLabel || "",
-        ];
-        (data.selections || []).forEach((s) => {
-          row.push(s.choice || "OFF");
-        });
-        periodMap[key].data.push(row);
+        periodMap[key].data.push(data);
       });
 
       return { periods: Object.values(periodMap) };
