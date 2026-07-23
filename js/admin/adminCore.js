@@ -722,26 +722,70 @@ const AdminApp = {
     }
 
     if (saveRegBtn) {
-      saveRegBtn.addEventListener("click", () => {
-        if (!parsedRegData) return;
+      saveRegBtn.addEventListener("click", async () => {
+        if (!parsedRegData || !parsedRegData.data || parsedRegData.data.length === 0) return;
         
-        // Push to allRegistrationPeriods
-        AdminApp.allRegistrationPeriods.push(parsedRegData);
-        
-        // Update select
-        const regPeriodSelect = document.getElementById("regPeriodSelect");
-        if (regPeriodSelect) {
-            regPeriodSelect.style.display = "inline-block";
-            const opt = document.createElement("option");
-            opt.value = AdminApp.allRegistrationPeriods.length - 1;
-            opt.textContent = parsedRegData.name;
-            regPeriodSelect.appendChild(opt);
-            regPeriodSelect.value = AdminApp.allRegistrationPeriods.length - 1;
-        }
+        if (!confirm(`Bạn có chắc chắn muốn lưu ${parsedRegData.data.length} dòng đăng ký này lên hệ thống? (Các dữ liệu trùng mã nhân viên sẽ bị ghi đè)`)) return;
 
-        AdminApp.renderRegistrationTable(parsedRegData);
+        saveRegBtn.disabled = true;
+        saveRegBtn.innerHTML = '<span style="font-size:16px;">⏳</span> Đang lưu...';
+        
+        let successCount = 0;
+        let failCount = 0;
+        const shiftId = State.selectedShiftId;
+        const shiftLabel = State.shifts.find(s => s.id === shiftId)?.label || shiftId;
+        const headers = parsedRegData.headers;
+        const period = (headers && headers.length > 0) ? `${headers[0]}_${headers[headers.length-1]}` : "manual";
+
+        // Save to Firestore sequentially or in small batches to avoid overload
+        if (window.FirestoreService) {
+          for (const row of parsedRegData.data) {
+             const selections = row.choices.map((c, i) => ({
+                 date: headers[i],
+                 label: headers[i],
+                 choice: c ? c.toUpperCase() : "OFF"
+             }));
+             
+             const payload = {
+                 empId: row.empId,
+                 empName: row.name,
+                 empPhone: row.phone,
+                 osGender: "", 
+                 shiftId: shiftId,
+                 shiftLabel: shiftLabel,
+                 period: period,
+                 selections: selections,
+                 timestamp: row.timestamp || new Date().toISOString()
+             };
+             
+             try {
+                const res = await window.FirestoreService.submitRegistration(payload);
+                if (res.success) {
+                    successCount++;
+                    // Fire-and-forget sync to GAS
+                    if (window.State && window.State.apiLink) {
+                        fetch(window.State.apiLink, {
+                           method: "POST",
+                           body: JSON.stringify({ ...payload, action: 'submit_registration' })
+                        }).catch(e => console.warn("GAS sync error", e));
+                    }
+                } else {
+                    failCount++;
+                }
+             } catch (e) {
+                console.error("Lỗi lưu DB:", e);
+                failCount++;
+             }
+          }
+        }
+        
+        AdminApp.loadData();
         if(regManagerModal) regManagerModal.classList.add("hidden");
-        Utils.showToast("Đã áp dụng lịch đăng ký thủ công!", "success");
+        
+        saveRegBtn.disabled = false;
+        saveRegBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Áp dụng lên bảng Lịch Làm Việc';
+        
+        Utils.showGenericSuccessModal("Lưu Thành Công", `Đã ghi nhận ${successCount} nhân sự lên hệ thống.${failCount > 0 ? ` (Lỗi: ${failCount})` : ''}`, "✅");
       });
     }
 
