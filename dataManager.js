@@ -1,4 +1,3 @@
-
 // ==========================================
 // TRẠNG THÁI ỨNG DỤNG (STATE)
 // ==========================================
@@ -144,119 +143,149 @@ const DataManager = {
     };
   },
 
-  loadSchedule: (shiftId) => {
-    return new Promise(async (resolve) => {
-      if (CONFIG.DEMO_MODE) {
-        const key = Utils.getShiftStorageKey(shiftId);
-        try {
-          const stored = localStorage.getItem(key);
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            const normalized = Array.isArray(parsed)
-              ? parsed.map(DataManager.normalizeEmp)
-              : [];
-            resolve(normalized);
-          } else {
-            const demo = DataManager.getDemoData();
-            localStorage.setItem(key, JSON.stringify(demo));
-            resolve(demo.map(DataManager.normalizeEmp));
-          }
-        } catch (e) {
-          console.error("Lỗi đọc demo data hoặc cache ca:", e);
-          const demo = DataManager.getDemoData();
-          resolve(demo.map(DataManager.normalizeEmp));
-        }
-      } else {
-        // Tải từ Google Sheets
-        try {
-          const url = `${State.apiLink}?action=load&shiftId=${shiftId}`;
-          const response = await fetch(url);
-          const data = await response.json();
-          const normalized = Array.isArray(data)
-            ? data.map(DataManager.normalizeEmp)
+  loadSchedule: async (shiftId) => {
+    if (CONFIG.DEMO_MODE) {
+      const key = Utils.getShiftStorageKey(shiftId);
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const normalized = Array.isArray(parsed)
+            ? parsed.map(DataManager.normalizeEmp)
             : [];
-          // Cập nhật lại local cache để dự phòng
-          localStorage.setItem(
-            Utils.getShiftStorageKey(shiftId),
-            JSON.stringify(normalized),
-          );
-          resolve(normalized);
-        } catch (error) {
-          console.error("Lỗi tải lịch từ Google Sheets:", error);
-          // Fallback
-          try {
-            const stored = localStorage.getItem(
-              Utils.getShiftStorageKey(shiftId),
-            );
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              const normalized = Array.isArray(parsed)
-                ? parsed.map(DataManager.normalizeEmp)
-                : [];
-              resolve(normalized);
-            } else {
-              resolve([]);
-            }
-          } catch (err) {
-            console.error("Lỗi đọc cache local dự phòng:", err);
-            resolve([]);
-          }
+          return normalized;
+        } else {
+          const demo = DataManager.getDemoData();
+          localStorage.setItem(key, JSON.stringify(demo));
+          return demo.map(DataManager.normalizeEmp);
         }
+      } catch (e) {
+        const demo = DataManager.getDemoData();
+        return demo.map(DataManager.normalizeEmp);
       }
-    });
+    }
+
+    // 1. Tải từ Firebase (Rosters) nếu có
+    if (window.FirestoreService) {
+      try {
+        const rosterData = await window.FirestoreService.loadRoster(shiftId);
+        if (rosterData.success && rosterData.schedule && rosterData.schedule.length > 0) {
+          const normalized = rosterData.schedule.map(DataManager.normalizeEmp);
+          localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(normalized));
+          return normalized;
+        }
+      } catch (err) {
+        console.warn("Lỗi tải lịch từ Firebase:", err);
+      }
+    }
+
+    // 2. Tải từ Google Sheets (Fallback)
+    try {
+      const url = `${State.apiLink}?action=load&shiftId=${shiftId}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const normalized = Array.isArray(data)
+        ? data.map(DataManager.normalizeEmp)
+        : [];
+      localStorage.setItem(
+        Utils.getShiftStorageKey(shiftId),
+        JSON.stringify(normalized)
+      );
+      
+      // Background sync qua Firebase để lần sau load nhanh hơn
+      if (window.FirestoreService && normalized.length > 0) {
+        window.FirestoreService.saveRoster(shiftId, normalized).catch(()=>{});
+      }
+      
+      return normalized;
+    } catch (error) {
+      console.error("Lỗi tải lịch từ Google Sheets:", error);
+      // 3. Tải từ Local Cache (Offline fallback)
+      try {
+        const stored = localStorage.getItem(Utils.getShiftStorageKey(shiftId));
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          return Array.isArray(parsed) ? parsed.map(DataManager.normalizeEmp) : [];
+        }
+      } catch (err) {}
+      return [];
+    }
   },
 
   loadRegistrations: async (shiftId) => {
-    return new Promise(async (resolve) => {
+    // Sử dụng chung logic Firestore-first từ regAPI nếu có
+    if (window.RegAPI && window.RegAPI.getRegistrations) {
+       // getRegistrations hiện tại query theo empId, admin cần query theo shiftId.
+       // Sử dụng FirestoreService.getShiftRegistrations
+    }
+
+    if (window.FirestoreService) {
       try {
-        const url = `${State.apiLink}?action=get_shift_registrations&shiftId=${encodeURIComponent(shiftId)}&adminToken=${localStorage.getItem("agr_admin_token")}`;
-        const response = await fetch(url);
-        const json = await response.json();
-        let resultObj = { periods: [] };
-        if (json.periods && Array.isArray(json.periods)) {
-          resultObj = json;
-        } else if (json.data && Array.isArray(json.data)) {
-          resultObj = {
-            periods: [
-              {
-                id: "current",
-                name: "Kỳ hiện tại",
-                headers: json.headers || [],
-                data: json.data,
-              },
-            ],
-          };
-        }
-        // Save to cache for Optimistic UI
-        localStorage.setItem(`agr_reg_cache_${shiftId}`, JSON.stringify(resultObj));
-        resolve(resultObj);
-      } catch (error) {
-        console.error("Lỗi tải danh sách đăng ký:", error);
-        // Fallback to cache if available
-        try {
-           const cached = localStorage.getItem(`agr_reg_cache_${shiftId}`);
-           if (cached) {
-              resolve(JSON.parse(cached));
-              return;
-           }
-        } catch(e) {}
-        resolve({ periods: [] });
+         const result = await window.FirestoreService.getShiftRegistrations(shiftId);
+         if (result.periods && result.periods.length > 0) {
+            localStorage.setItem(`agr_reg_cache_${shiftId}`, JSON.stringify(result));
+            return result;
+         }
+      } catch (e) {
+         console.warn("Lỗi tải danh sách đăng ký từ Firebase:", e);
       }
-    });
+    }
+
+    try {
+      const url = `${State.apiLink}?action=get_shift_registrations&shiftId=${encodeURIComponent(shiftId)}&adminToken=${localStorage.getItem("agr_admin_token")}`;
+      const response = await fetch(url);
+      const json = await response.json();
+      let resultObj = { periods: [] };
+      if (json.periods && Array.isArray(json.periods)) {
+        resultObj = json;
+      } else if (json.data && Array.isArray(json.data)) {
+        resultObj = {
+          periods: [
+            {
+              id: "current",
+              name: "Kỳ hiện tại",
+              headers: json.headers || [],
+              data: json.data,
+            },
+          ],
+        };
+      }
+      localStorage.setItem(`agr_reg_cache_${shiftId}`, JSON.stringify(resultObj));
+      return resultObj;
+    } catch (error) {
+      console.error("Lỗi tải danh sách đăng ký:", error);
+      try {
+          const cached = localStorage.getItem(`agr_reg_cache_${shiftId}`);
+          if (cached) return JSON.parse(cached);
+      } catch(e) {}
+      return { periods: [] };
+    }
   },
 
   loadRequests: async () => {
     if (CONFIG.DEMO_MODE) {
       return JSON.parse(localStorage.getItem("agr_requests") || "[]");
     }
+
+    // 1. Tải từ Firebase (Primary)
+    if (window.FirestoreService) {
+      try {
+        const fbReq = await window.FirestoreService.loadRequests();
+        if (fbReq.success) {
+           localStorage.setItem("agr_requests", JSON.stringify(fbReq.requests));
+           return fbReq.requests;
+        }
+      } catch (e) {
+        console.warn("Lỗi tải danh sách request từ Firebase:", e);
+      }
+    }
+
+    // 2. Tải từ GAS (Fallback)
     try {
       const url = `${State.apiLink}?action=load_requests`;
       const response = await fetch(url);
       const data = await response.json();
       if (Array.isArray(data)) {
-        // Cập nhật lại localStorage để dự phòng offline và để renderTable dùng chung logic
-        // Ta có thể merge hoặc ghi đè. Tốt nhất là merge theo empId và timestamp hoặc cứ ghi đè.
-        // Ghi đè bằng dữ liệu server là an toàn nhất.
         localStorage.setItem("agr_requests", JSON.stringify(data));
         return data;
       }
@@ -272,62 +301,53 @@ const DataManager = {
   },
 
   saveSchedule: async (shiftId, data) => {
-    return new Promise(async (resolve, reject) => {
-      // Lưu local cache
-      localStorage.setItem(
-        Utils.getShiftStorageKey(shiftId),
-        JSON.stringify(data),
-      );
+    localStorage.setItem(Utils.getShiftStorageKey(shiftId), JSON.stringify(data));
+    if (CONFIG.DEMO_MODE) return { success: true };
 
-      if (CONFIG.DEMO_MODE) {
-        resolve({ success: true });
-      } else {
-        // Gửi lên Google Sheets
-        try {
-          const shift = State.shifts.find((s) => s.id === shiftId);
-          const headers = shift ? [...shift.colHeaders] : [];
-
-          const response = await fetch(State.apiLink, {
-            method: "POST",
-            body: JSON.stringify({
-              action: "save",
-              shiftId: shiftId,
-              headers: headers,
-              schedule: data,
-            }),
-          });
-          const res = await response.json();
-          if (res.error) reject(new Error(res.error));
-          else resolve(res);
-        } catch (error) {
-          console.error("Lỗi lưu lịch lên Google Sheets:", error);
-          reject(new Error("Lỗi kết nối đến máy chủ."));
-        }
+    // 1. Lưu vào Firebase (Primary)
+    if (window.FirestoreService) {
+      try {
+        await window.FirestoreService.saveRoster(shiftId, data);
+      } catch (e) {
+        console.warn("Lỗi lưu lịch vào Firebase:", e);
       }
-    });
+    }
+
+    // 2. Lưu vào Google Sheets (Sync)
+    try {
+      const shift = State.shifts.find((s) => s.id === shiftId);
+      const headers = shift ? [...shift.colHeaders] : [];
+      const response = await fetch(State.apiLink, {
+        method: "POST",
+        body: JSON.stringify({ action: "save", shiftId, headers, schedule: data }),
+      });
+      const res = await response.json();
+      if (res.error) throw new Error(res.error);
+      return res;
+    } catch (error) {
+      console.error("Lỗi lưu lịch lên Google Sheets:", error);
+      throw new Error("Lỗi kết nối đến máy chủ.");
+    }
   },
 
   updateAttendance: async (shiftId, empId, phone) => {
     const searchId = empId.toLowerCase().trim();
 
-    // 1. Try to find in local cache first for Instant response
+    // 1. Load data local
     const localKey = Utils.getShiftStorageKey(shiftId);
     let localData = [];
     try {
       const stored = localStorage.getItem(localKey);
       if (stored) {
         const parsed = JSON.parse(stored);
-        localData = Array.isArray(parsed)
-          ? parsed.map(DataManager.normalizeEmp)
-          : [];
+        localData = Array.isArray(parsed) ? parsed.map(DataManager.normalizeEmp) : [];
       }
     } catch (e) {}
 
     const empIndex = localData.findIndex(
-      (e) =>
-        (e.id && e.id.toString().toLowerCase().trim() === searchId) ||
-        (e.stt && e.stt.toString().toLowerCase().trim() === searchId) ||
-        (e.name && e.name.toString().toLowerCase().trim() === searchId),
+      (e) => (e.id || "").toLowerCase().trim() === searchId || 
+             (e.stt || "").toLowerCase().trim() === searchId ||
+             (e.name || "").toLowerCase().trim() === searchId
     );
 
     let localEmp = null;
@@ -344,80 +364,63 @@ const DataManager = {
 
       const emp = DataManager.normalizeEmp(localData[empIndex]);
       const positions = emp.positions || [];
-      localUnassigned =
-        positions.length === 0 ||
-        positions.every((p) => !p || p.toLowerCase().includes("chưa"));
+      localUnassigned = positions.length === 0 || positions.every((p) => !p || p.toLowerCase().includes("chưa"));
       localEmp = emp;
 
-      // Update cache immediately
+      // Update cache
       localStorage.setItem(localKey, JSON.stringify(localData));
 
-      // Firebase Relay for Admin Real-time
-      if (window.FirebaseDB?.db) {
-        const { collection, addDoc } = window.FirebaseDB;
-        addDoc(collection(window.FirebaseDB.db, "checkins"), {
-          empId: localData[empIndex].id || empId,
-          shiftId: shiftId,
-          status: "confirmed",
-          timestamp: localData[empIndex].timestamp,
-          phone: phone,
-          serverTimestamp: Date.now(),
-        }).catch((e) => console.error("Firebase relay error:", e));
+      // Push to Firebase (Primary) via FirestoreService
+      if (window.FirestoreService) {
+        window.FirestoreService.checkin(shiftId, localData[empIndex].id || empId, phone).catch(()=>{});
+        // Đồng thời cập nhật roster để lưu trạng thái "confirmed"
+        window.FirestoreService.saveRoster(shiftId, localData).catch(()=>{});
       }
     }
 
     if (CONFIG.DEMO_MODE) {
-      if (!localEmp)
-        throw new Error("Không tìm thấy mã nhân viên trong ca này.");
+      if (!localEmp) throw new Error("Không tìm thấy mã nhân viên trong ca này.");
       return { employeeData: localEmp, isUnassigned: localUnassigned };
     }
 
-    // 2. Prepare background sync to Google Sheets
-    const fetchPromise = fetch(State.apiLink, {
+    // Sync to GAS in background
+    const bgSync = fetch(State.apiLink, {
       method: "POST",
-      body: JSON.stringify({
-        action: "checkin",
-        shiftId: shiftId,
-        empId: empId,
-        phone: phone,
-      }),
-    }).then((res) => res.json());
+      body: JSON.stringify({ action: "checkin", shiftId, empId, phone }),
+    }).then((res) => res.json()).catch((err) => console.warn("Lỗi đồng bộ ngầm điểm danh:", err));
 
-    // 3. Optimistic UI: Return instantly if found locally
+    // Return instant local success
     if (localEmp) {
-      fetchPromise.catch((err) =>
-        console.error("Lỗi đồng bộ ngầm điểm danh:", err),
-      );
       return { employeeData: localEmp, isUnassigned: localUnassigned };
     }
 
-    // 4. Fallback: If not found locally, wait for server response
+    // Fallback if not found locally
     try {
-      const res = await fetchPromise;
-      if (res.error) {
-        throw new Error(res.error);
-      }
+      const res = await bgSync;
+      if (res && res.error) throw new Error(res.error);
+      if (!res) throw new Error("Không phản hồi từ máy chủ");
 
       const emp = DataManager.normalizeEmp(res.employee);
       const positions = emp.positions || [];
-      const isUnassigned =
-        positions.length === 0 ||
-        positions.every((p) => !p || p.toLowerCase().includes("chưa"));
-
-      // Update local cache with this new employee
+      const isUnassigned = positions.length === 0 || positions.every((p) => !p || p.toLowerCase().includes("chưa"));
+      
       localData.push(emp);
       localStorage.setItem(localKey, JSON.stringify(localData));
 
-      return { employeeData: emp, isUnassigned: isUnassigned };
+      if (window.FirestoreService) {
+        window.FirestoreService.checkin(shiftId, emp.id || empId, phone).catch(()=>{});
+        window.FirestoreService.saveRoster(shiftId, localData).catch(()=>{});
+      }
+
+      return { employeeData: emp, isUnassigned };
     } catch (error) {
-      console.error("Lỗi điểm danh qua API:", error);
+      console.error("Lỗi điểm danh:", error);
       throw new Error(error.message || "Lỗi kết nối hệ thống.");
     }
   },
 
-  // Gửi yêu cầu xin nghỉ / xin lên ca lên Google Sheets
   submitRequest: async (payload) => {
-    // Lưu vào localStorage để highlight admin
+    // 1. Lưu local cache
     const requests = JSON.parse(localStorage.getItem("agr_requests") || "[]");
     requests.push({
       empId: payload.empId.toLowerCase().trim(),
@@ -427,24 +430,37 @@ const DataManager = {
     });
     localStorage.setItem("agr_requests", JSON.stringify(requests));
 
-    if (!CONFIG.DEMO_MODE) {
+    if (CONFIG.DEMO_MODE) return { success: true };
+
+    // 2. Lưu vào Firebase (Primary)
+    if (window.FirestoreService) {
       try {
-        const response = await fetch(State.apiLink, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "request",
-            ...payload,
-          }),
-        });
-        const res = await response.json();
-        if (res.error) throw new Error(res.error);
-        return res;
-      } catch (error) {
-        console.error("Lỗi gửi yêu cầu:", error);
-        throw new Error(error.message || "Lỗi kết nối hệ thống.");
+        const fbRes = await window.FirestoreService.submitRequest(payload);
+        if (fbRes.success) {
+           // Sync GAS background
+           fetch(State.apiLink, {
+              method: "POST",
+              body: JSON.stringify({ action: "request", ...payload }),
+           }).catch(()=>{});
+           return fbRes;
+        }
+      } catch (e) {
+        console.warn("Firebase submitRequest error:", e);
       }
     }
-    return { success: true };
+
+    // 3. Lưu vào GAS (Fallback)
+    try {
+      const response = await fetch(State.apiLink, {
+        method: "POST",
+        body: JSON.stringify({ action: "request", ...payload }),
+      });
+      const res = await response.json();
+      if (res.error) throw new Error(res.error);
+      return res;
+    } catch (error) {
+      console.error("Lỗi gửi yêu cầu:", error);
+      throw new Error(error.message || "Lỗi kết nối hệ thống.");
+    }
   },
 };
-

@@ -13,14 +13,13 @@
 
 // =============================================
 // 🔑 FIREBASE CONFIG — THAY THẾ BẰNG CONFIG CỦA BẠN
-// =============================================
 const firebaseConfig = {
-  apiKey: "AIzaSyAhKTuLBoi4c81qEjhoXTWHyURbYk4jYWA",
-  authDomain: "asia-southeast1-b888c.firebaseapp.com",
-  projectId: "asia-southeast1-b888c",
-  storageBucket: "asia-southeast1-b888c.firebasestorage.app",
-  messagingSenderId: "502697530805",
-  appId: "1:502697530805:web:27b5f06a1b0df7f44135fc"
+  apiKey: "AIzaSyDMNXAQiU27NbYm217RjkGt_0OOYVnFGWM",
+  authDomain: "caigidonha.firebaseapp.com",
+  projectId: "caigidonha",
+  storageBucket: "caigidonha.firebasestorage.app",
+  messagingSenderId: "616964012819",
+  appId: "1:616964012819:web:5dd98d3e265f86dadd78e6"
 };
 
 // =============================================
