@@ -34,6 +34,9 @@ const RegUI = {
     let theadHtml = '';
     let tbodyHtml = '';
 
+    const today = new Date();
+    const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
     if (selectedShift.id === 'CA_NGAY') {
       theadHtml = `
         <tr>
@@ -44,15 +47,24 @@ const RegUI = {
           <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
         </tr>
       `;
-      tbodyHtml = dates.map((d, i) => `
-        <tr>
-          <td>${d.label}</td>
-          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-15:00" data-date="${d.iso}"></td>
-          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-10:00" data-date="${d.iso}"></td>
-          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="15:00-22:00" data-date="${d.iso}"></td>
-          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF" data-date="${d.iso}"></td>
-        </tr>
-      `).join('');
+      tbodyHtml = dates.map((d, i) => {
+        const isPast = d.iso < todayISO;
+        if (isPast) {
+          return `<tr style="display:none">
+            <td>${d.label}</td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF" data-date="${d.iso}" checked></td>
+          </tr>`;
+        }
+        return `
+          <tr>
+            <td>${d.label}</td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-15:00" data-date="${d.iso}"></td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-10:00" data-date="${d.iso}"></td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="15:00-22:00" data-date="${d.iso}"></td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF" data-date="${d.iso}"></td>
+          </tr>
+        `;
+      }).join('');
     } else {
       theadHtml = `
         <tr>
@@ -61,13 +73,22 @@ const RegUI = {
           <th>OFF (Không đăng ký)</th>
         </tr>
       `;
-      tbodyHtml = dates.map((d, i) => `
-        <tr>
-          <td>${d.label}</td>
-          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="WORK" data-date="${d.iso}"></td>
-          <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF"  data-date="${d.iso}"></td>
-        </tr>
-      `).join('');
+      tbodyHtml = dates.map((d, i) => {
+        const isPast = d.iso < todayISO;
+        if (isPast) {
+          return `<tr style="display:none">
+            <td>${d.label}</td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF" data-date="${d.iso}" checked></td>
+          </tr>`;
+        }
+        return `
+          <tr>
+            <td>${d.label}</td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="WORK" data-date="${d.iso}"></td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF"  data-date="${d.iso}"></td>
+          </tr>
+        `;
+      }).join('');
     }
 
     return { thead: theadHtml, tbody: tbodyHtml };
