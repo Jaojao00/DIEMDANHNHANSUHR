@@ -131,11 +131,11 @@ const Utils = {
       startStr = "10h00";
       endStr = "14h00";
     } else if (shiftId === "22:00-06:00") {
-      // Ca Đêm: 14h - 18h cùng ngày
+      // Ca Đêm: 14h - 20h cùng ngày
       start.setHours(14, 0, 0);
-      end.setHours(18, 0, 0);
+      end.setHours(20, 0, 0);
       startStr = "14h00";
-      endStr = "18h00";
+      endStr = "20h00";
     } else if (shiftId === "15:00-22:00") {
       // Ca Chiều: 9h - 12h cùng ngày
       start.setHours(9, 0, 0);
