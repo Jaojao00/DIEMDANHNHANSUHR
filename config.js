@@ -9,7 +9,7 @@ const CONFIG = {
   // =============================================
   // Dán URL Google Apps Script Web App vào đây sau khi deploy
   // Xem hướng dẫn trong README.md
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyMKDhdM4qguAa-fhUJMh-SO3o3hn0Rn7J51G8DQoi36GWqwyry8kNQTG0zsvMCb5Rx/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbys7p-hF3pMm1spEN12X63gW1chLeTHquCHD8VfykI337LXpj01PXrc-BrycZbS44Hu/exec',
 
   // Tự động BẬT realtime nếu APPS_SCRIPT_URL đã được cài đặt
   get DEMO_MODE() {
