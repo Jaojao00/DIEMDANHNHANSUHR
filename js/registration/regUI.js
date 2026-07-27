@@ -42,8 +42,8 @@ const RegUI = {
         <tr>
           <th>Ngày</th>
           <th style="color:#43e97b; min-width:80px">Ca OS Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-15:00</small></th>
-          <th style="color:#4facf7; min-width:80px">Ca Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-10:00</small></th>
-          <th style="color:#ffb347; min-width:80px">Ca Chiều<br><small style="font-weight:normal;opacity:0.8">15:00-22:00</small></th>
+          <th style="color:#4facf7; min-width:80px">Ca Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-11:00</small></th>
+          <th style="color:#ffb347; min-width:80px">Ca Chiều<br><small style="font-weight:normal;opacity:0.8">13:00-22:00</small></th>
           <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
         </tr>
       `;
@@ -59,8 +59,8 @@ const RegUI = {
           <tr>
             <td>${d.label}</td>
             <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-15:00" data-date="${d.iso}"></td>
-            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-10:00" data-date="${d.iso}"></td>
-            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="15:00-22:00" data-date="${d.iso}"></td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="06:00-11:00" data-date="${d.iso}"></td>
+            <td><input type="radio" class="reg-radio" name="regDay_${i}" value="13:00-22:00" data-date="${d.iso}"></td>
             <td><input type="radio" class="reg-radio" name="regDay_${i}" value="OFF" data-date="${d.iso}"></td>
           </tr>
         `;
@@ -103,8 +103,8 @@ const RegUI = {
         <tr>
           <th>Ngày</th>
           <th style="color:#43e97b; min-width:80px">Ca OS Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-15:00</small></th>
-          <th style="color:#4facf7; min-width:80px">Ca Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-10:00</small></th>
-          <th style="color:#ffb347; min-width:80px">Ca Chiều<br><small style="font-weight:normal;opacity:0.8">15:00-22:00</small></th>
+          <th style="color:#4facf7; min-width:80px">Ca Sáng<br><small style="font-weight:normal;opacity:0.8">06:00-11:00</small></th>
+          <th style="color:#ffb347; min-width:80px">Ca Chiều<br><small style="font-weight:normal;opacity:0.8">13:00-22:00</small></th>
           <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
         </tr>
       `;
@@ -123,8 +123,8 @@ const RegUI = {
       if (isCaNgay) {
         row += `
           <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="06:00-15:00" ${sel.choice === '06:00-15:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="06:00-10:00" ${sel.choice === '06:00-10:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
-          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="15:00-22:00" ${sel.choice === '15:00-22:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="06:00-11:00" ${sel.choice === '06:00-11:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
+          <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="13:00-22:00" ${sel.choice === '13:00-22:00' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
           <td><label class="reg-radio"><input type="radio" name="cr_choice_${index}" value="OFF" ${sel.choice === 'OFF' ? 'checked' : ''} onchange="${onChangeFnStr}(${index}, this.value)"><span></span></label></td>
         `;
       } else {

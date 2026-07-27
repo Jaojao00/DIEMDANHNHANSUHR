@@ -54,7 +54,7 @@ const RegValidation = {
     // Tạm thời tắt tính năng này theo yêu cầu (tắt kiểm tra 3 ngày làm liên tục)
     return null;
     
-    const longShifts = ["06:00-15:00", "15:00-22:00", "22:00-06:00"];
+    const longShifts = ["06:00-15:00", "13:00-22:00", "22:00-06:00"];
     let consecutive = 0;
     
     for (let i = 0; i < selections.length; i++) {

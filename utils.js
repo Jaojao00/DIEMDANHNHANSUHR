@@ -136,13 +136,13 @@ const Utils = {
       end.setHours(18, 0, 0);
       startStr = "14h00";
       endStr = "20h00";
-    } else if (shiftId === "15:00-22:00") {
+    } else if (shiftId === "13:00-22:00") {
       // Ca Chiều: 9h - 12h cùng ngày
       start.setHours(9, 0, 0);
       end.setHours(12, 0, 0);
       startStr = "09h00";
       endStr = "12h00";
-    } else if (shiftId === "06:00-10:00" || shiftId === "06:00-15:00") {
+    } else if (shiftId === "06:00-11:00" || shiftId === "06:00-15:00") {
       // Ca Sáng & OS Sáng: trước 19h ngày hôm trước
       start.setDate(start.getDate() - 1);
       start.setHours(0, 0, 0);

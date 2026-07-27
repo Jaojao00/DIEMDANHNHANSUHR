@@ -393,7 +393,7 @@ const RegApp = {
       
       let targetShiftIds = [];
       if (shiftId === 'CA_NGAY') {
-        targetShiftIds = ['06:00-15:00', '06:00-10:00', '15:00-22:00', 'CA_NGAY'];
+        targetShiftIds = ['06:00-15:00', '06:00-11:00', '13:00-22:00', 'CA_NGAY'];
       } else {
         targetShiftIds = [shiftId];
       }
