@@ -423,7 +423,7 @@ const RegApp = {
                 mergedSelections[sel.label] = { label: sel.label, choice: "OFF" };
               }
               if (sel.choice !== "OFF") {
-                mergedSelections[sel.label].choice = subShiftData.shiftId;
+                mergedSelections[sel.label].choice = subShiftData.shiftId === "CA_NGAY" ? sel.choice : subShiftData.shiftId;
               }
             });
           }
