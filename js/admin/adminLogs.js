@@ -72,8 +72,24 @@ Object.assign(AdminApp, {
     const logList = document.getElementById("logList");
     if (!logList) return;
     const confirmed = State.scheduleData
-      .filter((e) => e.status === "confirmed")
-      .sort((a, b) => (b.timestamp || "").localeCompare(a.timestamp || "")); // Xếp mới nhất lên trên
+      .filter((e) => (e.status || "").toLowerCase().trim() === "confirmed")
+      .sort((a, b) => {
+        const timeA = a.timestamp || "";
+        const timeB = b.timestamp || "";
+        
+        // Handle night shifts: times like "00:xx" to "06:xx" should be treated as > "23:xx"
+        const getSortValue = (timeStr) => {
+           if (!timeStr) return -1;
+           // assuming format HH:mm:ss
+           let [h, m, s] = timeStr.split(":").map(Number);
+           if (isNaN(h)) return 0;
+           // if time is between 00:00 and 12:00, add 24 to hours for sorting purposes
+           if (h < 12) h += 24;
+           return h * 3600 + (m || 0) * 60 + (s || 0);
+        };
+        
+        return getSortValue(timeB) - getSortValue(timeA);
+      });
 
     if (confirmed.length === 0) {
       logList.innerHTML = `<div class="log-empty">Chưa có ai điểm danh</div>`;

@@ -971,7 +971,7 @@ textarea {
   background: rgba(255, 184, 0, 0.08) !important;
 }
 .schedule-table tr.attended td {
-  background: rgba(0, 212, 142, 0.05) !important;
+  background: rgba(0, 212, 142, 0.15) !important;
 }
 
 .employee-code {
