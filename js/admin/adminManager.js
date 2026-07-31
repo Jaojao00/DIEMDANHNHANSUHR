@@ -15,6 +15,14 @@ Object.assign(AdminApp, {
         const d = new Date();
         datePicker.value = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
       }
+      
+      const resetCb = document.getElementById("resetStatusCheckbox");
+      if (resetCb) {
+        resetCb.checked = (datePicker.value !== savedDate);
+        datePicker.addEventListener("change", () => {
+           resetCb.checked = (datePicker.value !== localStorage.getItem("agr_schedule_date"));
+        });
+      }
     }
 
     // Render shift buttons inside modal
@@ -84,7 +92,10 @@ Object.assign(AdminApp, {
         let existingPhone = "";
         let newNote = cols[shift.noteColIndex]?.trim() || "";
 
-        if (State.scheduleData && State.scheduleData.length > 0) {
+        const resetCb = document.getElementById("resetStatusCheckbox");
+        const shouldReset = resetCb ? resetCb.checked : false;
+
+        if (!shouldReset && State.scheduleData && State.scheduleData.length > 0) {
            const existingEmp = State.scheduleData.find(e => 
               (e.id && empId && e.id.toLowerCase() === empId.toLowerCase()) || 
               (e.name && empName && e.name.toLowerCase() === empName.toLowerCase())
