@@ -1338,10 +1338,11 @@ Object.assign(AdminApp, {
   },
 
   changeConfirmStatus: async (empId, currentStatus) => {
-    let defaultStatus = currentStatus;
-    if (currentStatus === "xin off") defaultStatus = "xin off";
-    else if (currentStatus === "confirmed") defaultStatus = "confirmed";
-    else defaultStatus = "pending";
+    let normalizedStatus = (currentStatus || "").toLowerCase().trim();
+    let defaultStatus = "pending";
+    if (normalizedStatus === "xin off" || normalizedStatus === "xin_off") defaultStatus = "xin off";
+    else if (normalizedStatus === "confirmed") defaultStatus = "confirmed";
+    else if (normalizedStatus === "xin lên ca" || normalizedStatus === "xin len ca") defaultStatus = "xin lên ca";
 
     const { value: newStatus } = await Swal.fire({
       title: 'Cập Nhật Trạng Thái',
@@ -1369,7 +1370,7 @@ Object.assign(AdminApp, {
     });
 
     if (newStatus) {
-      const emp = State.scheduleData.find(e => e.id.toLowerCase() === empId.toLowerCase());
+      const emp = State.scheduleData.find(e => e.id.toLowerCase().trim() === empId.toLowerCase().trim());
       if (emp) {
         emp.status = newStatus;
         if (newStatus === 'confirmed' && !emp.timestamp) {

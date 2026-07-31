@@ -91,14 +91,15 @@ Object.assign(AdminApp, {
     tbody.innerHTML = State.scheduleData
       .map((emp) => {
         const empIdLower = (emp.id || "").toLowerCase().trim();
-        const isOff = offIds.has(empIdLower) || emp.status === "xin off";
-        const isExtra = extraIds.has(empIdLower);
+        const empStatusLower = (emp.status || "").toLowerCase().trim();
+        const isOff = offIds.has(empIdLower) || empStatusLower === "xin off" || empStatusLower === "xin_off";
+        const isExtra = extraIds.has(empIdLower) || empStatusLower === "xin lên ca" || empStatusLower === "xin len ca";
         const isAutoOff =
-          !isOff && !isExtra && emp.status !== "confirmed" && isTimeOver;
+          !isOff && !isExtra && empStatusLower !== "confirmed" && isTimeOver;
 
         let rowClass = isOff
           ? "xin-off-row"
-          : emp.status === "confirmed"
+          : empStatusLower === "confirmed"
             ? "attended"
             : "";
         if (isAutoOff) rowClass = "auto-off-row";
@@ -107,12 +108,12 @@ Object.assign(AdminApp, {
         const onclickAttr = `onclick="AdminApp.changeConfirmStatus('${escapeHTML(emp.id)}', '${emp.status || ''}')" style="cursor: pointer;"`;
         
         if (isOff) {
-          confirmCell = `<span class="xin-off-badge" ${onclickAttr}>📋 Xin Off</span>`;
+          confirmCell = `<span class="xin-off-badge" ${onclickAttr}>🚫 Xin Off</span>`;
         } else if (isAutoOff) {
           confirmCell = `<span class="auto-off-badge" ${onclickAttr}>OFF CHƯA ĐIỂM DANH</span>`;
-        } else if (isExtra || emp.status === "xin lên ca") {
+        } else if (isExtra || empStatusLower === "xin lên ca") {
           confirmCell = `<span class="xin-len-ca-badge" ${onclickAttr}>⬆️ Xin Lên Ca</span>`;
-        } else if (emp.status === "confirmed") {
+        } else if (empStatusLower === "confirmed") {
           confirmCell = `<div class="confirm-badge confirmed" title="Đã điểm danh lúc ${emp.timestamp || ''}" ${onclickAttr}>✓</div>`;
         } else {
           confirmCell = `<div class="confirm-badge pending" ${onclickAttr}></div>`;
@@ -257,8 +258,8 @@ Object.assign(AdminApp, {
     const isTimeOver = timeStatus.isOver;
 
     const total = State.scheduleData.length;
-    const confirmed = State.scheduleData.filter(
-      (e) => e.status === "confirmed",
+    const confirmedCount = State.scheduleData.filter(
+      (e) => (e.status || "").toLowerCase().trim() === "confirmed",
     ).length;
 
     let explicitXinOffCount = 0;
@@ -266,11 +267,12 @@ Object.assign(AdminApp, {
 
     State.scheduleData.forEach((e) => {
       const idLower = (e.id || "").toLowerCase().trim();
-      const isOff = offIds.has(idLower) || e.status === "xin off";
-      const isExtra = extraIds.has(idLower);
+      const empStatusLower = (e.status || "").toLowerCase().trim();
+      const isOff = offIds.has(idLower) || empStatusLower === "xin off" || empStatusLower === "xin_off";
+      const isExtra = extraIds.has(idLower) || empStatusLower === "xin lên ca" || empStatusLower === "xin len ca";
       if (isOff) {
         explicitXinOffCount++;
-      } else if (isTimeOver && !isExtra && e.status !== "confirmed") {
+      } else if (isTimeOver && !isExtra && empStatusLower !== "confirmed") {
         autoOffCount++;
       }
     });
@@ -289,15 +291,15 @@ Object.assign(AdminApp, {
     const adminBar = document.getElementById("adminBar");
 
     if (totalEl) totalEl.textContent = effectiveTotal;
-    if (confirmedEl) confirmedEl.textContent = confirmed;
+    if (confirmedEl) confirmedEl.textContent = confirmedCount;
     if (pendingEl)
-      pendingEl.textContent = Math.max(0, effectiveTotal - confirmed);
+      pendingEl.textContent = Math.max(0, effectiveTotal - confirmedCount);
     if (xinOffElTop) xinOffElTop.textContent = xinOffCount;
 
-    if (adminDone) adminDone.textContent = confirmed;
+    if (adminDone) adminDone.textContent = confirmedCount;
     if (adminTotal) adminTotal.textContent = effectiveTotal;
     if (adminBar) {
-      const pct = effectiveTotal === 0 ? 0 : (confirmed / effectiveTotal) * 100;
+      const pct = effectiveTotal === 0 ? 0 : (confirmedCount / effectiveTotal) * 100;
       adminBar.style.width = `${pct}%`;
     }
   }
