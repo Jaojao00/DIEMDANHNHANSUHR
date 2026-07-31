@@ -94,6 +94,15 @@ const EmployeeApp = {
       )
       .join("");
 
+    // GSAP Animation
+    if (typeof gsap !== "undefined") {
+      gsap.fromTo(
+        container.querySelectorAll(".shift-card"),
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "back.out(1.7)" }
+      );
+    }
+
     // Bind events
     container.querySelectorAll(".shift-card").forEach((card) => {
       card.addEventListener("click", () => {
@@ -111,6 +120,15 @@ const EmployeeApp = {
       if (el.id === phaseId) el.classList.add("active");
       else el.classList.add("hidden");
     });
+
+    // GSAP Phase Transition Animation
+    if (typeof gsap !== "undefined") {
+      gsap.fromTo(
+        `#${phaseId}`,
+        { opacity: 0, y: 15 },
+        { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }
+      );
+    }
 
     if (phaseId === "phaseAttendance") {
       const shift = State.shifts.find((s) => s.id === State.selectedShiftId);

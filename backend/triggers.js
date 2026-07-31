@@ -1,5 +1,5 @@
 function autoGenerateRoster(targetShifts) {
-  if (!targetShifts) targetShifts = ["06:00-15:00", "06:00-10:00", "15:00-22:00", "18:00-22:00", "22:00-06:00"];
+  if (!targetShifts) targetShifts = ["06:00-15:00", "06:00-11:00", "13:00-22:00", "18:00-22:00", "22:00-06:00"];
   var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   
   
@@ -172,8 +172,8 @@ function autoSyncPositions(targetShifts) {
     // Khai báo giới hạn dòng cho từng ca
     var rowMapping = {
       "06:00-15:00": { start: 22, end: 72 },
-      "06:00-10:00": { start: 76, end: 117 },
-      "15:00-22:00": { start: 149, end: 200 },
+      "06:00-11:00": { start: 76, end: 117 },
+      "13:00-22:00": { start: 149, end: 200 },
       "18:00-22:00": { start: 203, end: 258 },
       "22:00-06:00": { start: 296, end: 430 }
     };
@@ -241,17 +241,17 @@ function autoSyncPositions(targetShifts) {
 // ==========================================
 // CÁC HÀM GỌI TRIGGER THEO TỪNG CA
 // ==========================================
-// Nhóm Ca Sáng (06:00-15:00 và 06:00-10:00)
+// Nhóm Ca Sáng (06:00-15:00 và 06:00-11:00)
 
-function trigger_Generate_CaSang() { autoGenerateRoster(["06:00-15:00", "06:00-10:00"]); }
+function trigger_Generate_CaSang() { autoGenerateRoster(["06:00-15:00", "06:00-11:00"]); }
 
-function trigger_Sync_CaSang() { autoSyncPositions(["06:00-15:00", "06:00-10:00"]); }
+function trigger_Sync_CaSang() { autoSyncPositions(["06:00-15:00", "06:00-11:00"]); }
 
-// Nhóm Ca Chiều (15:00-22:00)
+// Nhóm Ca Chiều (13:00-22:00)
 
-function trigger_Generate_CaChieu() { autoGenerateRoster(["15:00-22:00"]); }
+function trigger_Generate_CaChieu() { autoGenerateRoster(["13:00-22:00"]); }
 
-function trigger_Sync_CaChieu() { autoSyncPositions(["15:00-22:00"]); }
+function trigger_Sync_CaChieu() { autoSyncPositions(["13:00-22:00"]); }
 
 // Nhóm Ca Tối (18:00-22:00)
 

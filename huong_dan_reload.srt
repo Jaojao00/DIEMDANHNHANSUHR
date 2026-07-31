@@ -1,0 +1,35 @@
+1
+00:00:00,000 --> 00:00:05,000
+Xin chào các bạn, video này sẽ hướng dẫn cách tải lại trang (reload) trên điện thoại.
+
+2
+00:00:05,500 --> 00:00:13,000
+Khi hệ thống có cập nhật mới hoặc lịch làm việc chưa hiển thị đúng, điện thoại của bạn có thể đang lưu bản cũ.
+
+3
+00:00:13,500 --> 00:00:20,000
+Cách đầu tiên và đơn giản nhất: Hãy vuốt màn hình từ trên cùng xuống dưới...
+
+4
+00:00:20,500 --> 00:00:26,000
+...cho đến khi thấy biểu tượng vòng tròn xoay xoay xuất hiện ở mép trên cùng để làm mới trang.
+
+5
+00:00:26,500 --> 00:00:34,000
+Cách thứ hai: Bạn bấm vào dấu 3 chấm ở góc phải màn hình trình duyệt (Safari hoặc Chrome).
+
+6
+00:00:34,500 --> 00:00:40,000
+Sau đó chọn biểu tượng "Tải lại trang" (hình mũi tên xoay vòng tròn).
+
+7
+00:00:40,500 --> 00:00:48,000
+Cách thứ ba: Đặc biệt trên ứng dụng của chúng ta, bạn có thể sử dụng nút tiện ích nổi.
+
+8
+00:00:48,500 --> 00:00:54,000
+Chỉ cần bấm vào nút có hình cái cờ lê ở góc màn hình...
+
+9
+00:00:54,500 --> 00:01:00,000
+Hệ thống sẽ tự động xóa bộ nhớ đệm và tải về bản mới nhất. Chúc các bạn thao tác thành công!

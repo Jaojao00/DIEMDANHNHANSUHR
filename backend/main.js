@@ -239,8 +239,8 @@ function doGet(e) {
             } else {
                var nm = sName.toLowerCase();
                if (nm.indexOf("os s") > -1) sShiftId = "06:00-15:00";
-               else if (nm.indexOf("sáng") > -1 || nm.indexOf("sng") > -1) sShiftId = "06:00-10:00";
-               else if (nm.indexOf("chiều") > -1 || nm.indexOf("chi?u") > -1) sShiftId = "15:00-22:00";
+               else if (nm.indexOf("sáng") > -1 || nm.indexOf("sng") > -1) sShiftId = "06:00-11:00";
+               else if (nm.indexOf("chiều") > -1 || nm.indexOf("chi?u") > -1) sShiftId = "13:00-22:00";
                else if (nm.indexOf("tối") > -1 || nm.indexOf("t?i") > -1) sShiftId = "18:00-22:00";
                else if (nm.indexOf("đêm") > -1 || nm.indexOf("dm") > -1) sShiftId = "22:00-06:00";
             }

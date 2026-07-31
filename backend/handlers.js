@@ -284,8 +284,8 @@ function handleApproveChangeRequest(data, shiftId, sheet) {
         if (data.shiftId === "CA_NGAY") {
           var subShifts = [
             { id: "06:00-15:00", label: "Ca OS Sáng" },
-            { id: "06:00-10:00", label: "Ca Sáng" },
-            { id: "15:00-22:00", label: "Ca Chiều" }
+            { id: "06:00-11:00", label: "Ca Sáng" },
+            { id: "13:00-22:00", label: "Ca Chiều" }
           ];
           for (var k = 0; k < subShifts.length; k++) {
             var subShift = subShifts[k];
@@ -581,8 +581,8 @@ function handleSubmitRegistration(data, shiftId, sheet) {
         if (data.shiftId === "CA_NGAY") {
           var subShifts = [
             { id: "06:00-15:00", label: "Ca OS Sáng" },
-            { id: "06:00-10:00", label: "Ca Sáng" },
-            { id: "15:00-22:00", label: "Ca Chiều" }
+            { id: "06:00-11:00", label: "Ca Sáng" },
+            { id: "13:00-22:00", label: "Ca Chiều" }
           ];
           
           for (var k = 0; k < subShifts.length; k++) {

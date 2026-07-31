@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hr-app-v4';
+const CACHE_NAME = 'hr-app-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -7,8 +7,6 @@ const ASSETS_TO_CACHE = [
   './config.js',
   './dataManager.js',
   './employee.js',
-  './registration.js',
-  './admin.js',
   './utils.js',
   './logo.png'
 ];
@@ -50,7 +48,7 @@ self.addEventListener('fetch', event => {
         // Return cached response if found, else fetch from network
         return cachedResponse || fetch(event.request).then(response => {
           // Update cache with new response
-          if (response && response.status === 200) {
+          if (response && response.status === 200 && event.request.url.startsWith('http')) {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then(cache => {
               cache.put(event.request, responseClone);

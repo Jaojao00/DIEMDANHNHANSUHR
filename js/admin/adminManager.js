@@ -77,15 +77,39 @@ Object.assign(AdminApp, {
         const positions = shift.colHeaders.map(
           (_, pi) => cols[4 + pi]?.trim() || "",
         );
+        const empId = cols[1]?.trim() || "";
+        const empName = cols[2]?.trim() || "";
+        let existingStatus = "pending";
+        let existingTimestamp = "";
+        let existingPhone = "";
+        let newNote = cols[shift.noteColIndex]?.trim() || "";
+
+        if (State.scheduleData && State.scheduleData.length > 0) {
+           const existingEmp = State.scheduleData.find(e => 
+              (e.id && empId && e.id.toLowerCase() === empId.toLowerCase()) || 
+              (e.name && empName && e.name.toLowerCase() === empName.toLowerCase())
+           );
+           
+           if (existingEmp) {
+               existingStatus = existingEmp.status || "pending";
+               existingTimestamp = existingEmp.timestamp || "";
+               existingPhone = existingEmp.phone || "";
+               if (existingEmp.note && !newNote) {
+                   newNote = existingEmp.note;
+               }
+           }
+        }
+
         parsedData.push({
           stt: cols[0]?.trim() || i + 1 - startIndex,
-          id: cols[1]?.trim() || "",
-          name: cols[2]?.trim() || "",
+          id: empId,
+          name: empName,
           dinhDanh: cols[3]?.trim() || "",
           positions: positions,
-          note: cols[shift.noteColIndex]?.trim() || "",
-          status: "pending",
-          timestamp: "",
+          note: newNote,
+          status: existingStatus,
+          timestamp: existingTimestamp,
+          phone: existingPhone
         });
       }
     }
