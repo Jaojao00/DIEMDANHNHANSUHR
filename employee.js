@@ -352,7 +352,7 @@ const EmployeeApp = {
             'Chọn Ca Xin Off <span style="color:#ff5c5c">*</span>';
         if (shiftSelect && shiftSelect.options.length > 0) {
           shiftSelect.options[0].style.display = "block";
-          shiftSelect.value = "ALL";
+          shiftSelect.value = "";
         }
 
         const reasonLabel = document.getElementById("req_reason_label");
@@ -479,9 +479,12 @@ const EmployeeApp = {
 
         if ((type === "XIN LÊN CA" || type === "XIN OFF") && targetShiftEl) {
           targetShift = targetShiftEl.value;
+          if (!targetShift) {
+            Utils.showToast("Vui lòng chọn ca bạn muốn Xin!", "error");
+            return;
+          }
           let shiftName =
             targetShiftEl.options[targetShiftEl.selectedIndex].text;
-          if (targetShift === "ALL") shiftName = "Tất cả các ca";
           note =
             `[${type === "XIN OFF" ? "Xin Off" : "Xin ca"}: ${shiftName}] ` +
             note;
