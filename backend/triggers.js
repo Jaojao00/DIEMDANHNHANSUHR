@@ -290,6 +290,56 @@ function setupAutoTriggers() {
   // 4. Ca Đêm (22h-06h): Chốt 22:00 hôm trước, Cập nhật vị trí 06:00 sáng hôm sau
   ScriptApp.newTrigger("trigger_Generate_CaDem").timeBased().atHour(22).nearMinute(0).everyDays(1).create();
   ScriptApp.newTrigger("trigger_Sync_CaDem").timeBased().atHour(6).nearMinute(0).everyDays(1).create();
+
+  // 5. Tự động dọn dẹp các đơn Xin Off/Xin Lên Ca của các ngày trước đó (chạy lúc 00:05 mỗi ngày)
+  ScriptApp.newTrigger("cleanupOldRequests").timeBased().atHour(0).nearMinute(5).everyDays(1).create();
+}
+
+// ==========================================
+// HÀM DỌN DẸP DỮ LIỆU XIN OFF/XIN LÊN CA CŨ
+// ==========================================
+function cleanupOldRequests() {
+  var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  var reqSheet = ss.getSheetByName("XIN_OFF");
+  
+  if (!reqSheet) return;
+  
+  var data = reqSheet.getDataRange().getValues();
+  if (data.length <= 1) return; 
+  
+  var today = new Date();
+  // Đưa về 00:00:00 của ngày hôm nay để so sánh
+  today.setHours(0, 0, 0, 0);
+  
+  var rowsToKeep = [data[0]]; // Luôn giữ lại Header
+  
+  for (var i = 1; i < data.length; i++) {
+    var rowDateStr = data[i][6] ? data[i][6].toString().trim() : "";
+    
+    if (!rowDateStr) {
+      // Nếu không có ngày thì giữ lại
+      rowsToKeep.push(data[i]);
+      continue;
+    }
+    
+    // Định dạng ngày trong sheet đang là DD/MM/YYYY
+    var parts = rowDateStr.split("/");
+    if (parts.length === 3) {
+      var d = new Date(parts[2], parts[1] - 1, parts[0]);
+      // Chỉ giữ lại đơn của hôm nay hoặc tương lai
+      if (d.getTime() >= today.getTime()) {
+        rowsToKeep.push(data[i]);
+      }
+    } else {
+      // Không parse được ngày thì cứ giữ lại
+      rowsToKeep.push(data[i]);
+    }
+  }
+  
+  reqSheet.clear();
+  if (rowsToKeep.length > 0) {
+    reqSheet.getRange(1, 1, rowsToKeep.length, rowsToKeep[0].length).setValues(rowsToKeep);
+  }
 }
 
 
