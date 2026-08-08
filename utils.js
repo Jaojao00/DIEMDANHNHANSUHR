@@ -132,7 +132,7 @@ const Utils = {
       endStr = "14h00";
     } else if (shiftId === "22:00-06:00") {
       // Ca Đêm: 14h - 20h cùng ngày
-      start.setHours(14, 0, 0);
+      start.setHours(12, 0, 0);
       end.setHours(20, 0, 0);
       startStr = "14h00";
       endStr = "20h00";
