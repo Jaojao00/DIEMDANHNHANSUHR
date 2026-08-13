@@ -10,7 +10,7 @@ function doPost(e) {
     var shiftId = data.shiftId;
     
     // Auth Check for Admin Actions
-    var adminActions = ["save_reg_config", "reset_registrations", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs"];
+    var adminActions = ["save_reg_config", "reset_registrations", "reset_all_shifts", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs"];
     if (adminActions.indexOf(action) !== -1) {
       if (!verifyAdminToken(data.adminToken)) {
         return sendErrorResponse("Unauthorized. Vui lòng đăng nhập lại.", 401);
@@ -45,6 +45,7 @@ function doPost(e) {
       case "submit_change_request": return handleSubmitChangeRequest(data, shiftId, sheet);
       case "save_reg_config": return handleSaveRegConfig(data, shiftId, sheet);
       case "reset_registrations": return handleResetRegistrations(data, shiftId, sheet);
+      case "reset_all_shifts": return handleResetAllShifts(data);
       case "sync_roster": return handleSyncRoster(data, shiftId, sheet);
       case "admin_login": return handleAdminLogin(data);
       default: return sendErrorResponse("Invalid action");

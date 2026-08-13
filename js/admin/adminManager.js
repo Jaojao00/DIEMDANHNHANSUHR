@@ -175,8 +175,13 @@ Object.assign(AdminApp, {
   savePastedSchedule: async () => {
     if (!State._tempParsedData || State._tempParsedData.length === 0) return;
 
+    let dateChanged = false;
     const datePicker = document.getElementById("scheduleDatePicker");
     if (datePicker && datePicker.value) {
+      const oldDate = localStorage.getItem("agr_schedule_date");
+      if (oldDate && oldDate !== datePicker.value) {
+        dateChanged = true;
+      }
       localStorage.setItem("agr_schedule_date", datePicker.value);
       const mainDateInput = document.getElementById("mainScheduleDateInput");
       if (mainDateInput) {
@@ -199,6 +204,14 @@ Object.assign(AdminApp, {
       );
       document.getElementById("managerModal").classList.add("hidden");
       AdminApp.loadData(); // Tải lại bảng admin
+      
+      if (dateChanged) {
+        setTimeout(() => {
+          if (confirm("Bạn vừa thay đổi ngày làm việc.\nBạn có muốn XÓA TOÀN BỘ trạng thái điểm danh của TẤT CẢ CÁC CA để bắt đầu ngày mới không?")) {
+            DataManager.resetAllShifts().then(() => AdminApp.loadData());
+          }
+        }, 500);
+      }
     } catch (e) {
       Utils.showToast("Lỗi lưu dữ liệu: " + e.message, "error");
     }

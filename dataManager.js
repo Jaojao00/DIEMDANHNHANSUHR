@@ -313,7 +313,29 @@ const DataManager = {
       }
     }
 
-    // 2. Lưu vào Google Sheets (Sync)
+  resetAllShifts: async () => {
+    try {
+      AdminApp.showLoading(true);
+      const response = await fetch(State.apiLink, {
+        method: "POST",
+        body: JSON.stringify({ action: "reset_all_shifts" })
+      });
+      const res = await response.json();
+      if (res.success) {
+        Utils.showToast(res.message || "Đã reset trạng thái ngày mới", "success");
+        localStorage.removeItem("agr_requests");
+      } else {
+        Utils.showToast(res.error || "Lỗi khi reset", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      Utils.showToast("Lỗi kết nối máy chủ", "error");
+    } finally {
+      AdminApp.showLoading(false);
+    }
+  },
+
+  // 2. Lưu vào Google Sheets (Sync)
     try {
       const shift = State.shifts.find((s) => s.id === shiftId);
       const headers = shift ? [...shift.colHeaders] : [];

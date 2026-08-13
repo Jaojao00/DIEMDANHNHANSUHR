@@ -128,6 +128,7 @@ function handleRequest(data, shiftId, sheet) {
                 var phoneCol = headers.length;
                 var noteCol = headers.length - 3; // 1-based index (headers.length - 4 + 1)
                 
+                var hasUpdate = false;
                 for (var i = 1; i < values.length; i++) {
                   var empIdInSheet = (values[i][1] || "").toString().toLowerCase().trim();
                   var empStt = (values[i][0] || "").toString().toLowerCase().trim();
@@ -136,16 +137,20 @@ function handleRequest(data, shiftId, sheet) {
                   if (empIdInSheet === searchId || empStt === searchId || empName === searchId) {
                     var currentStatus = values[i][statusCol - 1]; // 0-based index
                     if (currentStatus !== "confirmed") {
-                      allSheets[s].getRange(i + 1, statusCol).setValue("XIN OFF");
-                      allSheets[s].getRange(i + 1, timeCol).setValue(reqTime);
+                      values[i][statusCol - 1] = "XIN OFF";
+                      values[i][timeCol - 1] = reqTime;
                       if (data.reason) {
-                        allSheets[s].getRange(i + 1, noteCol).setValue(data.reason);
+                        values[i][noteCol - 1] = data.reason;
                       }
                       if (data.phone) {
-                        allSheets[s].getRange(i + 1, phoneCol).setValue(data.phone);
+                        values[i][phoneCol - 1] = data.phone;
                       }
+                      hasUpdate = true;
                     }
                   }
+                }
+                if (hasUpdate) {
+                  dataRange.setValues(values);
                 }
               }
             }
@@ -507,15 +512,16 @@ function handleCheckin(data, shiftId, sheet) {
     }
     
     // Cập nhật trạng thái
+    var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss");
     values[empIndex][statusIndex] = "confirmed";
-    values[empIndex][timeIndex] = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss");
+    values[empIndex][timeIndex] = timeString;
     
-    // Tối ưu: Batch update một lần duy nhất
-    dataRange.setValues(values);
+    // Tối ưu: Chỉ ghi lại một dòng đó thay vì ghi lại toàn bộ bảng (tránh ghi đè dữ liệu của người khác và tăng tốc cực nhanh)
+    sheet.getRange(empIndex + 1, statusIndex + 1, 1, 2).setValues([["confirmed", timeString]]);
     
     return sendSuccessResponse({ 
       status: "confirmed",
-      time: values[empIndex][timeIndex],
+      time: timeString,
       name: values[empIndex][2]
     });
     
@@ -525,6 +531,7 @@ function handleCheckin(data, shiftId, sheet) {
     lock.releaseLock();
   }
 }
+
 
 function handleSubmitRegistration(data, shiftId, sheet) {
 
