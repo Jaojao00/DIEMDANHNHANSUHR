@@ -313,6 +313,23 @@ const DataManager = {
       }
     }
 
+    // 2. Lưu vào Google Sheets (Sync)
+    try {
+      const shift = State.shifts.find((s) => s.id === shiftId);
+      const headers = shift ? [...shift.colHeaders] : [];
+      const response = await fetch(State.apiLink, {
+        method: "POST",
+        body: JSON.stringify({ action: "save", shiftId, headers, schedule: data }),
+      });
+      const res = await response.json();
+      if (res.error) throw new Error(res.error);
+      return res;
+    } catch (error) {
+      console.error("Lỗi lưu lịch lên Google Sheets:", error);
+      throw new Error("Lỗi kết nối đến máy chủ.");
+    }
+  },
+
   resetAllShifts: async () => {
     try {
       AdminApp.showLoading(true);
@@ -332,23 +349,6 @@ const DataManager = {
       Utils.showToast("Lỗi kết nối máy chủ", "error");
     } finally {
       AdminApp.showLoading(false);
-    }
-  },
-
-  // 2. Lưu vào Google Sheets (Sync)
-    try {
-      const shift = State.shifts.find((s) => s.id === shiftId);
-      const headers = shift ? [...shift.colHeaders] : [];
-      const response = await fetch(State.apiLink, {
-        method: "POST",
-        body: JSON.stringify({ action: "save", shiftId, headers, schedule: data }),
-      });
-      const res = await response.json();
-      if (res.error) throw new Error(res.error);
-      return res;
-    } catch (error) {
-      console.error("Lỗi lưu lịch lên Google Sheets:", error);
-      throw new Error("Lỗi kết nối đến máy chủ.");
     }
   },
 
