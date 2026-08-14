@@ -62,7 +62,8 @@ function autoGenerateRoster(targetShifts) {
     destSheet.clear();
     destSheet.appendRow(destHeaders);
     
-    var N = destHeaders.length - 8;
+    var noteIndex = destHeaders.indexOf("Ghi Chú");
+    var N = noteIndex !== -1 ? noteIndex - 4 : destHeaders.length - 8;
     if (N < 0) N = 0;
     
     var rowsToWrite = [];
@@ -214,7 +215,8 @@ function autoSyncPositions(targetShifts) {
       if (destData.length <= 1) continue;
       
       var destHeaders = destData[0];
-      var N = destHeaders.length - 8;
+      var noteIndex = destHeaders.indexOf("Ghi Chú");
+      var N = noteIndex !== -1 ? noteIndex - 4 : destHeaders.length - 8;
       if (N < 0) N = 0;
       
       var updatedRows = [];

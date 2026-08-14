@@ -80,7 +80,8 @@ function doGet(e) {
       var dataRange = sheet.getDataRange();
       var values = dataRange.getValues();
       var headers = values[0] || [];
-      var N = headers.length - 8; // Số cột vị trí động
+      var noteIndex = headers.indexOf("Ghi Chú");
+      var N = noteIndex !== -1 ? noteIndex - 4 : headers.length - 8; // Số cột vị trí động
       
       if (values.length <= 1) {
         return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);

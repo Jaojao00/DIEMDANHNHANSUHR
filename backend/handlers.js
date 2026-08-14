@@ -123,10 +123,10 @@ function handleRequest(data, shiftId, sheet) {
               var values = dataRange.getValues();
               if (values.length > 1) {
                 var headers = values[0];
-                var statusCol = headers.length - 2; // 1-based index (headers.length - 3 + 1)
-                var timeCol = headers.length - 1;
-                var phoneCol = headers.length;
-                var noteCol = headers.length - 3; // 1-based index (headers.length - 4 + 1)
+                var statusCol = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") + 1 : headers.length - 2;
+                var timeCol = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") + 1 : headers.length - 1;
+                var phoneCol = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") + 1 : headers.length;
+                var noteCol = headers.indexOf("Ghi Chú") !== -1 ? headers.indexOf("Ghi Chú") + 1 : headers.length - 3;
                 
                 var hasUpdate = false;
                 for (var i = 1; i < values.length; i++) {
@@ -179,10 +179,10 @@ function handleRequest(data, shiftId, sheet) {
                 }
               }
               
-              var noteIndex = headers.length - 4; // 0-based
-              var statusIndex = headers.length - 3; // 0-based
-              var timeIndex = headers.length - 2; // 0-based
-              var phoneIndex = headers.length - 1; // 0-based
+              var noteIndex = headers.indexOf("Ghi Chú") !== -1 ? headers.indexOf("Ghi Chú") : headers.length - 4;
+              var statusIndex = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") : headers.length - 3;
+              var timeIndex = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") : headers.length - 2;
+              var phoneIndex = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") : headers.length - 1;
               var reqTime = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
               
               if (foundIndex > -1) {
@@ -489,8 +489,8 @@ function handleCheckin(data, shiftId, sheet) {
     }
     
     var headers = values[0];
-    var statusIndex = headers.length - 3; // "Trạng Thái"
-    var timeIndex = headers.length - 2;   // "Thời Gian"
+    var statusIndex = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") : headers.length - 3;
+    var timeIndex = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") : headers.length - 2;
     
     try {
       var searchId = sanitizeEmployeeId(data.empId);
