@@ -1213,13 +1213,27 @@ Object.assign(AdminApp, {
       title: "Thêm Nhân Sự",
       background: '#151928',
       color: '#fff',
-      html:
-        '<input id="swal-input1" class="agr-swal-input" placeholder="Mã Nhân Viên">' +
-        '<input id="swal-input2" class="agr-swal-input" placeholder="Họ Tên">' +
-        `<select id="swal-input3" class="agr-swal-input">
+      html: `
+        <style>
+          .add-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+          .add-tab-btn { flex: 1; padding: 8px; background: #2a2e3f; color: #aaa; border: 1px solid #444; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+          .add-tab-btn.active { background: #4facf7; color: #fff; border-color: #4facf7; }
+        </style>
+        <div class="add-tabs">
+          <button id="btnSingle" class="add-tab-btn active" onclick="document.getElementById('formSingle').style.display='block'; document.getElementById('formBulk').style.display='none'; this.classList.add('active'); document.getElementById('btnBulk').classList.remove('active');">1 Người</button>
+          <button id="btnBulk" class="add-tab-btn" onclick="document.getElementById('formSingle').style.display='none'; document.getElementById('formBulk').style.display='block'; this.classList.add('active'); document.getElementById('btnSingle').classList.remove('active');">Hàng Loạt</button>
+        </div>
+        <div id="formSingle">
+          <input id="swal-input1" class="agr-swal-input" placeholder="Mã Nhân Viên (VD: NV01)">
+          <input id="swal-input2" class="agr-swal-input" placeholder="Họ Tên (VD: Nguyễn Văn A)">
+        </div>
+        <div id="formBulk" style="display:none">
+          <textarea id="swal-input-bulk" class="agr-swal-input" rows="5" placeholder="Dán từ Excel... Mỗi dòng 1 người&#10;Định dạng: [Mã NV] [Tab/Khoảng trắng] [Họ Tên]&#10;Ví dụ: NV01 Nguyễn Văn A"></textarea>
+        </div>
+        <select id="swal-input3" class="agr-swal-input" style="margin-top:10px;">
            <option value="">-- Chọn ca làm việc --</option>
            ${shiftOptions}
-         </select>`,
+        </select>`,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: "Xác nhận",
@@ -1231,19 +1245,52 @@ Object.assign(AdminApp, {
         cancelButton: 'agr-swal-cancel'
       },
       preConfirm: () => {
-        const id = document.getElementById('swal-input1').value.trim();
-        const name = document.getElementById('swal-input2').value.trim();
+        const isBulk = document.getElementById('formBulk').style.display === 'block';
         const shiftId = document.getElementById('swal-input3').value;
-        if (!id || !name || !shiftId) {
-          Swal.showValidationMessage("Vui lòng nhập đủ thông tin và chọn ca.");
+        
+        if (!shiftId) {
+          Swal.showValidationMessage("Vui lòng chọn ca làm việc.");
           return false;
         }
-        return [id, name, shiftId];
+
+        const employeesToAdd = [];
+
+        if (!isBulk) {
+          const id = document.getElementById('swal-input1').value.trim();
+          const name = document.getElementById('swal-input2').value.trim();
+          if (!id || !name) {
+            Swal.showValidationMessage("Vui lòng nhập đủ thông tin.");
+            return false;
+          }
+          employeesToAdd.push({ id, name });
+        } else {
+          const bulkText = document.getElementById('swal-input-bulk').value.trim();
+          if (!bulkText) {
+            Swal.showValidationMessage("Vui lòng nhập danh sách nhân sự.");
+            return false;
+          }
+          const lines = bulkText.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            // Split by tab or multiple spaces
+            const parts = line.split(/[\t\s]+/);
+            if (parts.length < 2) {
+              Swal.showValidationMessage(`Dòng ${i+1} sai định dạng. Vui lòng nhập: MãNV HọTên`);
+              return false;
+            }
+            const id = parts[0];
+            const name = parts.slice(1).join(' ');
+            employeesToAdd.push({ id, name });
+          }
+        }
+        
+        return { employees: employeesToAdd, shiftId };
       }
     });
 
     if (formValues) {
-      const [empId, empName, targetShiftId] = formValues;
+      const { employees, shiftId: targetShiftId } = formValues;
       
       Swal.fire({
         title: 'Đang xử lý...',
@@ -1258,32 +1305,33 @@ Object.assign(AdminApp, {
         const targetShift = State.shifts.find(s => s.id === targetShiftId);
         const posCount = targetShift ? targetShift.colHeaders.length : 4;
         
-        const newEmp = {
-          id: empId,
-          name: empName,
-          dinhDanh: "",
-          positions: Array(posCount).fill("Chưa xếp"),
-          note: "Thêm thủ công",
-          status: "pending",
-          timestamp: ""
-        };
+        let targetData = targetShiftId === State.selectedShiftId ? State.scheduleData : await DataManager.loadSchedule(targetShiftId);
+        
+        employees.forEach(emp => {
+            const newEmp = {
+              id: emp.id,
+              name: emp.name,
+              dinhDanh: "",
+              positions: Array(posCount).fill("Chưa xếp"),
+              note: "Thêm thủ công",
+              status: "pending",
+              timestamp: ""
+            };
+            newEmp.stt = targetData.length + 1;
+            targetData.push(newEmp);
+        });
 
         if (targetShiftId === State.selectedShiftId) {
-          newEmp.stt = State.scheduleData.length + 1;
-          State.scheduleData.push(newEmp);
           AdminApp.renderTable();
           await DataManager.saveSchedule(targetShiftId, State.scheduleData);
         } else {
-          const targetData = await DataManager.loadSchedule(targetShiftId);
-          newEmp.stt = targetData.length + 1;
-          targetData.push(newEmp);
           await DataManager.saveSchedule(targetShiftId, targetData);
         }
 
         Swal.fire({
           icon: 'success',
           title: 'Thành công',
-          text: `Đã thêm nhân sự vào ${targetShift ? targetShift.label : targetShiftId}.`,
+          text: `Đã thêm ${employees.length} nhân sự vào ${targetShift ? targetShift.label : targetShiftId}.`,
           background: '#151928',
           color: '#fff',
           confirmButtonColor: '#4facf7'
