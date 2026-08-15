@@ -1271,7 +1271,7 @@ Object.assign(AdminApp, {
         if (targetShiftId === State.selectedShiftId) {
           newEmp.stt = State.scheduleData.length + 1;
           State.scheduleData.push(newEmp);
-          AdminUI.renderSchedule();
+          AdminApp.renderSchedule();
           await DataManager.saveSchedule(targetShiftId, State.scheduleData);
         } else {
           const targetData = await DataManager.loadSchedule(targetShiftId);
@@ -1331,7 +1331,7 @@ Object.assign(AdminApp, {
       if (emp) {
         if (!emp.positions) emp.positions = [];
         emp.positions[colIndex] = newPosition.trim();
-        AdminUI.renderSchedule();
+        AdminApp.renderSchedule();
         DataManager.saveSchedule(State.selectedShiftId, State.scheduleData);
       }
     }
@@ -1376,7 +1376,7 @@ Object.assign(AdminApp, {
         if (newStatus === 'confirmed' && !emp.timestamp) {
            emp.timestamp = new Date().toLocaleTimeString();
         }
-        AdminUI.renderSchedule();
+        AdminApp.renderSchedule();
         DataManager.saveSchedule(State.selectedShiftId, State.scheduleData);
       }
     }
