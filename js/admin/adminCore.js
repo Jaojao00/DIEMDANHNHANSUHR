@@ -1385,6 +1385,97 @@ Object.assign(AdminApp, {
     }
   },
 
+  bulkEditPositions: async () => {
+    const shift = State.shifts.find(s => s.id === State.selectedShiftId);
+    if (!shift || !shift.colHeaders || shift.colHeaders.length === 0) return;
+
+    const checkedBoxes = document.querySelectorAll('.schedule-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Chưa chọn nhân sự',
+        text: 'Vui lòng tích chọn ít nhất 1 nhân sự (ở cột bên trái) để xếp vị trí hàng loạt.',
+        background: '#151928',
+        color: '#fff',
+        confirmButtonColor: '#4facf7'
+      });
+      return;
+    }
+
+    const colOptions = shift.colHeaders.map((colName, index) => 
+      `<option value="${index}">${colName}</option>`
+    ).join("");
+
+    const { value: formValues } = await Swal.fire({
+      title: 'Xếp Vị Trí Hàng Loạt',
+      html: `
+        <div style="margin-bottom: 15px; text-align: left; font-size: 14px; color: #aaa;">Đang chọn <b>${checkedBoxes.length}</b> nhân sự.</div>
+        <select id="bulk-col-select" class="agr-swal-input" style="margin-bottom: 15px;">
+           ${colOptions}
+        </select>
+        <input id="bulk-pos-input" class="agr-swal-input" placeholder="Nhập vị trí (Ví dụ: Trực ban)...">
+        <div style="margin-top: 10px; font-size: 12px; color: #888;">Để trống nếu muốn xoá vị trí hiện tại</div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Cập nhật",
+      cancelButtonText: "Hủy",
+      background: '#151928',
+      color: '#fff',
+      customClass: {
+        popup: 'agr-swal-popup',
+        title: 'agr-swal-title',
+        confirmButton: 'agr-swal-confirm',
+        cancelButton: 'agr-swal-cancel'
+      },
+      preConfirm: () => {
+        const colIndex = document.getElementById('bulk-col-select').value;
+        const newPos = document.getElementById('bulk-pos-input').value.trim();
+        return { colIndex: parseInt(colIndex), newPos };
+      }
+    });
+
+    if (formValues) {
+      const { colIndex, newPos } = formValues;
+      let updatedCount = 0;
+      
+      checkedBoxes.forEach(cb => {
+        const empId = cb.value;
+        const emp = State.scheduleData.find(e => e.id.toLowerCase() === empId.toLowerCase());
+        if (emp) {
+          if (!emp.positions) emp.positions = [];
+          emp.positions[colIndex] = newPos;
+          updatedCount++;
+        }
+      });
+      
+      if (updatedCount > 0) {
+        AdminApp.renderTable();
+        await DataManager.saveSchedule(State.selectedShiftId, State.scheduleData);
+        
+        // Uncheck all after success
+        document.querySelectorAll('.schedule-checkbox:checked').forEach(cb => cb.checked = false);
+        const checkAll = document.getElementById('selectAllSchedule');
+        if (checkAll) checkAll.checked = false;
+        
+        // Use optional chaining since it might not exist in AdminApp
+        if (typeof AdminApp.updateScheduleCopyButton === 'function') {
+          AdminApp.updateScheduleCopyButton();
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công',
+          text: `Đã xếp vị trí cho ${updatedCount} nhân sự.`,
+          background: '#151928',
+          color: '#fff',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    }
+  },
+
   changeConfirmStatus: async (empId, currentStatus) => {
     let normalizedStatus = (currentStatus || "").toLowerCase().trim();
     let defaultStatus = "pending";
