@@ -1544,6 +1544,20 @@ input:checked + .slider:before {
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--border);
 }
+.modal-close-btn,
+.modal-close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.modal-close-btn:hover,
+.modal-close:hover {
+  color: var(--danger);
+}
 .modal-icon {
   font-size: 22px;
 }
