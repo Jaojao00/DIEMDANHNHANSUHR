@@ -1476,6 +1476,72 @@ Object.assign(AdminApp, {
     }
   },
 
+  bulkDeletePersonnel: async () => {
+    const checkedBoxes = document.querySelectorAll('.schedule-checkbox:checked');
+    if (checkedBoxes.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Chưa chọn nhân sự',
+        text: 'Vui lòng tích chọn ít nhất 1 nhân sự để xóa.',
+        background: '#151928',
+        color: '#fff',
+        confirmButtonColor: '#4facf7'
+      });
+      return;
+    }
+
+    const { isConfirmed } = await Swal.fire({
+      title: 'Xóa nhân sự?',
+      text: `Bạn có chắc chắn muốn xóa ${checkedBoxes.length} nhân sự đã chọn khỏi ca làm việc hiện tại không? Hành động này không thể hoàn tác.`,
+      icon: 'warning',
+      background: '#151928',
+      color: '#fff',
+      showCancelButton: true,
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy",
+      confirmButtonColor: '#ff5c5c',
+      customClass: {
+        popup: 'agr-swal-popup',
+        title: 'agr-swal-title',
+        confirmButton: 'agr-swal-confirm',
+        cancelButton: 'agr-swal-cancel'
+      }
+    });
+
+    if (isConfirmed) {
+      const idsToDelete = Array.from(checkedBoxes).map(cb => cb.value.toLowerCase());
+      
+      const originalLength = State.scheduleData.length;
+      State.scheduleData = State.scheduleData.filter(emp => !idsToDelete.includes(emp.id.toLowerCase()));
+      
+      const deletedCount = originalLength - State.scheduleData.length;
+      
+      if (deletedCount > 0) {
+        AdminApp.renderTable();
+        await DataManager.saveSchedule(State.selectedShiftId, State.scheduleData);
+        
+        // Uncheck all after success
+        document.querySelectorAll('.schedule-checkbox:checked').forEach(cb => cb.checked = false);
+        const checkAll = document.getElementById('selectAllSchedule');
+        if (checkAll) checkAll.checked = false;
+        
+        if (typeof AdminApp.updateScheduleCopyButton === 'function') {
+          AdminApp.updateScheduleCopyButton();
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Đã xóa',
+          text: `Đã xóa thành công ${deletedCount} nhân sự khỏi ca.`,
+          background: '#151928',
+          color: '#fff',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    }
+  },
+
   changeConfirmStatus: async (empId, currentStatus) => {
     let normalizedStatus = (currentStatus || "").toLowerCase().trim();
     let defaultStatus = "pending";

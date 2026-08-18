@@ -305,9 +305,13 @@ Object.assign(AdminApp, {
 
   updateScheduleCopyButton: () => {
     const btn = document.getElementById('btnCopySelected');
+    const btnDel = document.getElementById('btnDeleteSelected');
     const countSpan = document.getElementById('copySelectedCount');
+    const countSpanDel = document.getElementById('deleteSelectedCount');
     const checked = document.querySelectorAll('.schedule-checkbox:checked, .reg-checkbox:checked').length;
     if (countSpan) countSpan.textContent = checked;
+    if (countSpanDel) countSpanDel.textContent = checked;
     if (btn) btn.style.display = checked > 0 ? 'inline-flex' : 'none';
+    if (btnDel) btnDel.style.display = checked > 0 ? 'inline-flex' : 'none';
   }
 });
