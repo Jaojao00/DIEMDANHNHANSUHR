@@ -66,6 +66,46 @@ const EmpNav = {
       regView.style.display = 'block';
       RegAPI.loadConfig(); // Use new API
       RegApp.showStep(1);
+
+      if (!localStorage.getItem('agr_seen_reg_guide')) {
+        Swal.fire({
+          title: 'Đang tải dữ liệu đăng ký...',
+          text: 'Vui lòng chờ trong giây lát',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showConfirmButton: false,
+          background: '#151928',
+          color: '#fff',
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        setTimeout(() => {
+          Swal.fire({
+            title: 'Hướng dẫn đăng ký lịch',
+            html: `
+              <div style="text-align: left; font-size: 14px; line-height: 1.6; margin-top: 10px;">
+                <p>Chào bạn mới! Để đăng ký lịch làm việc, vui lòng làm theo các bước sau:</p>
+                <ol style="padding-left: 20px; margin-top: 10px; margin-bottom: 10px;">
+                  <li><b>Bước 1:</b> Chọn ca làm việc mà bạn muốn đăng ký.</li>
+                  <li><b>Bước 2:</b> Điền đầy đủ thông tin: <b>Mã Nhân Viên</b>, <b>Họ Tên</b> và <b>SĐT</b>.</li>
+                  <li><b>Bước 3:</b> Tại bảng lịch, đánh dấu vào các ngày bạn có thể đi làm.</li>
+                  <li><b>Bước 4:</b> Kiểm tra lại thông tin và bấm <b>Gửi Lịch Làm Việc</b>.</li>
+                </ol>
+                <p style="color: #f39c12; font-style: italic;">* Lưu ý: Nhập sai mã nhân viên có thể khiến lịch không được ghi nhận.</p>
+              </div>
+            `,
+            icon: 'info',
+            background: '#151928',
+            color: '#fff',
+            confirmButtonText: 'Đã hiểu và bắt đầu',
+            confirmButtonColor: '#4facf7'
+          }).then(() => {
+            localStorage.setItem('agr_seen_reg_guide', 'true');
+          });
+        }, 5000);
+      }
     } else if (tab === 'xemLich') {
       const btn = document.getElementById('navXemLich');
       if (btn) btn.classList.add('active');
