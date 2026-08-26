@@ -247,11 +247,25 @@ const RegApp = {
     }
 
     const selections = [];
+    const selections18 = [];
     let allFilled = true;
+    let isDoubleShift = RegApp.selectedShift.id === '22:00-06:00';
+
     dates.forEach((d, i) => {
-      const chosen = document.querySelector(`input[name="regDay_${i}"]:checked`);
-      if (!chosen) { allFilled = false; return; }
-      selections.push({ date: d.iso, label: d.label, choice: chosen.value });
+      if (isDoubleShift) {
+        const c18 = document.querySelector(`input[name="regDay_${i}_18"]`)?.checked;
+        const c22 = document.querySelector(`input[name="regDay_${i}_22"]`)?.checked;
+        const coff = document.querySelector(`input[name="regDay_${i}_off"]`)?.checked;
+        
+        if (!c18 && !c22 && !coff) { allFilled = false; return; }
+        
+        selections.push({ date: d.iso, label: d.label, choice: c22 ? 'WORK' : 'OFF' });
+        selections18.push({ date: d.iso, label: d.label, choice: c18 ? 'WORK' : 'OFF' });
+      } else {
+        const chosen = document.querySelector(`input[name="regDay_${i}"]:checked`);
+        if (!chosen) { allFilled = false; return; }
+        selections.push({ date: d.iso, label: d.label, choice: chosen.value });
+      }
     });
 
     if (!allFilled) {
@@ -303,15 +317,39 @@ const RegApp = {
       timestamp:  new Date().toISOString()
     };
 
-    const result = await RegAPI.submitRegistration(payload);
+    let result;
+    if (isDoubleShift) {
+      const payload18 = {
+        ...payload,
+        shiftId: '18:00-22:00',
+        shiftLabel: 'Ca Tối',
+        selections: selections18
+      };
+      
+      // Submit 18h shift
+      await RegAPI.submitRegistration(payload18);
+      // Submit 22h shift (main payload)
+      result = await RegAPI.submitRegistration(payload);
+    } else {
+      result = await RegAPI.submitRegistration(payload);
+    }
 
     if (result.success || result.sheetSuccess) {
       // Save locally for offline view using standardized key
       const localKey = `agr_reg_${empId}`;
       const localExisting = JSON.parse(localStorage.getItem(localKey) || '[]');
       const updated = localExisting.filter(r => r.shiftId !== RegApp.selectedShift.id);
-      updated.push(payload);
-      localStorage.setItem(localKey, JSON.stringify(updated));
+      
+      if (isDoubleShift) {
+         const payload18 = { ...payload, shiftId: '18:00-22:00', shiftLabel: 'Ca Tối', selections: selections18 };
+         const updated18 = updated.filter(r => r.shiftId !== '18:00-22:00');
+         updated18.push(payload18);
+         updated18.push(payload);
+         localStorage.setItem(localKey, JSON.stringify(updated18));
+      } else {
+         updated.push(payload);
+         localStorage.setItem(localKey, JSON.stringify(updated));
+      }
 
       localStorage.setItem("agr_empId", empId);
       localStorage.setItem("agr_empName", empName);
@@ -322,13 +360,13 @@ const RegApp = {
         let details = [
           { label: 'Mã Nhân Viên', value: empId.toUpperCase(), valueColor: '#ff5c5c', isHighlight: true },
           { label: 'Họ và Tên', value: empName },
-          { label: 'Vị Trí', value: payload.shiftLabel, valueColor: '#4fc3f7', isHighlight: true },
+          { label: 'Vị Trí', value: isDoubleShift ? 'Ca Tối & Ca Đêm' : payload.shiftLabel, valueColor: '#4fc3f7', isHighlight: true },
           { label: 'Giai Đoạn', value: currentPeriod }
         ];
 
         ModalManager.showModal('success', {
           title: 'ĐĂNG KÝ THÀNH CÔNG!',
-          message: `Bạn đã gửi lịch làm việc cho vị trí <span style="font-weight:700;color:#4fc3f7">${payload.shiftLabel}</span> thành công!`,
+          message: `Bạn đã gửi lịch làm việc cho vị trí <span style="font-weight:700;color:#4fc3f7">${isDoubleShift ? 'Ca Tối & Ca Đêm' : payload.shiftLabel}</span> thành công!`,
           details: details
         }, {
           icon: '🎉',
@@ -686,3 +724,22 @@ const ViewScheduleApp = {
 window.EmpNav = EmpNav;
 window.RegApp = RegApp;
 window.ViewScheduleApp = ViewScheduleApp;
+
+window.handleDoubleShift = function(el, index) {
+    const isOff = el.name.endsWith('_off');
+    const c18 = document.querySelector(`input[name="regDay_${index}_18"]`);
+    const c22 = document.querySelector(`input[name="regDay_${index}_22"]`);
+    const coff = document.querySelector(`input[name="regDay_${index}_off"]`);
+    
+    if (el.checked) {
+        if (isOff) {
+            if (c18) c18.checked = false;
+            if (c22) c22.checked = false;
+        } else {
+            if (coff) coff.checked = false;
+        }
+    } else {
+        // Nếu uncheck ca làm việc và không còn ca nào được check, thì có tự động check OFF không?
+        // Không bắt buộc, submit sẽ bắt lỗi nếu để trống.
+    }
+};

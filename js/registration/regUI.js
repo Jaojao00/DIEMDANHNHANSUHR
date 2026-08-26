@@ -65,6 +65,32 @@ const RegUI = {
           </tr>
         `;
       }).join('');
+    } else if (selectedShift.id === '22:00-06:00') {
+      theadHtml = `
+        <tr>
+          <th>Ngày</th>
+          <th style="color:#5c6bc0; min-width:80px">Ca Tối<br><small style="font-weight:normal;opacity:0.8">18:00-22:00</small></th>
+          <th style="color:#7e57c2; min-width:80px">Ca Đêm<br><small style="font-weight:normal;opacity:0.8">22:00-06:00</small></th>
+          <th style="color:#ff4b4b; min-width:80px">OFF<br><small style="font-weight:normal;opacity:0.8">(Không đăng ký)</small></th>
+        </tr>
+      `;
+      tbodyHtml = dates.map((d, i) => {
+        const isPast = d.iso < todayISO;
+        if (isPast) {
+          return `<tr style="display:none">
+            <td>${d.label}</td>
+            <td><input type="checkbox" class="reg-checkbox" name="regDay_${i}_off" value="OFF" data-date="${d.iso}" checked></td>
+          </tr>`;
+        }
+        return `
+          <tr>
+            <td>${d.label}</td>
+            <td style="text-align:center"><input type="checkbox" style="width:20px;height:20px;cursor:pointer" name="regDay_${i}_18" value="WORK" data-date="${d.iso}" onchange="window.handleDoubleShift(this, ${i})"></td>
+            <td style="text-align:center"><input type="checkbox" style="width:20px;height:20px;cursor:pointer" name="regDay_${i}_22" value="WORK" data-date="${d.iso}" onchange="window.handleDoubleShift(this, ${i})"></td>
+            <td style="text-align:center"><input type="checkbox" style="width:20px;height:20px;cursor:pointer" name="regDay_${i}_off" value="OFF" data-date="${d.iso}" onchange="window.handleDoubleShift(this, ${i})"></td>
+          </tr>
+        `;
+      }).join('');
     } else {
       theadHtml = `
         <tr>
