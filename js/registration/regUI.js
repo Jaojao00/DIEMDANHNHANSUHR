@@ -183,13 +183,12 @@ const RegUI = {
       `;
 
       html += (reg.selections || []).map(sel => {
-        const isOff = !sel.choice || sel.choice === 'OFF';
-        const shiftDisplay = (sel.choice && sel.choice !== 'WORK') ? sel.choice : (reg.shiftLabel || reg.shiftId);
+        const isOff = sel.choice === 'OFF';
         return `
           <tr>
             <td class="vsr-date">${sel.label}</td>
             <td class="vsr-shift ${isOff ? 'off' : 'working'}">
-              ${isOff ? '— OFF' : shiftDisplay}
+              ${isOff ? '— OFF' : (reg.shiftLabel || reg.shiftId)}
             </td>
           </tr>
         `;

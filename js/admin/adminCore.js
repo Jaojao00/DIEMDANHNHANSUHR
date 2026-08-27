@@ -565,7 +565,6 @@ const AdminApp = {
                  } else if (r.selections && Array.isArray(r.selections)) {
                      choice = r.selections[i]?.choice || "";
                  }
-                 if (choice === "OFF") choice = "";
                  row.push(choice);
                });
                aoa.push(row);
