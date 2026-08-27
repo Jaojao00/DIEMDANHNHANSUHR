@@ -205,7 +205,8 @@ Object.assign(AdminApp, {
           const style = isOff
             ? "color:var(--danger); font-weight:bold;"
             : "color:var(--success); font-weight:600;";
-          html += `<td style="text-align:center; ${style}">${choice || ""}</td>`;
+          const displayChoice = isOff ? "" : choice;
+          html += `<td style="text-align:center; ${style}">${displayChoice || ""}</td>`;
         });
       } else if (r.selections && Array.isArray(r.selections)) {
         r.selections.forEach((sel) => {
@@ -213,7 +214,8 @@ Object.assign(AdminApp, {
           const style = isOff
             ? "color:var(--danger); font-weight:bold;"
             : "color:var(--success); font-weight:600;";
-          html += `<td style="text-align:center; ${style}">${sel.choice || ""}</td>`;
+          const displayChoice = isOff ? "" : sel.choice;
+          html += `<td style="text-align:center; ${style}">${displayChoice || ""}</td>`;
         });
       } else {
         // If somehow no selections exist for this row, fill with empty cells
