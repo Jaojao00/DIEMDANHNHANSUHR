@@ -259,12 +259,13 @@ const RegApp = {
         
         if (!c18 && !c22 && !coff) { allFilled = false; return; }
         
-        selections.push({ date: d.iso, label: d.label, choice: c22 ? 'WORK' : 'OFF' });
-        selections18.push({ date: d.iso, label: d.label, choice: c18 ? 'WORK' : 'OFF' });
+        selections.push({ date: d.iso, label: d.label, choice: c22 ? 'WORK' : '' });
+        selections18.push({ date: d.iso, label: d.label, choice: c18 ? 'WORK' : '' });
       } else {
         const chosen = document.querySelector(`input[name="regDay_${i}"]:checked`);
         if (!chosen) { allFilled = false; return; }
-        selections.push({ date: d.iso, label: d.label, choice: chosen.value });
+        const val = chosen.value === 'OFF' ? '' : chosen.value;
+        selections.push({ date: d.iso, label: d.label, choice: val });
       }
     });
 

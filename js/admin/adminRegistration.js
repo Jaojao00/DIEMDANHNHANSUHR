@@ -152,10 +152,13 @@ Object.assign(AdminApp, {
 
         let choice = "";
         if (r.choices && Array.isArray(r.choices)) {
-          choice = r.choices[i];
+          choice = r.choices[i] || "";
         } else if (r.selections && Array.isArray(r.selections)) {
-          choice = r.selections[i]?.choice;
+          choice = r.selections[i]?.choice || "";
         }
+
+        // Treat empty string as OFF
+        if (!choice) choice = "OFF";
 
         if (choice !== filterVal) pass = false;
       });
@@ -201,19 +204,19 @@ Object.assign(AdminApp, {
       // Render selection cells (supporting both .choices and .selections API responses)
       if (r.choices && Array.isArray(r.choices)) {
         r.choices.forEach((choice) => {
-          const isOff = choice === "OFF";
+          const isOff = !choice || choice === "OFF";
           const style = isOff
             ? "color:var(--danger); font-weight:bold;"
             : "color:var(--success); font-weight:600;";
-          html += `<td style="text-align:center; ${style}">${choice || ""}</td>`;
+          html += `<td style="text-align:center; ${style}">${isOff ? "" : choice}</td>`;
         });
       } else if (r.selections && Array.isArray(r.selections)) {
         r.selections.forEach((sel) => {
-          const isOff = sel.choice === "OFF";
+          const isOff = !sel.choice || sel.choice === "OFF";
           const style = isOff
             ? "color:var(--danger); font-weight:bold;"
             : "color:var(--success); font-weight:600;";
-          html += `<td style="text-align:center; ${style}">${sel.choice || ""}</td>`;
+          html += `<td style="text-align:center; ${style}">${isOff ? "" : sel.choice}</td>`;
         });
       } else {
         // If somehow no selections exist for this row, fill with empty cells
