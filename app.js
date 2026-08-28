@@ -51,21 +51,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Repair button: chỉ xoá key có tiền tố 'agr_' để tránh mất dữ liệu khác
-  const repairBtn = document.getElementById("repairBtn");
+    const repairBtn = document.getElementById("repairBtn");
   if (repairBtn) {
     repairBtn.addEventListener("click", () => {
-      if (confirm("Bạn có chắc chắn muốn dọn dẹp dữ liệu ứng dụng (chỉ các mục tạm của AGR) và tải lại trang?")) {
-        // Xoá các key localStorage bắt đầu bằng 'agr_'
-        for (let i = localStorage.length - 1; i >= 0; i--) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith("agr_")) localStorage.removeItem(key);
-        }
-        // Tương tự cho sessionStorage nếu cần
-        for (let i = sessionStorage.length - 1; i >= 0; i--) {
-          const key = sessionStorage.key(i);
-          if (key && key.startsWith("agr_")) sessionStorage.removeItem(key);
-        }
-        location.reload();
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      const currentUrl = window.location.href;
+      
+      // If Android, try to open in Chrome via Intent
+      if (/android/i.test(ua)) {
+        const cleanUrl = currentUrl.replace(/^https?:\/\//, '');
+        const intentUrl = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
+        window.location.href = intentUrl;
+        
+        // Fallback
+        setTimeout(() => {
+          window.open(currentUrl, '_blank', 'noopener,noreferrer');
+        }, 500);
+      } else {
+        // iOS or desktop
+        window.open(currentUrl, '_blank', 'noopener,noreferrer');
       }
     });
   }
