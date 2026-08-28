@@ -1,204 +1,252 @@
 ﻿/* ==========================================================================
-   VIETNAM NATIONAL DAY 2/9 THEME
+   VIETNAM NATIONAL DAY 2/9 THEME (PREMIUM UI)
    ========================================================================== */
 
 :root {
-  --nd-red: #DA251D;
-  --nd-red-dark: #7A0000;
-  --nd-red-wine: #4A0000;
-  --nd-gold: #FFD700;
-  --nd-gold-light: #F4B942;
-  --nd-bg-dark: #0D0E18;
-  --nd-card-dark: #171827;
-  --nd-card-darker: #202132;
+  --nd-bg-dark: #080A12;
+  --nd-bg-darker: #0D1020;
   
-  --bg-base: var(--nd-bg-dark);
-  --bg-surface: var(--nd-card-dark);
-  --bg-panel: var(--nd-card-dark);
-  --bg-card: var(--nd-card-darker);
-  --agr-red: var(--nd-red);
+  --nd-card: #181B2A;
+  --nd-card-hover: #202335;
+  --nd-card-border: #2A3045;
+  
+  --nd-red: #DC2626;
+  --nd-red-dark: #B91C1C;
+  --nd-red-wine: #4A0000;
+  
+  --nd-gold: #FACC15;
+  --nd-gold-bright: #FFD700;
+  
+  --nd-text-main: #F5F5F5;
+  --nd-text-sec: #8B92A8;
 }
 
 /* Base Body Modifications */
-body {
+body.theme-nd {
   background-color: var(--nd-bg-dark);
   background-image: 
-    radial-gradient(circle at 15% 50%, rgba(122, 0, 0, 0.4), transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(74, 0, 0, 0.5), transparent 50%);
+    linear-gradient(rgba(8, 10, 18, 0.75), rgba(13, 16, 32, 0.85)),
+    url('assets/img/bg-2-9.jpg');
+  background-size: cover;
+  background-position: center top;
   background-attachment: fixed;
-  color: #fff;
+  color: var(--nd-text-main);
+  /* Override global vars if needed */
+  --bg-base: transparent;
+  --bg-surface: var(--nd-card);
+  --text-primary: var(--nd-text-main);
+  --text-muted: var(--nd-text-sec);
 }
 
-/* Background Decorations (Pseudo-elements) */
-body::before, body::after {
+/* Subtle Particles Overlay */
+body.theme-nd::before {
   content: '';
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0; width: 100%; height: 100%;
   pointer-events: none;
-  z-index: -1;
-}
-
-body::before {
-  /* Subtle firework / star particles */
+  z-index: 0;
   background-image: 
-    radial-gradient(1px 1px at 20% 30%, #FFD700, transparent),
-    radial-gradient(1px 1px at 80% 20%, #FFD700, transparent),
-    radial-gradient(2px 2px at 40% 80%, #FFD700, transparent),
-    radial-gradient(1px 1px at 60% 10%, #FFD700, transparent);
-  background-size: 200px 200px;
-  opacity: 0.3;
-  animation: ndSparkle 10s infinite linear;
+    radial-gradient(1px 1px at 10% 20%, rgba(255, 215, 0, 0.4), transparent),
+    radial-gradient(2px 2px at 30% 60%, rgba(255, 215, 0, 0.2), transparent),
+    radial-gradient(1px 1px at 80% 40%, rgba(255, 215, 0, 0.3), transparent),
+    radial-gradient(1.5px 1.5px at 90% 80%, rgba(255, 215, 0, 0.5), transparent);
+  background-size: 150px 150px;
+  animation: ndFloat 10s linear infinite;
+  opacity: 0.6;
 }
 
-body::after {
-  /* Subtle red silk wave at the bottom */
-  background: 
-    radial-gradient(ellipse at 50% 100%, rgba(218, 37, 29, 0.15) 0%, transparent 60%);
-}
-
-@keyframes ndSparkle {
-  0% { transform: translateY(0); opacity: 0.1; }
-  50% { opacity: 0.5; }
-  100% { transform: translateY(-50px); opacity: 0.1; }
+@keyframes ndFloat {
+  0% { transform: translateY(0); opacity: 0.3; }
+  50% { opacity: 0.8; }
+  100% { transform: translateY(-30px); opacity: 0.3; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::before {
-    animation: none;
-  }
+  body.theme-nd::before { animation: none; }
 }
 
 /* Banner Styling */
 .nd-banner {
   text-align: center;
-  margin: 10px 0 20px;
-  padding: 15px;
-  background: linear-gradient(135deg, rgba(122,0,0,0.8), rgba(218,37,29,0.3));
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
+  margin: 10px auto 24px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.85), rgba(220, 38, 38, 0.5));
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(185, 28, 28, 0.3);
   position: relative;
   overflow: hidden;
+  max-width: 500px;
 }
 
 .nd-banner h2 {
-  font-size: 1.2rem;
-  color: var(--nd-gold);
-  margin-bottom: 5px;
+  font-size: 1.3rem;
+  color: var(--nd-gold-bright);
+  margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
   font-weight: 800;
 }
 
 .nd-banner p {
-  font-size: 0.9rem;
-  color: #fff;
+  font-size: 1rem;
+  color: #FFFFFF;
   font-weight: 600;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
+  opacity: 0.9;
 }
 
-/* Override existing elements */
 .emp-welcome {
-  display: none; /* Hide old welcome in favor of banner */
+  display: none !important;
 }
 
 /* Shift Cards */
 .shift-card {
-  background: var(--nd-card-dark);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  background: #1B1E2E !important;
+  border: 1px solid var(--nd-card-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s !important;
+  position: relative;
+  z-index: 1;
 }
 
 .shift-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(218, 37, 29, 0.2);
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
 }
 
-/* Custom Card Borders */
-.shift-card[data-shift="06:00-11:00"] { border-left: 4px solid #4fc3f7; }
-.shift-card[data-shift="06:00-15:00"] { border-left: 4px solid #00d48e; }
-.shift-card[data-shift="13:00-22:00"] { border-left: 4px solid var(--nd-gold); }
-.shift-card[data-shift="18:00-22:00"] { border-left: 4px solid #ff8c42; }
-.shift-card[data-shift="22:00-06:00"] { border-left: 4px solid #b980f0; }
+/* Card Borders & Accent (Sáng: Blue, OS: Green, Chiều: Yellow, Tối: Orange, Đêm: Purple) */
+.shift-card[data-shift="06:00-11:00"] { border-left: 4px solid #3B82F6 !important; }
+.shift-card[data-shift="06:00-15:00"] { border-left: 4px solid #10B981 !important; }
+.shift-card[data-shift="13:00-22:00"] { border-left: 4px solid #F59E0B !important; }
+.shift-card[data-shift="18:00-22:00"] { border-left: 4px solid #F97316 !important; }
+.shift-card[data-shift="22:00-06:00"] { border-left: 4px solid #8B5CF6 !important; }
 
-.shift-card:hover[data-shift="13:00-22:00"] { border-color: var(--nd-gold); box-shadow: 0 8px 20px rgba(255, 215, 0, 0.2); }
-
-/* Buttons */
+/* Action Buttons (Xin Lên Ca, Xin Nghỉ) */
 .action-btn {
-  background: var(--nd-card-darker);
-  border: 1px solid rgba(218, 37, 29, 0.3);
-  transition: all 0.3s ease;
+  background: var(--nd-card) !important;
+  border: 1px solid var(--nd-card-border) !important;
+  border-radius: 14px !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  z-index: 1;
 }
 
 .action-btn:hover {
-  border-color: var(--nd-gold-light);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
+  border-color: rgba(250, 204, 21, 0.4) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(185, 28, 28, 0.2) !important;
 }
 
-/* Modals */
+.action-btn-title {
+  color: var(--nd-text-main) !important;
+  font-weight: 600 !important;
+}
+
+.action-btn-sub {
+  color: var(--nd-text-sec) !important;
+}
+
+/* Modals (Form Xác nhận, Form Xin Lên Ca, Xin Nghỉ) */
 .modal {
-  background: linear-gradient(180deg, var(--nd-red-dark) 0%, var(--nd-bg-dark) 40%);
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-  border-radius: 16px;
+  background: rgba(20, 22, 35, 0.92) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.8) !important;
+  border-radius: 16px !important;
 }
 
 .modal-header {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
 .modal-title {
   color: var(--nd-gold) !important;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+  text-shadow: 0 0 8px rgba(250, 204, 21, 0.3);
+  font-weight: 700;
 }
 
-/* Inputs */
+/* Inputs within Modals */
 .input-wrapper input, .input-wrapper select, .input-wrapper textarea {
-  background: rgba(0,0,0,0.3) !important;
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  color: #fff !important;
+  background: #121521 !important;
+  border: 1px solid #30354A !important;
+  color: var(--nd-text-main) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
 }
 
 .input-wrapper input:focus, .input-wrapper select:focus, .input-wrapper textarea:focus {
-  border-color: var(--nd-gold) !important;
-  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.15) !important;
+  border-color: var(--nd-red) !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+  outline: none;
 }
 
 /* Primary Submit Buttons */
 .btn-primary {
-  background: linear-gradient(90deg, #E31B23, #FF6B35) !important;
+  background: linear-gradient(90deg, #B91C1C, #FF5A36) !important;
   color: #fff !important;
   border: none !important;
-  font-weight: bold;
-  transition: all 0.3s ease;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  border-radius: 8px !important;
 }
 
 .btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(227, 27, 35, 0.4) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(185, 28, 28, 0.4) !important;
 }
 
-/* Schedule View */
-.reg-header-title h2 {
-  color: var(--nd-gold);
+.btn-primary:active {
+  transform: translateY(1px) !important;
 }
 
-/* Watermark Lotus */
-.nd-watermark {
-  position: fixed;
-  bottom: -50px;
-  right: -50px;
-  width: 300px;
-  height: 300px;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23FFD700" opacity="0.03" d="M50 0 Q60 40 100 50 Q60 60 50 100 Q40 60 0 50 Q40 40 50 0 Z"/></svg>');
+/* Schedule View Tweaks */
+#empViewScheduleView .reg-header-title h2 {
+  color: var(--nd-gold) !important;
+}
+#empViewScheduleView .vs-card {
+  background: #1B1E2E !important;
+  border: 1px solid var(--nd-card-border) !important;
+}
+
+/* Bottom Nav */
+.emp-nav {
+  background: rgba(13, 16, 32, 0.95) !important;
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.05) !important;
+  z-index: 10;
+}
+.nav-item {
+  color: var(--nd-text-sec) !important;
+}
+.nav-item.active {
+  color: var(--nd-gold) !important;
+}
+.nav-item.active::after {
+  background: var(--nd-gold) !important;
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.5) !important;
+}
+
+
+/* Lotus Watermark on Modals */
+.modal::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  width: 120px;
+  height: 120px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="%23DC2626" opacity="0.08" d="M256 0 C256 0 100 150 100 256 C100 350 200 400 256 512 C312 400 412 350 412 256 C412 150 256 0 256 0 Z"/></svg>');
   background-repeat: no-repeat;
+  background-size: contain;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
 }
 
+.modal-header, .modal-body {
+  position: relative;
+  z-index: 1;
+}
