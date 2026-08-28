@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hr-app-v6';
+const CACHE_NAME = 'hr-app-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,7 +9,7 @@ const ASSETS_TO_CACHE = [
   './employee.js',
   './utils.js',
   './logo.png',
-  './theme-nd.css?v=3',
+  './theme-nd.css?v=4',
   './assets/img/bg-2-9.jpg'
 ];
 

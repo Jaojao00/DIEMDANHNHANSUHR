@@ -24,8 +24,8 @@
 /* Base Body Modifications */
 body.theme-nd {
   background-color: var(--nd-bg-dark) !important;
-  background: linear-gradient(rgba(8, 10, 18, 0.75), rgba(13, 16, 32, 0.85)), url('assets/img/bg-2-9.jpg') !important;
-  background-image: linear-gradient(rgba(8, 10, 18, 0.75), rgba(13, 16, 32, 0.85)), url('assets/img/bg-2-9.jpg') !important;
+  background: linear-gradient(rgba(8, 10, 18, 0.4), rgba(13, 16, 32, 0.6)), url('assets/img/bg-2-9.jpg') !important;
+  background-image: linear-gradient(rgba(8, 10, 18, 0.4), rgba(13, 16, 32, 0.6)), url('assets/img/bg-2-9.jpg') !important;
   background-size: cover !important;
   background-position: center top !important;
   background-attachment: fixed !important;
@@ -103,41 +103,45 @@ body.theme-nd::before {
 
 /* Shift Cards */
 .shift-card {
-  background: #1B1E2E !important;
-  border: 1px solid var(--nd-card-border) !important;
+  background: rgba(27, 30, 46, 0.75) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 16px !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s !important;
   position: relative;
   z-index: 1;
 }
 
 .shift-card:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6) !important;
 }
 
-/* Card Borders & Accent (Sáng: Blue, OS: Green, Chiều: Yellow, Tối: Orange, Đêm: Purple) */
+/* Card Borders & Accent (SÃ¡ng: Blue, OS: Green, Chiá»u: Yellow, Tá»‘i: Orange, ÄÃªm: Purple) */
 .shift-card[data-shift="06:00-11:00"] { border-left: 4px solid #3B82F6 !important; }
 .shift-card[data-shift="06:00-15:00"] { border-left: 4px solid #10B981 !important; }
 .shift-card[data-shift="13:00-22:00"] { border-left: 4px solid #F59E0B !important; }
 .shift-card[data-shift="18:00-22:00"] { border-left: 4px solid #F97316 !important; }
 .shift-card[data-shift="22:00-06:00"] { border-left: 4px solid #8B5CF6 !important; }
 
-/* Action Buttons (Xin Lên Ca, Xin Nghỉ) */
+/* Action Buttons (Xin LÃªn Ca, Xin Nghá»‰) */
 .action-btn {
-  background: var(--nd-card) !important;
-  border: 1px solid var(--nd-card-border) !important;
+  background: rgba(24, 27, 42, 0.75) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 14px !important;
-  transition: all 0.3s ease !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   position: relative;
   z-index: 1;
 }
 
 .action-btn:hover {
-  border-color: rgba(250, 204, 21, 0.4) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 16px rgba(185, 28, 28, 0.2) !important;
+  border-color: rgba(250, 204, 21, 0.5) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 20px rgba(185, 28, 28, 0.3) !important;
 }
 
 .action-btn-title {
@@ -149,7 +153,7 @@ body.theme-nd::before {
   color: var(--nd-text-sec) !important;
 }
 
-/* Modals (Form Xác nhận, Form Xin Lên Ca, Xin Nghỉ) */
+/* Modals (Form XÃ¡c nháº­n, Form Xin LÃªn Ca, Xin Nghá»‰) */
 .modal {
   background: rgba(20, 22, 35, 0.92) !important;
   backdrop-filter: blur(12px);
