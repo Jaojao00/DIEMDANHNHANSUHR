@@ -1,0 +1,204 @@
+﻿/* ==========================================================================
+   VIETNAM NATIONAL DAY 2/9 THEME
+   ========================================================================== */
+
+:root {
+  --nd-red: #DA251D;
+  --nd-red-dark: #7A0000;
+  --nd-red-wine: #4A0000;
+  --nd-gold: #FFD700;
+  --nd-gold-light: #F4B942;
+  --nd-bg-dark: #0D0E18;
+  --nd-card-dark: #171827;
+  --nd-card-darker: #202132;
+  
+  --bg-base: var(--nd-bg-dark);
+  --bg-surface: var(--nd-card-dark);
+  --bg-panel: var(--nd-card-dark);
+  --bg-card: var(--nd-card-darker);
+  --agr-red: var(--nd-red);
+}
+
+/* Base Body Modifications */
+body {
+  background-color: var(--nd-bg-dark);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(122, 0, 0, 0.4), transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(74, 0, 0, 0.5), transparent 50%);
+  background-attachment: fixed;
+  color: #fff;
+}
+
+/* Background Decorations (Pseudo-elements) */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+body::before {
+  /* Subtle firework / star particles */
+  background-image: 
+    radial-gradient(1px 1px at 20% 30%, #FFD700, transparent),
+    radial-gradient(1px 1px at 80% 20%, #FFD700, transparent),
+    radial-gradient(2px 2px at 40% 80%, #FFD700, transparent),
+    radial-gradient(1px 1px at 60% 10%, #FFD700, transparent);
+  background-size: 200px 200px;
+  opacity: 0.3;
+  animation: ndSparkle 10s infinite linear;
+}
+
+body::after {
+  /* Subtle red silk wave at the bottom */
+  background: 
+    radial-gradient(ellipse at 50% 100%, rgba(218, 37, 29, 0.15) 0%, transparent 60%);
+}
+
+@keyframes ndSparkle {
+  0% { transform: translateY(0); opacity: 0.1; }
+  50% { opacity: 0.5; }
+  100% { transform: translateY(-50px); opacity: 0.1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}
+
+/* Banner Styling */
+.nd-banner {
+  text-align: center;
+  margin: 10px 0 20px;
+  padding: 15px;
+  background: linear-gradient(135deg, rgba(122,0,0,0.8), rgba(218,37,29,0.3));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(218, 37, 29, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.nd-banner h2 {
+  font-size: 1.2rem;
+  color: var(--nd-gold);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+  font-weight: 800;
+}
+
+.nd-banner p {
+  font-size: 0.9rem;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+/* Override existing elements */
+.emp-welcome {
+  display: none; /* Hide old welcome in favor of banner */
+}
+
+/* Shift Cards */
+.shift-card {
+  background: var(--nd-card-dark);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.shift-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(218, 37, 29, 0.2);
+}
+
+/* Custom Card Borders */
+.shift-card[data-shift="06:00-11:00"] { border-left: 4px solid #4fc3f7; }
+.shift-card[data-shift="06:00-15:00"] { border-left: 4px solid #00d48e; }
+.shift-card[data-shift="13:00-22:00"] { border-left: 4px solid var(--nd-gold); }
+.shift-card[data-shift="18:00-22:00"] { border-left: 4px solid #ff8c42; }
+.shift-card[data-shift="22:00-06:00"] { border-left: 4px solid #b980f0; }
+
+.shift-card:hover[data-shift="13:00-22:00"] { border-color: var(--nd-gold); box-shadow: 0 8px 20px rgba(255, 215, 0, 0.2); }
+
+/* Buttons */
+.action-btn {
+  background: var(--nd-card-darker);
+  border: 1px solid rgba(218, 37, 29, 0.3);
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  border-color: var(--nd-gold-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.15);
+}
+
+/* Modals */
+.modal {
+  background: linear-gradient(180deg, var(--nd-red-dark) 0%, var(--nd-bg-dark) 40%);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  border-radius: 16px;
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.modal-title {
+  color: var(--nd-gold) !important;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+}
+
+/* Inputs */
+.input-wrapper input, .input-wrapper select, .input-wrapper textarea {
+  background: rgba(0,0,0,0.3) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #fff !important;
+}
+
+.input-wrapper input:focus, .input-wrapper select:focus, .input-wrapper textarea:focus {
+  border-color: var(--nd-gold) !important;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.15) !important;
+}
+
+/* Primary Submit Buttons */
+.btn-primary {
+  background: linear-gradient(90deg, #E31B23, #FF6B35) !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(227, 27, 35, 0.4) !important;
+}
+
+/* Schedule View */
+.reg-header-title h2 {
+  color: var(--nd-gold);
+}
+
+/* Watermark Lotus */
+.nd-watermark {
+  position: fixed;
+  bottom: -50px;
+  right: -50px;
+  width: 300px;
+  height: 300px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23FFD700" opacity="0.03" d="M50 0 Q60 40 100 50 Q60 60 50 100 Q40 60 0 50 Q40 40 50 0 Z"/></svg>');
+  background-repeat: no-repeat;
+  pointer-events: none;
+  z-index: -1;
+}
+
