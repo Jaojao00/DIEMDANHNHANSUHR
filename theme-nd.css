@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    VIETNAM NATIONAL DAY 2/9 THEME (PREMIUM UI)
    ========================================================================== */
 
@@ -23,14 +23,14 @@
 
 /* Base Body Modifications */
 body.theme-nd {
-  background-color: var(--nd-bg-dark);
-  background-image: 
-    linear-gradient(rgba(8, 10, 18, 0.75), rgba(13, 16, 32, 0.85)),
-    url('assets/img/bg-2-9.jpg');
-  background-size: cover;
-  background-position: center top;
-  background-attachment: fixed;
-  color: var(--nd-text-main);
+  background-color: var(--nd-bg-dark) !important;
+  background: linear-gradient(rgba(8, 10, 18, 0.75), rgba(13, 16, 32, 0.85)), url('assets/img/bg-2-9.jpg') !important;
+  background-image: linear-gradient(rgba(8, 10, 18, 0.75), rgba(13, 16, 32, 0.85)), url('assets/img/bg-2-9.jpg') !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-attachment: fixed !important;
+  color: var(--nd-text-main) !important;
+  animation: none !important;
   /* Override global vars if needed */
   --bg-base: transparent;
   --bg-surface: var(--nd-card);
