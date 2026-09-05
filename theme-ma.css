@@ -1,0 +1,196 @@
+﻿/* ============================================
+   🌕🏮 CHỦ ĐỀ TRUNG THU 2026 (DIEMDANHNHANSUHR) 🏮🌕
+   ============================================ */
+
+:root, [data-theme="dark"], [data-theme="light"] {
+  /* Mid-Autumn Colors */
+  --bg-primary: #080A18 !important;
+  --bg-secondary: #0D1024 !important;
+  --bg-gradient: linear-gradient(135deg, rgba(8, 10, 24, 0.9) 0%, rgba(13, 16, 36, 0.85) 50%, rgba(18, 21, 43, 0.9) 100%) !important;
+
+  --surface: rgba(20, 20, 40, 0.80) !important;
+  --surface-hover: rgba(30, 30, 60, 0.85) !important;
+  --surface-active: rgba(40, 40, 80, 0.9) !important;
+  --surface-border: rgba(255, 215, 90, 0.2) !important; /* Moon Gold border */
+
+  --glass: rgba(20, 20, 40, 0.70) !important;
+  --glass-border: rgba(255, 215, 90, 0.15) !important;
+
+  --primary: #FF7A2F !important; /* Lantern Orange */
+  --primary-light: #FFD75A !important; /* Moon Gold */
+  --primary-gradient: linear-gradient(135deg, #FF7A2F, #C62828) !important;
+  --primary-glow: rgba(255, 122, 47, 0.5) !important;
+
+  --accent: #FFD75A !important;
+  --accent-light: #FFC83D !important;
+  --accent-glow: rgba(255, 215, 90, 0.4) !important;
+
+  /* Text colors */
+  --text-primary: #FFFFFF !important;
+  --text-secondary: #D9DBEA !important;
+  --text-tertiary: #9296B5 !important;
+}
+
+body, .view {
+  background: 
+    var(--bg-gradient),
+    url("assets/mid-autumn-bg.webp") !important;
+  background-color: #080A18 !important;
+  background-size: cover !important;
+  background-position: center top !important;
+  background-attachment: fixed !important;
+  color: var(--text-primary) !important;
+}
+
+@media (max-width: 768px) {
+  body, .view {
+    background-size: auto 100% !important;
+    background-position: center top !important;
+    background-attachment: scroll !important;
+  }
+}
+
+/* Mid Autumn Overlay */
+.mid-autumn-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at center top, rgba(255, 215, 90, 0.05) 0%, rgba(8, 10, 24, 0.2) 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Hide old National Day elements just in case */
+.nd-background, .nd-watermark { display: none !important; }
+
+/* Banner Styling */
+.ma-banner {
+  text-align: center;
+  margin: var(--space-xl) 0 var(--space-lg);
+  padding: 20px;
+  background: rgba(20, 20, 40, 0.6);
+  border: 1px solid rgba(255, 215, 90, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  animation: fadeIn 0.8s ease-out forwards;
+  position: relative;
+  z-index: 1;
+}
+.ma-banner h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFD75A 50%, #FF7A2F 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+  filter: drop-shadow(0px 2px 8px rgba(255, 122, 47, 0.4));
+}
+.ma-banner p {
+  font-size: 1rem;
+  color: #D9DBEA;
+  font-weight: 500;
+}
+
+/* Header */
+.app-header {
+  background: rgba(8, 10, 24, 0.85) !important;
+  border-bottom: 1px solid rgba(255, 215, 90, 0.2) !important;
+  backdrop-filter: blur(10px) !important;
+  position: relative;
+  z-index: 10;
+}
+
+/* Shift Cards */
+.shift-card, .action-btn, .modal-content, .bottom-nav {
+  background: var(--surface) !important;
+  border: 1px solid var(--surface-border) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  z-index: 1;
+}
+.shift-card:hover, .action-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 90, 0.4) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 215, 90, 0.05) !important;
+}
+
+/* Card Icons & Colors */
+.shift-card[data-shift="Ca Sáng"] .shift-card__icon { background: rgba(255, 215, 90, 0.2) !important; color: #FFD75A !important; }
+.shift-card[data-shift="Ca OS Sáng"] .shift-card__icon { background: rgba(52, 211, 153, 0.2) !important; color: #34d399 !important; }
+.shift-card[data-shift="Ca Chiều"] .shift-card__icon { background: rgba(255, 122, 47, 0.2) !important; color: #FF7A2F !important; }
+.shift-card[data-shift="Ca Tối"] .shift-card__icon { background: rgba(198, 40, 40, 0.2) !important; color: #E53935 !important; }
+.shift-card[data-shift="Ca Đêm"] .shift-card__icon { background: rgba(108, 74, 182, 0.2) !important; color: #6C4AB6 !important; }
+
+/* Buttons */
+.btn-primary, .action-btn--off, .action-btn--extra {
+  background: var(--primary-gradient) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 15px rgba(255, 122, 47, 0.4) !important;
+  color: #fff !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+}
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(255, 215, 90, 0.5) !important;
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+/* Fix text colors */
+.shift-card__title, .action-btn-title {
+  color: var(--text-primary) !important;
+}
+.shift-card__time, .action-btn-sub {
+  color: var(--text-secondary) !important;
+}
+.form-group label {
+  color: var(--text-secondary) !important;
+}
+.form-control, select.form-control {
+  background: rgba(8, 10, 24, 0.6) !important;
+  border: 1px solid rgba(255, 215, 90, 0.2) !important;
+  color: var(--text-primary) !important;
+}
+.form-control:focus {
+  border-color: #FFD75A !important;
+  box-shadow: 0 0 0 3px rgba(255, 215, 90, 0.1) !important;
+}
+
+/* Bottom Nav Fix */
+.bottom-nav {
+  background: rgba(8, 10, 24, 0.95) !important;
+  border-top: 1px solid rgba(255, 215, 90, 0.2) !important;
+}
+.nav-item.active {
+  color: #FFD75A !important;
+}
+.nav-item {
+  color: #9296B5 !important;
+}
+
+/* Calendar View */
+.calendar-day.active {
+  background: var(--primary-gradient) !important;
+  box-shadow: 0 0 15px rgba(255, 122, 47, 0.5) !important;
+  border-color: #FFD75A !important;
+  color: #fff !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
