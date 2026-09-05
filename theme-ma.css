@@ -1,4 +1,4 @@
-﻿/* ============================================
+/* ============================================
    🌕🏮 CHỦ ĐỀ TRUNG THU 2026 (DIEMDANHNHANSUHR) 🏮🌕
    ============================================ */
 
@@ -40,6 +40,10 @@ body, .view {
   background-position: center top !important;
   background-attachment: fixed !important;
   color: var(--text-primary) !important;
+}
+
+.view {
+  width: 100% !important; /* Fix 100vw overflow issue causing white space */
 }
 
 @media (max-width: 768px) {
@@ -101,7 +105,7 @@ body, .view {
 }
 
 /* Shift Cards */
-.shift-card, .action-btn, .modal-content, .bottom-nav {
+.shift-card, .action-btn, .modal-content, .bottom-nav, .att-card {
   background: var(--surface) !important;
   border: 1px solid var(--surface-border) !important;
   border-radius: 16px !important;

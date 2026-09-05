@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hr-app-v7';
+const CACHE_NAME = 'hr-app-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,8 +9,8 @@ const ASSETS_TO_CACHE = [
   './employee.js',
   './utils.js',
   './logo.png',
-  './theme-nd.css?v=4',
-  './assets/img/bg-2-9.jpg'
+  './theme-ma.css?v=2',
+  './assets/mid-autumn-bg.webp'
 ];
 
 self.addEventListener('install', event => {
