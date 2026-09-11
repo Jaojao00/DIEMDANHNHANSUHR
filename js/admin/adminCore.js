@@ -1466,7 +1466,7 @@ Object.assign(AdminApp, {
         Swal.fire({
           icon: 'success',
           title: 'Thành công',
-          text: \`Đã cập nhật Xin Off cho \${updateCount} nhân sự trong \${targetShift ? targetShift.label : targetShiftId}.\`,
+          text: `Đã cập nhật Xin Off cho ${updateCount} nhân sự trong ${targetShift ? targetShift.label : targetShiftId}.`,
           background: '#151928',
           color: '#fff',
           confirmButtonColor: '#4facf7'
