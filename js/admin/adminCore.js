@@ -1372,6 +1372,118 @@ Object.assign(AdminApp, {
     }
   },
 
+  promptBulkXinOff: async () => {
+    const shiftOptions = State.shifts.map(shift => {
+      const isSelected = shift.id === State.selectedShiftId ? "selected" : "";
+      return `<option value="${shift.id}" ${isSelected}>${shift.label}</option>`;
+    }).join("");
+
+    const { value: formValues } = await Swal.fire({
+      title: "Xin Off Hàng Loạt",
+      background: '#151928',
+      color: '#fff',
+      html: `
+        <div id="formBulkXinOff">
+          <textarea id="swal-input-bulk-off" class="agr-swal-input" rows="6" placeholder="Dán danh sách từ Excel...\nMỗi dòng 1 người\nVí dụ:\nps237360\nps237040"></textarea>
+        </div>
+        <select id="swal-input-shift-off" class="agr-swal-input" style="margin-top:10px;">
+           <option value="">-- Chọn ca làm việc --</option>
+           ${shiftOptions}
+        </select>`,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: "Xác nhận",
+      cancelButtonText: "Hủy",
+      customClass: {
+        popup: 'agr-swal-popup',
+        title: 'agr-swal-title',
+        confirmButton: 'agr-swal-confirm',
+        cancelButton: 'agr-swal-cancel'
+      },
+      preConfirm: () => {
+        const shiftId = document.getElementById('swal-input-shift-off').value;
+        if (!shiftId) {
+          Swal.showValidationMessage("Vui lòng chọn ca làm việc.");
+          return false;
+        }
+
+        const bulkText = document.getElementById('swal-input-bulk-off').value.trim();
+        if (!bulkText) {
+          Swal.showValidationMessage("Vui lòng dán danh sách nhân sự.");
+          return false;
+        }
+        
+        const lines = bulkText.split('\n');
+        const empIds = [];
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          // Split by tab/space to just grab the first column (ID) in case they paste multiple columns
+          const id = line.split(/[\t\s]+/)[0].toLowerCase();
+          if (id) empIds.push(id);
+        }
+        
+        if (empIds.length === 0) {
+          Swal.showValidationMessage("Không tìm thấy Mã nhân viên hợp lệ.");
+          return false;
+        }
+        
+        return { empIds, shiftId };
+      }
+    });
+
+    if (formValues) {
+      const { empIds, shiftId: targetShiftId } = formValues;
+      
+      Swal.fire({
+        title: 'Đang xử lý...',
+        text: 'Vui lòng chờ trong giây lát',
+        allowOutsideClick: false,
+        background: '#151928',
+        color: '#fff',
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        let targetData = targetShiftId === State.selectedShiftId ? State.scheduleData : await DataManager.loadSchedule(targetShiftId);
+        
+        let updateCount = 0;
+        targetData.forEach(emp => {
+          if (empIds.includes(emp.id.toLowerCase())) {
+            emp.status = "xin off";
+            updateCount++;
+          }
+        });
+
+        if (targetShiftId === State.selectedShiftId) {
+          AdminApp.renderTable();
+          await DataManager.saveSchedule(targetShiftId, State.scheduleData);
+        } else {
+          await DataManager.saveSchedule(targetShiftId, targetData);
+        }
+
+        const targetShift = State.shifts.find(s => s.id === targetShiftId);
+        Swal.fire({
+          icon: 'success',
+          title: 'Thành công',
+          text: \`Đã cập nhật Xin Off cho \${updateCount} nhân sự trong \${targetShift ? targetShift.label : targetShiftId}.\`,
+          background: '#151928',
+          color: '#fff',
+          confirmButtonColor: '#4facf7'
+        });
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi',
+          text: 'Có lỗi xảy ra: ' + err.message,
+          background: '#151928',
+          color: '#fff',
+          confirmButtonColor: '#ff5c5c'
+        });
+      }
+    }
+  },
+
   editPosition: async (empId, colIndex, currentValue) => {
     const shift = State.shifts.find(s => s.id === State.selectedShiftId);
     if (!shift || !shift.colHeaders || !shift.colHeaders[colIndex]) return;
