@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hr-app-v12';
+const CACHE_NAME = 'hr-app-v13';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
