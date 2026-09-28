@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Module: Handlers
  * Chứa logic xử lý của từng action.
  */
@@ -499,30 +499,41 @@ function handleCheckin(data, shiftId, sheet) {
     }
     
     // Tối ưu: Dùng Map thay vì For Loop
-    var empIndexMap = buildEmployeeIndex(values, 1);
-    var empIndex = empIndexMap[searchId];
+        var foundIndices = [];
+    for (var i = 1; i < values.length; i++) {
+      var id = (values[i][1] || "").toString().toLowerCase().trim();
+      var stt = (values[i][0] || "").toString().toLowerCase().trim();
+      var nameStr = (values[i][2] || "").toString().toLowerCase().trim();
+      if (id === searchId || stt === searchId || nameStr === searchId) {
+        foundIndices.push(i);
+      }
+    }
     
-    if (empIndex === undefined) {
+    if (foundIndices.length === 0) {
       return sendErrorResponse("Không tìm thấy Mã Nhân Viên trong danh sách ca này");
     }
     
-    // Kiểm tra lại trạng thái NGAY SAU khi lấy lock để ngăn chặn race condition
-    if (values[empIndex][statusIndex] === "confirmed") {
-      return sendErrorResponse("Nhân viên này đã điểm danh rồi!");
+    var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss");
+    var updatedAny = false;
+    
+    for (var k = 0; k < foundIndices.length; k++) {
+      var i = foundIndices[k];
+      if (values[i][statusIndex] !== "confirmed") {
+        values[i][statusIndex] = "confirmed";
+        values[i][timeIndex] = timeString;
+        sheet.getRange(i + 1, statusIndex + 1, 1, 2).setValues([["confirmed", timeString]]);
+        updatedAny = true;
+      }
     }
     
-    // Cập nhật trạng thái
-    var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss");
-    values[empIndex][statusIndex] = "confirmed";
-    values[empIndex][timeIndex] = timeString;
-    
-    // Tối ưu: Chỉ ghi lại một dòng đó thay vì ghi lại toàn bộ bảng (tránh ghi đè dữ liệu của người khác và tăng tốc cực nhanh)
-    sheet.getRange(empIndex + 1, statusIndex + 1, 1, 2).setValues([["confirmed", timeString]]);
+    if (!updatedAny) {
+      return sendErrorResponse("Nhân viên này đã điểm danh rồi!");
+    }
     
     return sendSuccessResponse({ 
       status: "confirmed",
       time: timeString,
-      name: values[empIndex][2]
+      name: values[foundIndices[0]][2]
     });
     
   } catch (e) {
@@ -847,3 +858,5 @@ function handleAdminLogin(data) {
   
   return sendErrorResponse("Email hoặc mật khẩu không đúng!");
 }
+
+

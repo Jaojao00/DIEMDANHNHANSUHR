@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hr-app-v13';
+﻿const CACHE_NAME = 'hr-app-v15';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -64,3 +64,5 @@ self.addEventListener('fetch', event => {
       })
   );
 });
+
+

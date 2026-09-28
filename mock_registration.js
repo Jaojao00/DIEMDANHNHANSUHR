@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbyfXco9SQzgQBFOucTUzRd9tRX4MqsogCBLi0ANnNDOiH7KG2e6itEu3bioGUjtnbtw/exec";
+﻿const API_URL = "https://script.google.com/macros/s/AKfycbwB4ySQAoSBVfP9S7e27TVcx08f5hrRFzkTKVM6LKKXlTMyZjFQNiWRNYxLKnEEwBAo/exec";
 
 async function submitMockRegistration() {
   const payload1 = {
@@ -77,3 +77,4 @@ async function submitMockRegistration() {
 }
 
 submitMockRegistration();
+

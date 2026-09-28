@@ -1,4 +1,4 @@
-// ==========================================
+﻿// ==========================================
 // TRẠNG THÁI ỨNG DỤNG (STATE)
 // ==========================================
 const State = {
@@ -366,38 +366,47 @@ const DataManager = {
       }
     } catch (e) {}
 
-    const empIndex = localData.findIndex(
-      (e) => (e.id || "").toLowerCase().trim() === searchId || 
-             (e.stt || "").toLowerCase().trim() === searchId ||
-             (e.name || "").toLowerCase().trim() === searchId
-    );
-
-    let localEmp = null;
+        let localEmp = null;
     let localUnassigned = false;
+    let foundAny = false;
+    let alreadyConfirmed = true;
 
-    if (empIndex >= 0) {
-      if (localData[empIndex].status === "confirmed") {
+    localData.forEach((e, idx) => {
+      const idLower = (e.id || "").toLowerCase().trim();
+      const sttLower = (e.stt || "").toLowerCase().trim();
+      const nameLower = (e.name || "").toLowerCase().trim();
+      if (idLower === searchId || sttLower === searchId || nameLower === searchId) {
+        foundAny = true;
+        if (localData[idx].status !== "confirmed") {
+          alreadyConfirmed = false;
+          localData[idx].status = "confirmed";
+          localData[idx].timestamp = Utils.formatTime();
+          localData[idx].phone = phone;
+          
+          const emp = DataManager.normalizeEmp(localData[idx]);
+          const positions = emp.positions || [];
+          if (!localEmp) {
+            localEmp = emp;
+            localUnassigned = positions.length === 0 || positions.every((p) => !p || p.toLowerCase().includes("chưa"));
+          }
+        }
+      }
+    });
+
+    if (foundAny) {
+      if (alreadyConfirmed) {
         throw new Error("Nhân viên này đã điểm danh rồi!");
       }
-
-      localData[empIndex].status = "confirmed";
-      localData[empIndex].timestamp = Utils.formatTime();
-      localData[empIndex].phone = phone;
-
-      const emp = DataManager.normalizeEmp(localData[empIndex]);
-      const positions = emp.positions || [];
-      localUnassigned = positions.length === 0 || positions.every((p) => !p || p.toLowerCase().includes("chưa"));
-      localEmp = emp;
 
       // Update cache
       localStorage.setItem(localKey, JSON.stringify(localData));
 
       // Push to Firebase (Primary) via FirestoreService
       if (window.FirestoreService) {
-        window.FirestoreService.checkin(shiftId, localData[empIndex].id || empId, phone).catch(()=>{});
-        // Đồng thời cập nhật roster để lưu trạng thái "confirmed"
+        window.FirestoreService.checkin(shiftId, localEmp.id || empId, phone).catch(()=>{});
         window.FirestoreService.saveRoster(shiftId, localData).catch(()=>{});
       }
+    }
     }
 
     if (CONFIG.DEMO_MODE) {
@@ -486,3 +495,6 @@ const DataManager = {
     }
   },
 };
+
+
+
