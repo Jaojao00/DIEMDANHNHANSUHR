@@ -407,7 +407,6 @@ const DataManager = {
         window.FirestoreService.saveRoster(shiftId, localData).catch(()=>{});
       }
     }
-    }
 
     if (CONFIG.DEMO_MODE) {
       if (!localEmp) throw new Error("Không tìm thấy mã nhân viên trong ca này.");
@@ -495,6 +494,7 @@ const DataManager = {
     }
   },
 };
+
 
 
 
