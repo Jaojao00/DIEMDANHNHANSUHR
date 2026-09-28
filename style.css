@@ -2593,3 +2593,111 @@ select.agr-swal-input { cursor: pointer; appearance: none; background-image: url
 .agr-swal-confirm:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 172, 247, 0.6) !important; }
 .agr-swal-cancel { background: linear-gradient(135deg, #ff5c5c 0%, #f02fc2 100%) !important; color: white !important; border: none !important; border-radius: 8px !important; font-weight: 600 !important; padding: 12px 24px !important; box-shadow: 0 4px 15px rgba(255, 92, 92, 0.4) !important; transition: all 0.3s ease !important; }
 .agr-swal-cancel:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 92, 92, 0.6) !important; }
+
+/* JOB SECTION STYLES */
+.job-section {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  padding: 0 16px;
+}
+.job-section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.job-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.job-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
+}
+.job-fulltime {
+  border-left: 4px solid var(--primary);
+}
+.job-parttime {
+  border-left: 4px solid #f39c12;
+}
+.job-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-bottom-left-radius: 12px;
+}
+.parttime-badge {
+  background: #f39c12;
+}
+.job-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+.job-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  background: var(--bg-body);
+  padding: 10px;
+  border-radius: 8px;
+}
+.job-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.job-row .icon {
+  font-size: 1.1rem;
+}
+.job-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.job-desc ul {
+  margin: 4px 0 12px 20px;
+  padding: 0;
+}
+.job-desc li {
+  margin-bottom: 4px;
+}
+.job-apply-btn {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: var(--primary);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+.job-apply-btn:hover {
+  opacity: 0.9;
+}
+.parttime-btn {
+  background: #f39c12;
+}
