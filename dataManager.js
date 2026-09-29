@@ -430,7 +430,7 @@ const DataManager = {
       if (res && res.error) throw new Error(res.error);
       if (!res) throw new Error("Không phản hồi từ máy chủ");
 
-      const emp = DataManager.normalizeEmp(res.employee);
+      const emp = DataManager.normalizeEmp({ id: empId, name: res.name || "Không rỗ", phone: phone, status: res.status || "confirmed", timestamp: res.time || Utils.formatTime(), positions: [] });
       const positions = emp.positions || [];
       const isUnassigned = positions.length === 0 || positions.every((p) => !p || p.toLowerCase().includes("chưa"));
       
@@ -494,6 +494,7 @@ const DataManager = {
     }
   },
 };
+
 
 
 
