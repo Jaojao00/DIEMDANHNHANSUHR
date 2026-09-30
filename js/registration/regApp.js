@@ -218,8 +218,21 @@ const RegApp = {
     const empNameEl = document.getElementById('regEmpName');
     const empPhoneEl = document.getElementById('regEmpPhone');
     
-    const empId   = (empIdEl ? empIdEl.value : '').trim().toLowerCase();
-    const empName = (empNameEl ? empNameEl.value : '').trim();
+          const empId   = (empIdEl ? empIdEl.value : '').trim().toLowerCase();
+      
+      if (empId === "ops170621") {
+          const today = new Date();
+          const startBlock = new Date("2026-10-01T00:00:00");
+          const endBlock = new Date("2026-10-08T00:00:00");
+          if (today >= startBlock && today < endBlock) {
+              if (typeof Utils !== 'undefined') {
+                  Utils.showGenericAlertModal("TÀI KHOẢN BỊ HẠN CHẾ", "Mã nhân viên OPS170621 hiện đang bị hạn chế đăng ký lịch và xin lên ca từ ngày 01/10 đến hết ngày 07/10 do vi phạm bỏ ca nhiều lần. Sau thời gian này hệ thống sẽ tự động bỏ chặn.", "⚠️");
+              }
+              return;
+          }
+      }
+
+      const empName = (empNameEl ? empNameEl.value : '').trim();
     const empPhone= (empPhoneEl? empPhoneEl.value: '').trim();
     
     let osGender = '';
@@ -703,4 +716,5 @@ const ViewScheduleApp = {
 window.EmpNav = EmpNav;
 window.RegApp = RegApp;
 window.ViewScheduleApp = ViewScheduleApp;
+
 
