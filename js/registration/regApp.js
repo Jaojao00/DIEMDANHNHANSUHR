@@ -222,7 +222,7 @@ const RegApp = {
       
       if (empId === "ops170621") {
           const today = new Date();
-          const startBlock = new Date("2026-10-01T00:00:00");
+          const startBlock = new Date("2026-09-30T00:00:00");
           const endBlock = new Date("2026-10-08T00:00:00");
           if (today >= startBlock && today < endBlock) {
               if (typeof Utils !== 'undefined') {
@@ -716,5 +716,6 @@ const ViewScheduleApp = {
 window.EmpNav = EmpNav;
 window.RegApp = RegApp;
 window.ViewScheduleApp = ViewScheduleApp;
+
 
 

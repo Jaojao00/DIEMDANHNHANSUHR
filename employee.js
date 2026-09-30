@@ -441,7 +441,7 @@ const EmployeeApp = {
         
         if (empId.toLowerCase() === "ops170621") {
             const today = new Date();
-            const startBlock = new Date("2026-10-01T00:00:00");
+            const startBlock = new Date("2026-09-30T00:00:00");
             const endBlock = new Date("2026-10-08T00:00:00"); // Until Oct 7th end
             if (today >= startBlock && today < endBlock) {
                 if (typeof Utils !== 'undefined') {
@@ -686,4 +686,5 @@ const EmployeeApp = {
 
 // Attach EmployeeApp to window
 window.EmployeeApp = EmployeeApp;
+
 
