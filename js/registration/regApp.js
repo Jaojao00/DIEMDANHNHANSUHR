@@ -1,4 +1,4 @@
-// js/registration/regApp.js
+﻿// js/registration/regApp.js
 /**
  * Main Controller for Registration Module
  * Connects RegUI, RegAPI, and RegValidation
@@ -383,9 +383,11 @@ const RegApp = {
     if (arrow) arrow.style.display = 'none';
   },
   
-  openChangeRequestModal: () => {
-    if (typeof Utils !== 'undefined') Utils.showGenericAlertModal("Tính Năng Đã Khóa", "Chức năng yêu cầu thay đổi lịch hiện đang được tạm khóa theo yêu cầu. Vui lòng liên hệ Admin để biết thêm chi tiết.", "🔒");
-    return;
+    openChangeRequestModal: () => {
+    const modal = document.getElementById("regChangeRequest");
+    const step1 = document.getElementById("regStep1");
+    if (modal) modal.style.display = "block";
+    if (step1) step1.style.display = "none";
   },
 
   closeChangeRequestModal: () => {
@@ -577,18 +579,30 @@ const RegApp = {
   },
 
   submitChangeRequest: async () => {
-    if (RegApp.isSubmittingChange) return;
-    const empId = RegApp.crOriginalData.empId.toLowerCase();
-    const phone = RegApp.crOriginalData.empPhone || '';
+      if (RegApp.isSubmittingChange) return;
+      const empId = RegApp.crOriginalData.empId.toLowerCase();
+      const phone = RegApp.crOriginalData.empPhone || "";
 
-    const lastChangeReqTime = localStorage.getItem(`agr_last_change_req_${empId}`);
-    if (lastChangeReqTime) {
-       const timeDiff = Date.now() - parseInt(lastChangeReqTime);
-       if (timeDiff < 24 * 60 * 60 * 1000) {
-          if (typeof Utils !== 'undefined') Utils.showToast('Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ 24h để gửi lại.', 'error');
+      const now = Date.now();
+      const currentMonth = new Date().getMonth();
+
+      let historyStr = localStorage.getItem(`agr_req_history_${empId}`);
+      let history = historyStr ? JSON.parse(historyStr) : [];
+      history = history.filter(ts => new Date(ts).getMonth() === currentMonth);
+
+      if (history.length >= 4) {
+          if (typeof Utils !== "undefined") Utils.showGenericAlertModal("CẢNH CÁO", "Bạn đã vượt quá giới hạn 4 lần thay đổi lịch trong tháng này. Nếu cố tình spam, hệ thống sẽ tự động khóa tài khoản và xóa toàn bộ lịch làm việc của bạn!", "⚠️");
           return;
-       }
-    }
+      }
+
+      if (history.length > 0) {
+         const lastChangeReqTime = history[history.length - 1];
+         const timeDiff = now - parseInt(lastChangeReqTime);
+         if (timeDiff < 48 * 60 * 60 * 1000) {
+            if (typeof Utils !== "undefined") Utils.showToast("Bạn đã gửi yêu cầu thay đổi lịch gần đây. Vui lòng chờ 48h để gửi lại.", "error");
+            return;
+         }
+      }
 
     const pendingKey = `agr_pending_req_${empId}`;
     if (localStorage.getItem(pendingKey)) {
@@ -620,7 +634,8 @@ const RegApp = {
       const result = await RegAPI.submitChangeRequest(payload);
       
       if (result.success) {
-        localStorage.setItem(`agr_last_change_req_${empId}`, Date.now());
+        history.push(now);
+          localStorage.setItem(`agr_req_history_${empId}`, JSON.stringify(history));
         localStorage.setItem("agr_empId", RegApp.crOriginalData.empId);
         localStorage.setItem("agr_empName", RegApp.crOriginalData.empName);
         localStorage.setItem("agr_empPhone", phone);
@@ -688,3 +703,4 @@ const ViewScheduleApp = {
 window.EmpNav = EmpNav;
 window.RegApp = RegApp;
 window.ViewScheduleApp = ViewScheduleApp;
+
