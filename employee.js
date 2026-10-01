@@ -758,7 +758,9 @@ const ItemRequestModule = {
             price: price
           };
 
-          const response = await fetch(State.apiLink, {
+                    let urlToUse = State.apiLink || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
+          console.log('Sending request to:', urlToUse, 'Payload:', payload);
+          const response = await fetch(urlToUse, {
             method: 'POST',
             body: JSON.stringify(payload)
           });
@@ -825,3 +827,4 @@ const ItemRequestModule = {
 document.addEventListener('DOMContentLoaded', () => {
   ItemRequestModule.init();
 });
+
