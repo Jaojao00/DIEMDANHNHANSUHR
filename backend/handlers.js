@@ -860,3 +860,34 @@ function handleAdminLogin(data) {
 }
 
 
+
+// Handle Item Request (Uniform/ID Card)
+function handleItemRequest(data) {
+  try {
+    var ss = SpreadsheetApp.openById("1Y1yxepri5X6CTUFbgERo8fuACwhbd7nsA68MaNOASvs");
+    var sheet = ss.getSheets()[0];
+    var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
+    
+    var reqType = data.type || "";
+    var empId = (data.empId || "").toString().toUpperCase();
+    var name = (data.name || "").toString().toUpperCase();
+    var shift = data.shift || "";
+    
+    var role = data.role || "";
+    var quantity = data.quantity || "";
+    var pickupDate = data.pickupDate || "";
+    var price = data.price || "";
+    
+    // Check if the spreadsheet has headers
+    var lastRow = sheet.getLastRow();
+    if (lastRow === 0) {
+      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền"]);
+    }
+    
+    sheet.appendRow([timeString, reqType, empId, name, shift, role, quantity, pickupDate, price]);
+    
+    return sendSuccessResponse({ message: "Ghi nhận yêu cầu thành công" });
+  } catch (e) {
+    return sendErrorResponse("Lỗi khi ghi nhận yêu cầu: " + e.message);
+  }
+}

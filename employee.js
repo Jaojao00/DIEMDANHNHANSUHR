@@ -688,3 +688,140 @@ const EmployeeApp = {
 window.EmployeeApp = EmployeeApp;
 
 
+const ItemRequestModule = {
+  init: () => {
+    const openBtn = document.getElementById('openItemReqBtn');
+    const closeBtn = document.getElementById('itemRequestModalCloseBtn');
+    const modal = document.getElementById('itemRequestModal');
+    const form = document.getElementById('itemRequestForm');
+
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        if (modal) modal.classList.remove('hidden');
+        ItemRequestModule.toggleFields();
+        document.getElementById('itemReqDate').value = new Date().toISOString().split('T')[0];
+      });
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        if (modal) modal.classList.add('hidden');
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        let reqType = 'Đổi Áo';
+        const typeRadios = document.getElementsByName('itemReqType');
+        for (const radio of typeRadios) {
+          if (radio.checked) reqType = radio.value;
+        }
+
+        const empId = document.getElementById('itemReqEmpId').value.trim();
+        const name = document.getElementById('itemReqName').value.trim();
+        const shift = document.getElementById('itemReqShift').value;
+
+        if (!empId || !name || !shift) return;
+
+        let role = '';
+        let quantity = '';
+        let pickupDate = '';
+        let price = '';
+
+        if (reqType === 'Đổi Áo') {
+          role = document.getElementById('itemReqRole').value;
+          quantity = document.getElementById('itemReqQuantity').value;
+          pickupDate = document.getElementById('itemReqDate').value;
+          price = document.getElementById('itemReqPrice').value;
+          if (!role || !quantity || !pickupDate) {
+             if (typeof Utils !== 'undefined') Utils.showToast('Vui lòng điền đầy đủ thông tin áo', 'error');
+             return;
+          }
+        }
+
+        const submitBtn = document.getElementById('itemReqSubmitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Đang gửi...';
+
+        try {
+          const payload = {
+            action: 'request_item',
+            type: reqType,
+            empId: empId,
+            name: name,
+            shift: shift,
+            role: role,
+            quantity: quantity,
+            pickupDate: pickupDate,
+            price: price
+          };
+
+          const response = await fetch(State.apiLink, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+          });
+          const resData = await response.json();
+
+          if (resData.success || !resData.error) {
+            if (typeof Utils !== 'undefined') Utils.showGenericSuccessModal('Thành công', 'Yêu cầu cấp đổi của bạn đã được ghi nhận!', '👕');
+            if (modal) modal.classList.add('hidden');
+            form.reset();
+          } else {
+            throw new Error(resData.error || 'Lỗi hệ thống');
+          }
+        } catch(err) {
+           if (typeof Utils !== 'undefined') Utils.showToast(err.message, 'error');
+        } finally {
+           submitBtn.disabled = false;
+           submitBtn.innerHTML = 'Gửi Yêu Cầu';
+        }
+      });
+    }
+  },
+
+  toggleFields: () => {
+    let reqType = 'Đổi Áo';
+    const typeRadios = document.getElementsByName('itemReqType');
+    for (const radio of typeRadios) {
+      if (radio.checked) reqType = radio.value;
+    }
+
+    const shirtFields = document.getElementById('itemReqShirtFields');
+    if (shirtFields) {
+      if (reqType === 'Đổi Áo') {
+        shirtFields.style.display = 'block';
+        document.getElementById('itemReqRole').required = true;
+        document.getElementById('itemReqQuantity').required = true;
+        document.getElementById('itemReqDate').required = true;
+      } else {
+        shirtFields.style.display = 'none';
+        document.getElementById('itemReqRole').required = false;
+        document.getElementById('itemReqQuantity').required = false;
+        document.getElementById('itemReqDate').required = false;
+      }
+    }
+    ItemRequestModule.calculatePrice();
+  },
+
+  calculatePrice: () => {
+    const role = document.getElementById('itemReqRole').value;
+    const quantity = parseInt(document.getElementById('itemReqQuantity').value) || 1;
+    const priceEl = document.getElementById('itemReqPrice');
+    
+    if (role === 'OS') {
+      priceEl.value = (30000 * quantity).toLocaleString('vi-VN') + ' đ';
+    } else if (role === 'BPO') {
+      priceEl.value = (40000 * quantity).toLocaleString('vi-VN') + ' đ';
+    } else if (role === 'S-BPO') {
+      priceEl.value = 'C&B truy thu';
+    } else {
+      priceEl.value = '0 đ';
+    }
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  ItemRequestModule.init();
+});
