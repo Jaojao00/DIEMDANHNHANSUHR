@@ -864,8 +864,12 @@ function handleAdminLogin(data) {
 // Handle Item Request (Uniform/ID Card)
 function handleItemRequest(data) {
   try {
-    var ss = SpreadsheetApp.openById("1Y1yxepri5X6CTUFbgERo8fuACwhbd7nsA68MaNOASvs");
-    var sheet = ss.getSheets()[0];
+    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var sheet = ss.getSheetByName("Cấp Đổi Áo Thẻ");
+    if (!sheet) {
+      sheet = ss.insertSheet("Cấp Đổi Áo Thẻ");
+      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền"]);
+    }
     var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
     
     var reqType = data.type || "";
