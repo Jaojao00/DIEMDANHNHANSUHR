@@ -189,6 +189,8 @@ window.lookupSalary = async function() {
             const ctvCode = firstRec['Mã CTV (nếu có)'] || firstRec['Mã CTV'] || 'N/A';
             const empRegion = firstRec['Khu vực'] || 'N/A';
             const empLocation = firstRec['Địa điểm'] || 'N/A';
+            const empTitle = firstRec['Chức vụ'] || 'Nhân viên';
+            const empCCCD = firstRec['CCCD'] || 'N/A';
             
             let html = `
             <style>
