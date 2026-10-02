@@ -186,10 +186,9 @@ window.lookupSalary = async function() {
             
             const firstRec = res.records[0];
             const empName = firstRec['Họ Tên'] || firstRec['Họ và Tên'] || 'Không rõ';
-            const empCCCD = firstRec['CCCD'] || 'N/A';
-            const empTitle = firstRec['Chức vụ'] || 'Nhân viên';
-            const empLocation = firstRec['Địa điểm'] || firstRec['Khu vực'] || 'N/A';
-            const ctvCode = firstRec['Mã CTV (nếu có)'] || firstRec['Mã CTV'] || firstRec['Mã dự án'] || 'N/A';
+            const ctvCode = firstRec['Mã CTV (nếu có)'] || firstRec['Mã CTV'] || 'N/A';
+            const empRegion = firstRec['Khu vực'] || 'N/A';
+            const empLocation = firstRec['Địa điểm'] || 'N/A';
             
             let html = `
             <style>
@@ -239,7 +238,7 @@ window.lookupSalary = async function() {
                     <div class="sd-avatar">${empName.charAt(0)}</div>
                     <div class="sd-banner-info">
                         <h2>${empName}</h2>
-                        <p>Mã: ${ctvCode} | CCCD: ${empCCCD} | ${empTitle}</p>
+                        <p>Mã CTV: ${ctvCode} | KV: ${empRegion} | ĐĐ: ${empLocation}</p>
                     </div>
                 </div>
 
