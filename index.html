@@ -2684,6 +2684,36 @@
     <script defer="" src="js/registration/regAPI.js?v=1785171830"></script>
     <script defer="" src="js/registration/regApp.js?v=1785171830"></script>
     <script>
+    window.toggleLookupTab = function(tab) {
+      const tabSched = document.getElementById('tabContentSchedule');
+      const tabSal = document.getElementById('tabContentSalary');
+      const tabRules = document.getElementById('tabContentRules');
+      
+      const navSched = document.getElementById('tabNavSchedule');
+      const navSal = document.getElementById('tabNavSalary');
+      const navRules = document.getElementById('tabNavRules');
+      
+      if(tabSched) tabSched.style.display = 'none';
+      if(tabSal) tabSal.style.display = 'none';
+      if(tabRules) tabRules.style.display = 'none';
+      
+      if(navSched) { navSched.style.color = 'var(--text-secondary)'; navSched.style.borderBottom = 'none'; navSched.style.fontWeight = '500'; }
+      if(navSal) { navSal.style.color = 'var(--text-secondary)'; navSal.style.borderBottom = 'none'; navSal.style.fontWeight = '500'; }
+      if(navRules) { navRules.style.color = 'var(--text-secondary)'; navRules.style.borderBottom = 'none'; navRules.style.fontWeight = '500'; }
+      
+      let activeTab, activeNav;
+      if (tab === 'schedule') { activeTab = tabSched; activeNav = navSched; }
+      else if (tab === 'salary') { activeTab = tabSal; activeNav = navSal; }
+      else if (tab === 'rules') { activeTab = tabRules; activeNav = navRules; }
+      
+      if (activeTab) activeTab.style.display = 'block';
+      if (activeNav) {
+          activeNav.style.color = 'var(--primary)';
+          activeNav.style.borderBottom = '2px solid var(--primary)';
+          activeNav.style.fontWeight = '600';
+      }
+    };
+
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
@@ -2848,70 +2878,11 @@
     </div>
   
 <script>
-function toggleLookupTab(tab) {
-      const tabSched = document.getElementById('tabContentSchedule');
-      const tabSal = document.getElementById('tabContentSalary');
-      const tabRules = document.getElementById('tabContentRules');
-      
-      const navSched = document.getElementById('tabNavSchedule');
-      const navSal = document.getElementById('tabNavSalary');
-      const navRules = document.getElementById('tabNavRules');
-      
-      // Hide all
-      if(tabSched) tabSched.style.display = 'none';
-      if(tabSal) tabSal.style.display = 'none';
-      if(tabRules) tabRules.style.display = 'none';
-      
-      // Reset navs
-      [navSched, navSal, navRules].forEach(n => {
-          if(!n) return;
-          n.style.color = 'var(--text-secondary)';
-          n.style.borderBottom = 'none';
-          n.style.fontWeight = '500';
-      });
-      
-      // Show active
-      let activeTab, activeNav;
-      if (tab === 'schedule') { activeTab = tabSched; activeNav = navSched; }
-      else if (tab === 'salary') { activeTab = tabSal; activeNav = navSal; }
-      else if (tab === 'rules') { activeTab = tabRules; activeNav = navRules; }
-      
-      if (activeTab) activeTab.style.display = 'block';
-      if (activeNav) {
-          activeNav.style.color = 'var(--primary)';
-          activeNav.style.borderBottom = '2px solid var(--primary)';
-          activeNav.style.fontWeight = '600';
-      }
-    }
+
 </script>
 
 <script>
-window.toggleLookupTab = function(tab) {
-    const tabSched = document.getElementById('tabContentSchedule');
-    const tabSal = document.getElementById('tabContentSalary');
-    const navSched = document.getElementById('tabNavSchedule');
-    const navSal = document.getElementById('tabNavSalary');
-    
-    if (tab === 'schedule') {
-        tabSched.style.display = 'block';
-        tabSal.style.display = 'none';
-        navSched.style.color = 'var(--primary)';
-        navSched.style.fontWeight = '600';
-        navSched.style.borderBottom = '2px solid var(--primary)';
-        navSal.style.color = 'var(--text-secondary)';
-        navSal.style.fontWeight = '500';
-        navSal.style.borderBottom = 'none';
-    } else {
-        tabSched.style.display = 'none';
-        tabSal.style.display = 'block';
-        navSal.style.color = 'var(--primary)';
-        navSal.style.fontWeight = '600';
-        navSal.style.borderBottom = '2px solid var(--primary)';
-        navSched.style.color = 'var(--text-secondary)';
-        navSched.style.fontWeight = '500';
-        navSched.style.borderBottom = 'none';
-    }
-}
+
 </script>
 </body>
 
