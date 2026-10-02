@@ -193,86 +193,108 @@ window.lookupSalary = async function() {
             
             let html = `
             <style>
-                .salary-dashboard { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; text-align: left; }
+                .salary-dashboard-v2 { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; font-family: 'Inter', sans-serif; }
                 
-                .salary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-                .salary-card-header { color: #fff; margin-top: 0; font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 12px; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+                /* Bảng thông tin cá nhân (Top Banner) */
+                .sd-banner { background: #1a1b26; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 20px; }
+                .sd-avatar { width: 60px; height: 60px; background: linear-gradient(135deg, #ff7e5f, #feb47b); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: #fff; box-shadow: 0 8px 16px rgba(255, 126, 95, 0.3); flex-shrink: 0; }
+                .sd-banner-info h2 { margin: 0 0 5px 0; color: #fff; font-size: 1.3rem; }
+                .sd-banner-info p { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
                 
-                .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; }
-                .stat-box { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
-                .stat-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+                /* Grid thống kê */
+                .sd-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+                .sd-stat-box { background: #1a1b26; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; position: relative; overflow: hidden; }
+                .sd-stat-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; }
+                .sd-stat-box.green::before { background: #00e676; }
+                .sd-stat-box.blue::before { background: #2979ff; }
+                .sd-stat-box.orange::before { background: #ff9100; }
+                .sd-stat-box.red::before { background: #ff1744; }
+                .sd-stat-value { color: #fff; font-size: 1.5rem; font-weight: bold; }
+                .sd-stat-value.green { color: #00e676; }
+                .sd-stat-value.blue { color: #2979ff; }
+                .sd-stat-value.orange { color: #ff9100; }
+                .sd-stat-value.red { color: #ff1744; }
+                .sd-stat-label { color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
                 
-                .salary-row { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; padding: 15px; display: flex; align-items: center; position: relative; overflow: hidden; gap: 15px; flex-wrap: wrap; margin-bottom: 12px; }
-                .salary-row-date { min-width: 65px; text-align:center; }
-                .salary-row-info { flex: 1; border-left: 1px solid rgba(255,255,255,0.05); padding-left: 15px; min-width: 140px; }
-                .salary-row-amount { width: 100%; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 10px; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
+                /* Bảng chi tiết */
+                .sd-table-card { background: #1a1b26; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 20px; overflow-x: auto; }
+                .sd-table-header { color: #fff; font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+                .sd-table { width: 100%; border-collapse: collapse; min-width: 500px; }
+                .sd-table th { text-align: left; padding: 12px 10px; color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); }
+                .sd-table td { padding: 15px 10px; color: #fff; font-size: 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.03); }
+                .sd-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; display: inline-block; }
+                .sd-pill.success { border: 1px solid #00e676; color: #00e676; background: rgba(0,230,118,0.1); }
+                
+                /* Responsive cho màn hình rất nhỏ */
+                @media (max-width: 400px) {
+                    .sd-stats-grid { grid-template-columns: 1fr 1fr; }
+                    .sd-avatar { width: 50px; height: 50px; font-size: 1.2rem; }
+                }
             </style>
             
-            <div class="salary-dashboard">
+            <div class="salary-dashboard-v2">
                 
-                <!-- 1. THÔNG TIN NHÂN SỰ -->
-                <div class="salary-card">
-                    <div class="salary-card-header">
-                        <span style="font-size:1.2rem;">👤</span> Thông tin nhân sự
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:12px; margin-top:15px; font-size:0.95rem;">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color:var(--text-secondary);">Họ và tên</span>
-                            <span style="color:#fff; font-weight:bold;">${empName}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color:var(--text-secondary);">Mã NV / CTV</span>
-                            <span style="color:#fff; font-weight:500;">${ctvCode}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color:var(--text-secondary);">Số CCCD</span>
-                            <span style="color:#fff; font-weight:500;">${empCCCD}</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between;">
-                            <span style="color:var(--text-secondary);">Chức vụ</span>
-                            <span style="color:#fff; font-weight:500;">${empTitle}</span>
-                        </div>
+                <!-- Bảng thông tin nhân sự -->
+                <div class="sd-banner">
+                    <div class="sd-avatar">${empName.charAt(0)}</div>
+                    <div class="sd-banner-info">
+                        <h2>${empName}</h2>
+                        <p>Mã: ${ctvCode} | CCCD: ${empCCCD} | ${empTitle}</p>
                     </div>
                 </div>
 
-                <!-- 2. THỐNG KÊ NHANH -->
-                <div class="stat-grid">
-                    <div class="stat-box">
-                        <div class="stat-icon" style="background:rgba(0, 132, 255, 0.1); color:#0084ff;">📅</div>
-                        <div style="color:var(--text-secondary); font-size:0.8rem;">Tổng công</div>
-                        <div style="color:#fff; font-weight:bold; font-size:1.2rem;">${res.records.length}</div>
+                <!-- Thống kê nhanh -->
+                <div class="sd-stats-grid">
+                    <div class="sd-stat-box green">
+                        <div class="sd-stat-value green">${res.records.length}</div>
+                        <div class="sd-stat-label">Ngày làm việc</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-icon" style="background:rgba(255, 123, 0, 0.1); color:var(--primary);">💰</div>
-                        <div style="color:var(--text-secondary); font-size:0.8rem;">Tổng lương</div>
-                        <div style="color:#fff; font-weight:bold; font-size:1.2rem;">${totalSalary.toLocaleString('vi-VN')}</div>
+                    <div class="sd-stat-box blue">
+                        <div class="sd-stat-value blue">${totalHours.toFixed(1)}h</div>
+                        <div class="sd-stat-label">Tổng giờ làm</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-icon" style="background:rgba(0, 200, 83, 0.1); color:#00c853;">⏱️</div>
-                        <div style="color:var(--text-secondary); font-size:0.8rem;">Tổng giờ</div>
-                        <div style="color:#fff; font-weight:bold; font-size:1.2rem;">${totalHours.toFixed(1)}h</div>
+                    <div class="sd-stat-box orange">
+                        <div class="sd-stat-value orange">${totalSalary.toLocaleString('vi-VN')}</div>
+                        <div class="sd-stat-label">Tổng lương (VNĐ)</div>
+                    </div>
+                    <div class="sd-stat-box red">
+                        <div class="sd-stat-value red">100%</div>
+                        <div class="sd-stat-label">Chuyên cần</div>
                     </div>
                 </div>
 
-                <!-- 3. BẢNG TÍNH CÔNG CHI TIẾT -->
-                <div class="salary-card" style="padding: 15px;">
-                    <div class="salary-card-header" style="margin-bottom: 15px; border-bottom: none; padding-bottom: 0;">
-                        <span style="font-size:1.2rem;">📋</span> Bảng tính công chi tiết
+                <!-- Chi tiết chấm công (Table) -->
+                <div class="sd-table-card">
+                    <div class="sd-table-header">
+                        <span>📋</span> Chi Tiết Chấm Công & Lương
                     </div>
+                    <table class="sd-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày</th>
+                                <th>Thứ</th>
+                                <th>Giờ vào</th>
+                                <th>Giờ ra</th>
+                                <th>Tổng giờ</th>
+                                <th>Địa điểm / Ca</th>
+                                <th style="text-align:right;">Tiền lương</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
             
             res.records.forEach((record, index) => {
                 let dateStr = record['Ngày chấm công'] || '';
-                let day = '--', monthYear = '--';
+                let day = '--', monthYear = '--', shortDate = '--';
                 if (dateStr.includes('/')) {
                     let parts = dateStr.split('/');
-                    if (parts.length >= 3) {
-                        day = parts[0];
-                        monthYear = parts[1] + '/' + parts[2];
+                    if (parts.length >= 2) {
+                        shortDate = parts[0] + '/' + parts[1];
+                    } else {
+                        shortDate = dateStr;
                     }
-                } else if (dateStr.length > 5) {
-                    day = dateStr.substring(0, 2);
-                    monthYear = dateStr.substring(2);
+                } else {
+                    shortDate = dateStr;
                 }
                 
                 const thu = record['Thứ'] || '';
@@ -281,48 +303,33 @@ window.lookupSalary = async function() {
                 const timeOut = record['Giờ check-out'] || '--:--';
                 const hours = record['Tổng giờ'] || '0';
                 const loc = record['Địa điểm'] || record['Khu vực'] || 'N/A';
-                
-                const borderColors = ['linear-gradient(180deg, #ff4b2b, #ff416c)', 'linear-gradient(180deg, #f7b733, #fc4a1a)', 'linear-gradient(180deg, #00c6ff, #0072ff)'];
-                const bColor = borderColors[index % borderColors.length];
 
                 html += `
-                    <div class="salary-row">
-                        <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: ${bColor};"></div>
-                        
-                        <div class="salary-row-date">
-                            <div style="font-size: 1.6rem; font-weight: bold; color: #fff; line-height: 1;">${day}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px;">${monthYear}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary);">${thu}</div>
-                        </div>
-                        
-                        <div class="salary-row-info">
-                            <div style="color: #fff; font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
-                                📍 ${loc}
-                            </div>
-                            <div style="display: flex; gap: 15px; font-size: 0.85rem; flex-wrap: wrap;">
-                                <div><span style="color:var(--text-secondary)">Giờ vào:</span> <span style="color:#fff;">${timeIn}</span></div>
-                                <div><span style="color:var(--text-secondary)">Giờ ra:</span> <span style="color:#fff;">${timeOut}</span></div>
-                                <div><span style="color:var(--text-secondary)">Tổng:</span> <span style="color:#fff; font-weight:bold;">${hours}h</span></div>
-                            </div>
-                        </div>
-                        
-                        <div class="salary-row-amount">
-                            <div style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;">Lương ngày</div>
-                            <div style="color: var(--primary); font-weight: bold; font-size: 1.2rem;">${salary}</div>
-                        </div>
-                    </div>
+                            <tr>
+                                <td style="font-weight: 500;">${shortDate}</td>
+                                <td style="color: var(--text-secondary);">${thu}</td>
+                                <td>${timeIn}</td>
+                                <td>${timeOut}</td>
+                                <td>${hours}h</td>
+                                <td style="color: var(--text-secondary);">${loc}</td>
+                                <td style="text-align:right;">
+                                    <span class="sd-pill success">${salary}</span>
+                                </td>
+                            </tr>
                 `;
             });
             
             html += `
+                        </tbody>
+                    </table>
                 </div>
-
-                <!-- 4. GHI CHÚ -->
-                <div class="salary-card">
-                    <div class="salary-card-header">
-                        <span style="font-size:1.2rem;">📝</span> Ghi chú
+                
+                <!-- Ghi chú -->
+                <div class="sd-table-card" style="padding: 15px 20px;">
+                    <div class="sd-table-header" style="margin-bottom: 5px; font-size: 1rem;">
+                        <span>📝</span> Ghi chú
                     </div>
-                    <div style="color:var(--text-secondary); font-size:0.85rem; line-height:1.6; margin-top:12px;">
+                    <div style="color:var(--text-secondary); font-size:0.85rem; line-height:1.6;">
                         Vui lòng kiểm tra lại bảng lương. Mọi thắc mắc hoặc sai sót về giờ giấc vui lòng liên hệ bộ phận nhân sự để được giải quyết sớm nhất.
                     </div>
                 </div>
