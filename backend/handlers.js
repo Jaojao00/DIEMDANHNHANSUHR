@@ -910,7 +910,7 @@ function handleLookupSalary(data) {
     var searchId = (data.empId || "").toString().trim().toUpperCase();
     if (!searchId) return sendErrorResponse("Vui lòng nhập mã");
     
-    var dataRange = sheet.getDataRange().getValues();
+    var dataRange = sheet.getDataRange().getDisplayValues();
     if (dataRange.length < 2) {
       return sendSuccessResponse({ records: [] });
     }
@@ -948,9 +948,7 @@ function handleLookupSalary(data) {
         var record = {};
         for (var j = 0; j < headers.length; j++) {
           var val = row[j];
-          if (val instanceof Date) {
-            val = Utilities.formatDate(val, CONFIG.TIMEZONE, "dd/MM/yyyy");
-          }
+
           record[headers[j]] = val;
         }
         records.push(record);
