@@ -48,12 +48,14 @@ const EmpNav = {
     const empView = document.getElementById('employeeView');
     const regView = document.getElementById('empRegView');
     const vsView  = document.getElementById('empViewScheduleView');
+    const rulesView = document.getElementById('empRulesView');
     if (!empView || !regView || !vsView) return;
 
     empView.classList.remove('active');
     empView.style.display = 'none';
     regView.style.display = 'none';
     vsView.style.display = 'none';
+    if(rulesView) rulesView.style.display = 'none';
 
     if (tab === 'diemDanh') {
       const btn = document.getElementById('navDiemDanh');
@@ -110,6 +112,10 @@ const EmpNav = {
       const btn = document.getElementById('navXemLich');
       if (btn) btn.classList.add('active');
       vsView.style.display = 'block';
+    } else if (tab === 'rules') {
+      const btn = document.getElementById('navRules');
+      if (btn) btn.classList.add('active');
+      if (rulesView) rulesView.style.display = 'block';
     }
 
     window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
