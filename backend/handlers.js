@@ -868,7 +868,7 @@ function handleItemRequest(data) {
     var sheet = ss.getSheetByName("Cấp Đổi Áo Thẻ");
     if (!sheet) {
       sheet = ss.insertSheet("Cấp Đổi Áo Thẻ");
-      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền"]);
+      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền", "Lý do"]);
     }
     var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
     
@@ -881,14 +881,15 @@ function handleItemRequest(data) {
     var quantity = data.quantity || "";
     var pickupDate = data.pickupDate || "";
     var price = data.price || "";
+    var reason = data.reason || "";
     
     // Check if the spreadsheet has headers
     var lastRow = sheet.getLastRow();
     if (lastRow === 0) {
-      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền"]);
+      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền", "Lý do"]);
     }
     
-    sheet.appendRow([timeString, reqType, empId, name, shift, role, quantity, pickupDate, price]);
+    sheet.appendRow([timeString, reqType, empId, name, shift, role, quantity, pickupDate, price, reason]);
     
     return sendSuccessResponse({ message: "Ghi nhận yêu cầu thành công" });
   } catch (e) {

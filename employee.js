@@ -730,6 +730,14 @@ const ItemRequestModule = {
         let pickupDate = '';
         let price = '';
 
+        const reasonEl = document.getElementById('itemReqReason');
+        const reason = reasonEl ? reasonEl.value : '';
+        
+        if ((reqType === 'Đổi Áo' || reqType === 'Đổi Thẻ') && !reason) {
+          if (typeof Utils !== 'undefined') Utils.showToast('Vui lòng chọn lý do', 'error');
+          return;
+        }
+
         if (reqType === 'Đổi Áo') {
           role = document.getElementById('itemReqRole').value;
           quantity = document.getElementById('itemReqQuantity').value;
@@ -762,7 +770,8 @@ const ItemRequestModule = {
             role: role,
             quantity: quantity,
             pickupDate: pickupDate,
-            price: price
+            price: price,
+            reason: reason
           };
 
                     let urlToUse = State.apiLink || (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
@@ -799,6 +808,26 @@ const ItemRequestModule = {
 
     const shirtFields = document.getElementById('itemReqShirtFields');
     const dateLabel = document.getElementById('itemReqDateLabel');
+    
+    const reasonGroup = document.getElementById('itemReqReasonGroup');
+    const reasonSelect = document.getElementById('itemReqReason');
+    
+    if (reasonGroup && reasonSelect) {
+      if (reqType === 'Đổi Áo') {
+        reasonGroup.style.display = 'block';
+        reasonSelect.required = true;
+        reasonSelect.innerHTML = '<option value="">-- Chọn Lý Do --</option><option value="Áo cũ rách">Áo cũ rách</option><option value="Mất áo do sự cố">Mất áo do sự cố</option><option value="Mua thêm áo">Mua thêm áo</option>';
+      } else if (reqType === 'Đổi Thẻ') {
+        reasonGroup.style.display = 'block';
+        reasonSelect.required = true;
+        reasonSelect.innerHTML = '<option value="">-- Chọn Lý Do --</option><option value="Mất thẻ">Mất thẻ</option><option value="Hư thẻ">Hư thẻ</option><option value="Cũ muốn cấp mới">Cũ muốn cấp mới</option><option value="Lý do khác">Lý do khác</option>';
+      } else {
+        reasonGroup.style.display = 'none';
+        reasonSelect.required = false;
+        reasonSelect.innerHTML = '';
+      }
+    }
+
     if (shirtFields) {
       if (reqType === 'Đổi Áo') {
         shirtFields.style.display = 'block';
