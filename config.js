@@ -8,7 +8,7 @@ const CONFIG = {
   // CẤU HÌNH API
   // =============================================
   // Dán URL Google Apps Script Web App vào đây sau khi deploy
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyxoA4zd_s94-f6DAc6OVq3Y0bICwG3eazG06VIZuwAAPPJ3t9fg8e7O93ymi7WoZI-/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzKN8syxbwXZtNBqAcSBpSh3iQV-yf3sIufKWMSPAt1h2eqZFL7rAZDQGNIyvZVs11d/exec',
 
   // Tự động BẬT realtime nếu APPS_SCRIPT_URL đã được cài đặt
   get DEMO_MODE() {
@@ -84,6 +84,7 @@ const CONFIG = {
   VERSION: '1.0.0',
   COMPANY: 'Tyler Nguyen HR',
 };
+
 
 
 
