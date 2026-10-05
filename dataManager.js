@@ -332,7 +332,7 @@ const DataManager = {
 
   resetAllShifts: async () => {
     try {
-      AdminApp.showLoading(true);
+      const loader = document.getElementById('loadingOverlay'); if(loader) loader.classList.remove('hidden');
       const response = await fetch(State.apiLink, {
         method: "POST",
         body: JSON.stringify({ action: "reset_all_shifts" })
@@ -348,7 +348,7 @@ const DataManager = {
       console.error(e);
       Utils.showToast("Lỗi kết nối máy chủ", "error");
     } finally {
-      AdminApp.showLoading(false);
+      const loader = document.getElementById('loadingOverlay'); if(loader) loader.classList.add('hidden');
     }
   },
 
