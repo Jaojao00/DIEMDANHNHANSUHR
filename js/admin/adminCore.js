@@ -489,6 +489,7 @@ const AdminApp = {
         const regBtnsContainer = document.getElementById("regManagerShiftBtns");
         if (regBtnsContainer) {
           regBtnsContainer.innerHTML = State.shifts
+            .filter(s => !s.hidden)
             .map(
               (s) => `<div class="mgr-shift-btn ${s.id === State.selectedShiftId ? "active" : ""}" data-shift="${s.id}" style="--tab-color:${s.color}">
               <span>${s.label}</span>
@@ -1227,7 +1228,7 @@ window.AdminApp = AdminApp;
 
 Object.assign(AdminApp, {
   promptAddPersonnel: async () => {
-    const shiftOptions = State.shifts.map(shift => {
+    const shiftOptions = State.shifts.filter(s => !s.hidden).map(shift => {
       const isSelected = shift.id === State.selectedShiftId ? "selected" : "";
       return `<option value="${shift.id}" ${isSelected}>${shift.label}</option>`;
     }).join("");
@@ -1373,7 +1374,7 @@ Object.assign(AdminApp, {
   },
 
   promptBulkXinOff: async () => {
-    const shiftOptions = State.shifts.map(shift => {
+    const shiftOptions = State.shifts.filter(s => !s.hidden).map(shift => {
       const isSelected = shift.id === State.selectedShiftId ? "selected" : "";
       return `<option value="${shift.id}" ${isSelected}>${shift.label}</option>`;
     }).join("");

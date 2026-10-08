@@ -4,6 +4,7 @@ Object.assign(AdminApp, {
     const list = document.getElementById("shiftTabsList");
     if (!list) return;
     list.innerHTML = State.shifts
+      .filter(s => !s.hidden)
       .map(
         (s) => `
       <div class="shift-tab ${s.id === State.selectedShiftId ? "active" : ""}" 

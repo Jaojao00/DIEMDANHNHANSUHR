@@ -28,6 +28,7 @@ Object.assign(AdminApp, {
     // Render shift buttons inside modal
     const btnsContainer = document.getElementById("managerShiftBtns");
     btnsContainer.innerHTML = State.shifts
+      .filter(s => !s.hidden)
       .map(
         (s) => `
       <div class="mgr-shift-btn ${s.id === State.selectedShiftId ? "active" : ""}" data-shift="${s.id}" style="--tab-color:${s.color}">

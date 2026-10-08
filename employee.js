@@ -76,6 +76,7 @@ const EmployeeApp = {
   renderShifts: () => {
     const container = document.getElementById("shiftCards");
     container.innerHTML = State.shifts
+      .filter(s => !s.hidden)
       .map(
         (shift) => `
       <div class="shift-card" data-shift="${shift.id}" style="--card-color: ${shift.color}">

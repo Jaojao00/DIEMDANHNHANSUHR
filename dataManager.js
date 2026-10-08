@@ -6,6 +6,7 @@ const State = {
     {
       id: "06:00-11:00",
       label: "Ca Sáng",
+        hidden: true,
       icon: "🌅",
       color: "#4facf7",
       colHeaders: [
@@ -20,6 +21,7 @@ const State = {
     {
       id: "06:00-15:00",
       label: "Ca OS Sáng",
+        hidden: true,
       icon: "🚀",
       color: "#43e97b",
       colHeaders: [
@@ -34,6 +36,7 @@ const State = {
     {
       id: "13:00-22:00",
       label: "Ca Chiều",
+        hidden: true,
       icon: "🌇",
       color: "#ffbd3a",
       colHeaders: [
@@ -72,7 +75,7 @@ const State = {
       noteColIndex: 8,
     },
   ],
-  selectedShiftId: "06:00-11:00", // Khởi tạo mặc định để tránh null
+  selectedShiftId: "18:00-22:00", // Khởi tạo mặc định để tránh null
   scheduleData: [], // Dữ liệu lịch ca hiện tại
   isAdminMode: false,
   isAdminLoggedIn: false,

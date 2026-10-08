@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang='vi'>
+<head>
+<meta charset='UTF-8'>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 40px; }
+  h1 { color: #E63C1E; text-align: center; font-size: 24px; text-transform: uppercase; border-bottom: 2px solid #E63C1E; padding-bottom: 10px; }
+  h2 { color: #FF8C42; font-size: 18px; margin-top: 30px; border-left: 4px solid #E63C1E; padding-left: 10px; }
+  h3 { color: #2C3E50; font-size: 16px; margin-top: 20px; }
+  p { margin: 10px 0; text-align: justify; }
+  ul { margin: 10px 0; padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  .box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 5px; margin-top: 15px; }
+  .code { font-family: 'Courier New', Courier, monospace; background: #e9ecef; padding: 2px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <h1>TÀI LIỆU CHI TIẾT HỆ THỐNG ĐIỂM DANH & QUẢN LÝ NHÂN SỰ AGARI</h1>
+  
+  <h2>1. TỔNG QUAN HỆ THỐNG</h2>
+  <p>Hệ thống phần mềm nội bộ (Web Application) quản lý điểm danh và tra cứu công lương dành riêng cho đội ngũ nhân sự và ban quản lý. Hệ thống hoạt động theo kiến trúc <b>Client-Server</b> (Frontend + Backend Google Apps Script) không cần server lưu trữ riêng.</p>
+  <ul>
+    <li><b>Tự động hóa:</b> Giảm 80% thời gian xử lý thủ công của HR.</li>
+    <li><b>Minh bạch:</b> Cung cấp công cụ tra cứu công/lương/KPI tức thời cho nhân viên.</li>
+    <li><b>Realtime:</b> Trang bị hệ thống quản trị (Admin Dashboard) cập nhật trạng thái nhân viên theo thời gian thực.</li>
+  </ul>
+
+  <h2>2. CHI TIẾT CÁC TÍNH NĂNG (FEATURES)</h2>
+  
+  <h3>A. Giao Diện Nhân Viên (Employee Portal)</h3>
+  <ul>
+    <li><b>1. Điểm Danh:</b> Điểm danh đầu ca, cuối ca, xác nhận vị trí làm việc. Hiển thị thông báo trạng thái realtime bằng Modal và Toast.</li>
+    <li><b>2. Lịch Làm Việc:</b> Xem danh sách các ca làm việc đang mở. Đăng ký ca làm, đăng ký vị trí.</li>
+    <li><b>3. Xem Lịch:</b> Xem chi tiết danh sách những người làm cùng ca, kiểm tra vị trí được phân công.</li>
+    <li><b>4. Tra Cứu Lương & KPI:</b> Tính năng mới giúp đối soát KPI, xem tổng công, số tiền tạm tính, biểu đồ số giờ làm việc. Tích hợp nhập CCCD/Mã NV để bảo mật. Tự động hiển thị biểu đồ Bar Chart thống kê công từng ngày.</li>
+    <li><b>5. Quy Định:</b> Bảng nội quy công ty, quy chế làm việc, thưởng phạt được tích hợp trực tiếp giúp nhân viên dễ dàng nắm bắt.</li>
+  </ul>
+
+  <h3>B. Giao Diện Quản Trị (Admin Dashboard)</h3>
+  <ul>
+    <li><b>1. Realtime Tracking:</b> Quản lý nhìn thấy tức thời trạng thái điểm danh của từng nhân sự, số lượng hiện diện/vắng mặt. Bảng điều khiển (Dashboard) với các thông số tổng quan (Tổng NV, Đã Điểm Danh, Chưa Điểm Danh, Xin OFF).</li>
+    <li><b>2. Quản Lý Yêu Cầu (Change Requests):</b> Duyệt hoặc từ chối các yêu cầu xin OFF, đổi ca, đổi áo, đổi thẻ.</li>
+    <li><b>3. Duyệt Điểm Danh & Vị Trí:</b> Quản lý trực tiếp phân vị trí làm việc hàng loạt, điều chỉnh trạng thái điểm danh thủ công.</li>
+    <li><b>4. Đồng Bộ (Sync):</b> Hệ thống tự động đồng bộ (Auto Save) toàn bộ dữ liệu trạng thái xuống Google Sheets thông minh, đảm bảo không ghi đè dữ liệu điểm danh đã có.</li>
+  </ul>
+
+  <h2>3. GIAO DIỆN & THIẾT KẾ (UI/UX - TONE MÀU & CHỮ)</h2>
+  <p>Hệ thống sử dụng giao diện <b>Dark Mode</b> chủ đạo, lấy cảm hứng từ phong cách hiện đại, kết hợp Theme "Đêm Hội Trăng Rằm" (Mid-Autumn) sang trọng.</p>
+
+  <div class="box">
+    <h3>3.1. Bảng màu (Color Palette):</h3>
+    <ul>
+      <li><b>Nền chính (Background):</b> Sử dụng dải màu từ <span class="code">#080A18</span> (Xanh tím than đậm) đến <span class="code">#1A1A2E</span> (Tím than nhạt), tạo chiều sâu.</li>
+      <li><b>Bề mặt (Surface/Glassmorphism):</b> <span class="code">rgba(20, 20, 40, 0.80)</span> kết hợp hiệu ứng Blur tạo cảm giác kính mờ sang trọng.</li>
+      <li><b>Màu chủ đạo (Primary Brand):</b> <span class="code">#E63C1E</span> (Đỏ Agari) và <span class="code">#FF8C42</span> (Cam sáng) dùng cho nút bấm, logo, thanh loading.</li>
+      <li><b>Màu trạng thái (Status):</b>
+        <ul>
+            <li>Thành công: <span class="code">#00D48E</span> (Xanh ngọc).</li>
+            <li>Cảnh báo: <span class="code">#FFB800</span> (Vàng).</li>
+            <li>Lỗi/Xóa: <span class="code">#FF4757</span> (Đỏ nhạt).</li>
+        </ul>
+      </li>
+      <li><b>Màu chữ (Text):</b> <span class="code">#F0F0FF</span> (Trắng sáng) cho tiêu đề chính, <span class="code">#9898C0</span> (Xám tím) cho chữ phụ/mô tả.</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <h3>3.2. Phông chữ (Typography):</h3>
+    <ul>
+      <li><b>Phông chữ chính (Inter):</b> Là phông chữ không chân (sans-serif) hiện đại, thanh thoát, dễ đọc. Được dùng cho văn bản chính, tên nút bấm, giao diện đọc quy định.</li>
+      <li><b>Phông chữ hệ thống/số liệu (JetBrains Mono):</b> Là phông chữ Monospace chuyên dụng, tạo cảm giác công nghệ, chính xác. Được dùng đặc biệt cho các con số, mã nhân viên (VD: <span class="code">OPS12345</span>), và giờ làm việc (VD: <span class="code">06:00 - 15:00</span>).</li>
+    </ul>
+  </div>
+
+  <h2>4. KIẾN TRÚC & CÔNG NGHỆ ÁP DỤNG</h2>
+  <ul>
+    <li><b>Giao diện (Frontend):</b> Viết bằng thuần HTML5, CSS3, Vanilla JavaScript (Không sử dụng Framework cồng kềnh), giúp ứng dụng có tốc độ tải siêu tốc. Tích hợp thư viện SweetAlert2 cho thông báo và Chart.js cho biểu đồ thống kê.</li>
+    <li><b>Trải nghiệm đa nền tảng:</b> Thiết kế Mobile-first responsive chuẩn mobile, tích hợp kỹ thuật CSS Breakout để tự động mở rộng không gian tối đa (100vw) trên màn hình máy tính (PC).</li>
+    <li><b>PWA (Progressive Web App):</b> Ứng dụng tích hợp Service Worker (<span class="code">sw.js</span>) để lưu cache, cho phép load cực nhanh cả khi rớt mạng, hỗ trợ lưu trữ Offline và cho phép cài đặt trực tiếp vào màn hình chính của điện thoại như App Native.</li>
+    <li><b>Máy chủ (Backend):</b> Hệ thống sử dụng Google Apps Script (GAS) làm REST API, kết nối với cơ sở dữ liệu là Google Sheets. Giải pháp này tiết kiệm 100% chi phí duy trì server, độ ổn định cực cao.</li>
+  </ul>
+</body>
+</html>
