@@ -10,13 +10,16 @@
 html {
   background-color: var(--autumn-dark);
 }
-body.theme-autumn {
+body.theme-autumn, 
+.theme-autumn .view, 
+.theme-autumn #employeeView {
+  background: linear-gradient(to bottom, rgba(10, 15, 29, 0.4) 0%, rgba(10, 15, 29, 0.8) 100%), url('assets/img/autumn-bg.webp') !important;
   background-color: transparent !important;
-  background-image: linear-gradient(to bottom, rgba(10, 15, 29, 0.4) 0%, rgba(10, 15, 29, 0.8) 100%), url('assets/img/autumn-bg.webp') !important;
   background-size: cover !important;
   background-position: center bottom !important;
   background-attachment: fixed !important;
   color: #ffffff;
+  animation: none !important;
 }
 
 /* The background artwork overlay */
