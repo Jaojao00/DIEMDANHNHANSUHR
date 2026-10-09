@@ -596,7 +596,7 @@ window.submitComplaint = async function() {
     };
     
     try {
-        let urlToUse = (typeof State !== 'undefined' && State.apiLink) ? State.apiLink : (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : '');
+        let urlToUse = (typeof State !== 'undefined' && State.apiLink) ? State.apiLink : (typeof CONFIG !== 'undefined' ? CONFIG.APPS_SCRIPT_URL : ''); console.log('Submitting to', urlToUse);
         const res = await fetch(urlToUse, {
             method: 'POST',
             body: JSON.stringify(payload)
@@ -678,3 +678,4 @@ window.submitComplaint = async function() {
         }
     }
 })();
+
