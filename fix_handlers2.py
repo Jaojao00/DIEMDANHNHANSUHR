@@ -1,17 +1,11 @@
 ﻿with open("backend/handlers.js", "r", encoding="utf-8") as f:
     content = f.read()
 
-# In handleLookupSalary:
-# var record = {};
-# for (var j = 0; j < headers.length; j++) {
-#   var val = row[j];
-#   record[headers[j]] = val;
-# }
-
 old_code = """        if (match) {
           var record = {};
           for (var j = 0; j < headers.length; j++) {
             var val = row[j];
+  
             record[headers[j]] = val;
           }"""
 
@@ -19,6 +13,7 @@ new_code = """        if (match) {
           var record = {};
           for (var j = 0; j < headers.length; j++) {
             var val = row[j];
+  
             var headerKey = headers[j] ? headers[j].toString().trim() : "";
             record[headerKey] = val;
           }"""

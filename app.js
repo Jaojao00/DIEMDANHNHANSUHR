@@ -171,8 +171,17 @@ window.lookupSalary = async function() {
             let totalSalary = 0;
             let totalHours = 0;
             
-            res.records.forEach(r => {
-                let s = r['Lương theo ngày công'];
+                          const getVal = (rec, possibleKeys) => {
+                  for (let key of Object.keys(rec)) {
+                      let k = key.toLowerCase().trim();
+                      for (let pk of possibleKeys) {
+                          if (k.includes(pk.toLowerCase())) return rec[key];
+                      }
+                  }
+                  return null;
+              };
+              res.records.forEach(r => {
+                  let s = getVal(r, ['l\u01b0\u01a1ng theo ng\u00e0y c\u00f4ng', 's\u1ed1 ti\u1ec1n t\u1ea1m t\u00ednh', 'luong']);
                 if (s) {
                     let num = parseFloat(s.toString().replace(/,/g, '').replace(/\./g, '').replace(/[^0-9]/g, ''));
                     if (!isNaN(num)) totalSalary += num;
@@ -400,7 +409,7 @@ window.lookupSalary = async function() {
                 }
                 
                 const thu = record['Thứ'] || '';
-                const salary = record['Lương theo ngày công'] || '0';
+                  const salary = getVal(record, ['l\u01b0\u01a1ng theo ng\u00e0y c\u00f4ng', 's\u1ed1 ti\u1ec1n t\u1ea1m t\u00ednh', 'luong']) || '0';
                 const timeIn = record['Giờ check-in'] || '--:--';
                 const timeOut = record['Giờ check-out'] || '--:--';
                 let hours = record['Tổng giờ'] || '0';

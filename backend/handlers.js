@@ -991,7 +991,7 @@ function handleLookupSalary(data) {
         for (var j = 0; j < headers.length; j++) {
           var val = row[j];
 
-          record[headers[j]] = val;
+          record[headers[j] ? headers[j].toString().trim() : ''] = val;
         }
         records.push(record);
       }
@@ -1002,3 +1002,4 @@ function handleLookupSalary(data) {
     return sendErrorResponse("Lỗi: " + e.toString());
   }
 }
+
