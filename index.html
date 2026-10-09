@@ -2725,7 +2725,7 @@
     ></script>
     <script defer="" src="js/admin/adminManager.js?v=1791466284602"></script>
     <script defer="" src="js/admin/adminLogs.js?v=1785171830"></script>
-    <script defer="" src="app.js?v=1791567640313"></script>
+    <script defer="" src="app.js?v=1791568456317"></script>
     <!-- Registration Module -->
     <script
       defer=""
@@ -2733,7 +2733,7 @@
     ></script>
     <script defer="" src="js/registration/regUI.js?v=1785171830"></script>
     <script defer="" src="js/registration/regAPI.js?v=1785171830"></script>
-    <script defer="" src="js/registration/regApp.js?v=1791567640313"></script>
+    <script defer="" src="js/registration/regapp.js?v=1791568456317"></script>
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
@@ -2939,6 +2939,22 @@ window.toggleLookupTab = function(tab) {
       <div class="modal-content" style="background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
         <h3 style="margin-top:0; color: #fff; font-size: 1.2rem; text-align: center; margin-bottom: 20px;">Gửi Phiếu Khiếu Nại</h3>
         
+        <div style="margin-bottom: 12px; display: flex; gap: 10px;">
+           <div style="flex: 1;">
+               <label style="display:block; margin-bottom:5px; color:#aaa; font-size: 0.85rem;">Họ và Tên</label>
+               <input type="text" id="compName" class="input-modern" readonly style="width:100%; background:rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; opacity: 0.8;">
+           </div>
+           <div style="flex: 1;">
+               <label style="display:block; margin-bottom:5px; color:#aaa; font-size: 0.85rem;">Mã OPS / CCCD</label>
+               <input type="text" id="compCode" class="input-modern" readonly style="width:100%; background:rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; opacity: 0.8;">
+           </div>
+        </div>
+        
+        <div style="margin-bottom: 12px;">
+           <label style="display:block; margin-bottom:5px; color:#aaa; font-size: 0.85rem;">Số điện thoại liên hệ *</label>
+           <input type="tel" id="compPhone" class="input-modern" placeholder="Nhập SĐT để quản lý liên hệ..." style="width:100%; background:rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px;">
+        </div>
+        
         <div style="margin-bottom: 15px;">
            <label style="display:block; margin-bottom:8px; color:#aaa; font-size: 0.9rem;">Loại khiếu nại</label>
            <select id="compType" class="input-modern" style="width:100%; background:rgba(0,0,0,0.3); color:#fff; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 8px;">
@@ -2970,6 +2986,7 @@ window.toggleLookupTab = function(tab) {
   </body>
 
 </html>
+
 
 
 

@@ -1011,7 +1011,7 @@ function handleSubmitComplaint(data) {
     var sheet = ss.getSheetByName("KhieuNai");
     if (!sheet) {
       sheet = ss.insertSheet("KhieuNai");
-      sheet.appendRow(["Thời gian", "Mã NV", "Họ Tên", "Loại khiếu nại", "Nội dung", "Link ảnh minh chứng", "Trạng thái"]);
+      sheet.appendRow(["Thời gian", "Mã OPS/CCCD", "Họ Tên", "SĐT liên hệ", "Loại khiếu nại", "Nội dung", "Link ảnh minh chứng", "Trạng thái"]);
     }
     
     var timeStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
@@ -1041,6 +1041,7 @@ function handleSubmitComplaint(data) {
       timeStr,
       data.empId || "",
       data.empName || "",
+      data.phone || "",
       data.type || "",
       data.content || "",
       imgUrl,

@@ -196,6 +196,7 @@ window.lookupSalary = async function() {
             const firstRec = res.records[0];
             const empName = firstRec['Họ Tên'] || firstRec['Họ và Tên'] || 'Không rõ';
               window._currentEmpName = empName;
+              window._currentEmpCode = getVal(firstRec, ['m\u00e3 ctv']) || getVal(firstRec, ['cccd']) || empId;
             const ctvCode = firstRec['Mã CTV (nếu có)'] || firstRec['Mã CTV'] || 'N/A';
             const empRegion = firstRec['Khu vực'] || 'N/A';
             const empLocation = firstRec['Địa điểm'] || 'N/A';
@@ -475,7 +476,14 @@ window.lookupSalary = async function() {
 
 window.openComplaintModal = function() {
     const modal = document.getElementById('complaintModal');
-    if (modal) { modal.classList.remove('hidden'); modal.style.display = 'flex'; }
+    if (modal) { 
+        modal.classList.remove('hidden'); 
+        modal.style.display = 'flex'; 
+        
+        // Auto fill
+        if(document.getElementById('compName')) document.getElementById('compName').value = window._currentEmpName || '';
+        if(document.getElementById('compCode')) document.getElementById('compCode').value = window._currentEmpCode || '';
+    }
 }
 
 window.closeComplaintModal = function() {
@@ -492,6 +500,14 @@ window.closeComplaintModal = function() {
 window.submitComplaint = async function() {
     const type = document.getElementById('compType').value;
     const content = document.getElementById('compDesc').value;
+    const phone = document.getElementById('compPhone') ? document.getElementById('compPhone').value.trim() : '';
+    const code = document.getElementById('compCode') ? document.getElementById('compCode').value.trim() : '';
+    const name = document.getElementById('compName') ? document.getElementById('compName').value.trim() : window._currentEmpName;
+    
+    if (!phone) {
+        Swal.fire({ title: "Thiếu SĐT", text: "Vui lòng nhập số điện thoại để quản lý liên hệ!", icon: "warning", background: "var(--surface)", color: "var(--text)"});
+        return;
+    }
     const fileInput = document.getElementById('compImage');
     const empId = document.getElementById('salaryEmpId').value.trim();
     
@@ -567,10 +583,11 @@ window.submitComplaint = async function() {
         didOpen: () => Swal.showLoading()
     });
     
-    const payload = {
+        const payload = {
         action: 'submit_complaint',
-        empId: empId,
-        empName: window._currentEmpName || 'Không rõ',
+        empId: code || empId,
+        empName: name || 'Không rõ',
+        phone: phone,
         type: type,
         content: content,
         imageBase64: base64,
