@@ -1020,14 +1020,7 @@ function handleSubmitComplaint(data) {
     // N?u c ?nh dnh km
     if (data.imageFilename && data.imageBase64) {
       try {
-        var folderIterator = DriveApp.getFoldersByName("KhieuNaiImages");
-        var folder;
-        if (folderIterator.hasNext()) {
-          folder = folderIterator.next();
-        } else {
-          folder = DriveApp.createFolder("KhieuNaiImages");
-          folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-        }
+        var folder = DriveApp.getFolderById("18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu");
         
         var blob = Utilities.newBlob(Utilities.base64Decode(data.imageBase64), data.imageMimeType || "image/png", data.imageFilename);
         var file = folder.createFile(blob);
