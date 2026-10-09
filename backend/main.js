@@ -17,7 +17,7 @@ function doPost(e) {
       }
     }
     
-    if (!shiftId && action !== "request" && action !== "request_item" && action !== "lookup_salary" && action !== "submit_registration" && action !== "submit_change_request" && adminActions.indexOf(action) === -1 && action !== "admin_login") {
+    if (!shiftId && action !== "request" && action !== "request_item" && action !== "lookup_salary" && action !== "submit_complaint" && action !== "submit_registration" && action !== "submit_change_request" && adminActions.indexOf(action) === -1 && action !== "admin_login") {
       return sendErrorResponse("Missing shiftId");
     }
     
@@ -42,6 +42,7 @@ function doPost(e) {
       case "get_admin_logs": return handleGetAdminLogs(data, shiftId, sheet);
       case "request_item": return handleItemRequest(data);
       case "lookup_salary": return handleLookupSalary(data);
+      case "submit_complaint": return handleSubmitComplaint(data);
       case "checkin": return handleCheckin(data, shiftId, sheet);
       case "submit_registration": return handleSubmitRegistration(data, shiftId, sheet);
       case "submit_change_request": return handleSubmitChangeRequest(data, shiftId, sheet);
