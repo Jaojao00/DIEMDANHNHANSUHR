@@ -629,7 +629,7 @@ window.submitComplaint = async function() {
 // ------------------------------------------------------------------
 // AUTUMN THEME DYNAMIC LOGIC
 // ------------------------------------------------------------------
-(function initAutumnTheme() {
+;(function initAutumnTheme() {
     const banner = document.getElementById('dynamicBanner');
     if (!banner) return;
     
