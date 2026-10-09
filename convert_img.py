@@ -1,13 +1,12 @@
 ﻿from PIL import Image
-import os
 
-def convert_to_webp(filepath):
-    try:
-        img = Image.open(filepath)
-        img.save(filepath, "WEBP", quality=80)
-        print(f"Converted {filepath} to WEBP successfully.")
-    except Exception as e:
-        print(f"Error converting {filepath}: {e}")
+input_path = r"C:\Users\ASUS\.gemini\antigravity\brain\446a8b5c-385c-4fe4-9b87-d5771d4a9e6e\.user_uploaded\media_1791572981131.jpg"
+output_path = r"autumn-bg.webp"
 
-convert_to_webp("C:\\Users\\ASUS\\Documents\\GitHub\\chamcongnhanvien.swsoc\\assets\\mid-autumn-bg.webp")
-convert_to_webp("C:\\Users\\ASUS\\Documents\\GitHub\\DIEMDANHNHANSUHR\\assets\\mid-autumn-bg.webp")
+try:
+    img = Image.open(input_path)
+    # Convert to webp with 80% quality
+    img.save(output_path, "WEBP", quality=80)
+    print(f"Successfully created {output_path}")
+except Exception as e:
+    print(f"Error: {e}")

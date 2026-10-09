@@ -1,0 +1,166 @@
+﻿/* Autumn Theme CSS */
+:root {
+  --autumn-gold: #F7E7CE;
+  --autumn-amber: #FFBF00;
+  --autumn-red: #FF4500;
+  --autumn-dark: #0A0F1D; /* navy night */
+}
+
+/* Base background */
+.theme-autumn {
+  background-color: var(--autumn-dark);
+  color: #ffffff;
+}
+
+/* The background artwork overlay */
+.autumn-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(to bottom, rgba(10, 15, 29, 0.4) 0%, rgba(10, 15, 29, 0.8) 100%), url('autumn-bg.webp');
+  background-size: cover;
+  background-position: center bottom;
+  background-attachment: fixed;
+  z-index: -2;
+  pointer-events: none;
+}
+
+/* Subtle glow */
+.autumn-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 191, 0, 0.05) 0%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+  animation: pulse-glow 8s infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* Banner styling */
+.autumn-banner {
+  background: linear-gradient(135deg, rgba(255, 191, 0, 0.15) 0%, rgba(255, 69, 0, 0.05) 100%);
+  border: 1px solid rgba(255, 191, 0, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.autumn-banner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><circle cx="2" cy="2" r="1" fill="rgba(255,191,0,0.2)"/></svg>');
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Shift card overrides */
+.theme-autumn .shift-card {
+  background: rgba(10, 15, 29, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.theme-autumn .shift-card:hover {
+  border-color: var(--autumn-amber) !important;
+  box-shadow: 0 4px 20px rgba(255, 191, 0, 0.2) !important;
+  transform: translateY(-2px);
+}
+
+.theme-autumn .btn-primary {
+  background: linear-gradient(135deg, var(--autumn-amber) 0%, var(--autumn-red) 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(255, 69, 0, 0.3) !important;
+  color: #fff !important;
+}
+
+.theme-autumn .btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(255, 69, 0, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+.theme-autumn .emp-welcome-icon {
+  text-shadow: 0 0 15px rgba(255, 191, 0, 0.5);
+}
+
+/* Leaf animation (lightweight) */
+.autumn-leaf {
+  position: fixed;
+  top: -20px;
+  z-index: 100;
+  pointer-events: none;
+  font-size: 1.2rem;
+  color: rgba(255, 150, 0, 0.8);
+  animation: fall linear infinite;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+@keyframes fall {
+  0% { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh) rotate(360deg) translateX(50px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .autumn-glow, .autumn-leaf {
+    display: none !important;
+    animation: none !important;
+  }
+}
+
+/* Outline buttons (Xin nghi, len ca, v.v) */
+.theme-autumn .btn-outline {
+  border: 1px solid rgba(255, 191, 0, 0.4) !important;
+  color: var(--autumn-gold) !important;
+  background: rgba(10, 15, 29, 0.4) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.theme-autumn .btn-outline:hover {
+  background: rgba(255, 191, 0, 0.1) !important;
+  border-color: var(--autumn-amber) !important;
+  box-shadow: 0 4px 15px rgba(255, 191, 0, 0.15) !important;
+  transform: translateY(-1px);
+}
+
+/* Nav bar styles */
+.theme-autumn .emp-nav {
+  background: rgba(10, 15, 29, 0.85) !important;
+  border-top: 1px solid rgba(255, 191, 0, 0.2) !important;
+  backdrop-filter: blur(10px);
+}
+
+.theme-autumn .nav-item {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.theme-autumn .nav-item.active {
+  color: var(--autumn-amber) !important;
+}
+
+.theme-autumn .nav-item.active svg {
+  stroke: var(--autumn-amber) !important;
+}

@@ -29,9 +29,9 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="style.css?v=1785171830" />
-    <link rel="stylesheet" href="theme-ma.css?v=2" />
+    <link rel="stylesheet" href="theme-autumn.css?v=1791573244541" />
   </head>
-  <body class="theme-nd">
+  <body class="theme-autumn">
     <div class="nd-watermark"></div>
     <!-- Nút sửa chữa / Clear Cache nổi -->
     <button
@@ -59,7 +59,8 @@
      EMPLOYEE VIEW — Mobile First (Default)
      ============================================================== -->
     <div id="employeeView" class="view active">
-      <div class="mid-autumn-overlay"></div>
+      <div class="autumn-overlay"></div>
+      <div class="autumn-glow"></div>
       <!-- PHASE 1: SHIFT SELECTION -->
       <section id="phaseShift" class="emp-phase active">
         <header class="emp-header">
@@ -81,16 +82,14 @@
 
         <div class="emp-scroll-body">
           <div class="emp-welcome">
-            <div class="emp-welcome-icon">👋</div>
+            <div class="emp-welcome-icon" style="font-size: 2rem; margin-bottom: 5px;">👋</div>
             <h1>Xin chào!</h1>
             <p>Chọn ca làm việc của bạn để bắt đầu điểm danh</p>
           </div>
           
-          <!-- Mid Autumn Banner -->
-          <div class="ma-banner">
-            <div style="font-size: 0.85rem; font-weight: 700; color: #FFD75A; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase;">⭐ Chúc Mừng Trung Thu 2026 ⭐</div>
-            <h2 style="font-size: clamp(1.8rem, 6vw, 2.4rem); letter-spacing: 1px; line-height: 1.2; text-transform: uppercase; margin-bottom: 10px;">Đêm Hội Trăng Rằm</h2>
-            <p style="font-size: 0.9rem; line-height: 1.4;">Chúc bạn và gia đình một mùa Trung Thu ấm áp, hạnh phúc và trọn vẹn!</p>
+          <!-- Autumn Banner -->
+          <div class="autumn-banner" id="dynamicBanner">
+            <!-- Rendered by JS -->
           </div>
 
           <div class="shift-cards" id="shiftCards">
@@ -2725,7 +2724,7 @@
     ></script>
     <script defer="" src="js/admin/adminManager.js?v=1791466284602"></script>
     <script defer="" src="js/admin/adminLogs.js?v=1785171830"></script>
-    <script defer="" src="app.js?v=1791568456317"></script>
+    <script defer="" src="app.js?v=1791573244541"></script>
     <!-- Registration Module -->
     <script
       defer=""
