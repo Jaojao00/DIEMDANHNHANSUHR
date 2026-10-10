@@ -42,11 +42,11 @@
                 })
             });
             const data = await res.json();
-            if (data.status === 'success') {
+            if (data.success) {
                 salaryData = data.salaries || [];
                 renderTable();
             } else {
-                Swal.fire("Lỗi", data.message || "Không thể tải dữ liệu", "error");
+                Swal.fire("Lỗi", data.error || data.message || "Không thể tải dữ liệu", "error");
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red">Lỗi tải dữ liệu</td></tr>`;
             }
         } catch (error) {
