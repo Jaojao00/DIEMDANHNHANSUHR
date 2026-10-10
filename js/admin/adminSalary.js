@@ -31,7 +31,7 @@
         document.getElementById('salaryTotalAmount').innerText = "0 VNĐ";
 
         try {
-            const token = localStorage.getItem("adminToken");
+            const token = localStorage.getItem("agr_admin_token");
             const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
