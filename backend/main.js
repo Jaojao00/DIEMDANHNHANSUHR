@@ -10,7 +10,7 @@ function doPost(e) {
     var shiftId = data.shiftId;
     
     // Auth Check for Admin Actions
-    var adminActions = ["save_reg_config", "reset_registrations", "reset_all_shifts", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs"];
+    var adminActions = ["save_reg_config", "reset_registrations", "reset_all_shifts", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs", "get_salary_list"];
     if (adminActions.indexOf(action) !== -1) {
       if (!verifyAdminToken(data.adminToken)) {
         return sendErrorResponse("Unauthorized. Vui lòng đăng nhập lại.", 401);
@@ -40,6 +40,7 @@ function doPost(e) {
       case "reject_change_request": return handleRejectChangeRequest(data, shiftId, sheet);
       case "get_booking": return handleGetBooking(data, shiftId, sheet);
       case "get_admin_logs": return handleGetAdminLogs(data, shiftId, sheet);
+      case "get_salary_list": return handleGetSalaryList(data);
       case "request_item": return handleItemRequest(data);
       case "lookup_salary": return handleLookupSalary(data);
       case "submit_complaint": return handleSubmitComplaint(data);

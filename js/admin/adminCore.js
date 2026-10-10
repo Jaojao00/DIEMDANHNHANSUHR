@@ -231,6 +231,8 @@ const AdminApp = {
     const btnViewModeFinal = document.getElementById("viewModeFinal");
     const btnViewModeReg = document.getElementById("viewModeReg");
     const btnViewModeBooking = document.getElementById("viewModeBooking");
+    const btnViewModeSalary = document.getElementById("viewModeSalary");
+    const salaryTableContainer = document.getElementById("salaryTableContainer");
     const scheduleTableContainer = document.getElementById(
       "scheduleTableContainer",
     );
@@ -259,6 +261,8 @@ const AdminApp = {
         if (scheduleTableContainer)
           scheduleTableContainer.style.display = "block";
         if (bookingTableContainer) bookingTableContainer.style.display = "none";
+        if (salaryTableContainer) salaryTableContainer.style.display = "none";
+        if (btnViewModeSalary) { btnViewModeSalary.style.background = "transparent"; btnViewModeSalary.style.color = "var(--text-secondary)"; btnViewModeSalary.classList.add("btn-ghost"); }
         AdminApp.loadData();
       });
       btnViewModeReg.addEventListener("click", () => {
@@ -281,6 +285,8 @@ const AdminApp = {
         if (scheduleTableContainer)
           scheduleTableContainer.style.display = "block";
         if (bookingTableContainer) bookingTableContainer.style.display = "none";
+        if (salaryTableContainer) salaryTableContainer.style.display = "none";
+        if (btnViewModeSalary) { btnViewModeSalary.style.background = "transparent"; btnViewModeSalary.style.color = "var(--text-secondary)"; btnViewModeSalary.classList.add("btn-ghost"); }
         AdminApp.loadData();
       });
       if (btnViewModeBooking) {
