@@ -34,11 +34,11 @@
             const token = localStorage.getItem("adminToken");
             const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: new URLSearchParams({
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({
                     action: "get_salary_list",
                     adminToken: token,
-                    shiftId: "dummy" // Bypass if needed
+                    shiftId: "dummy"
                 })
             });
             const data = await res.json();
