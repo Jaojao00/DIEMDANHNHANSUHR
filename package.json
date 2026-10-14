@@ -1,12 +1,23 @@
 {
-  "dependencies": {
-    "@babel/core": "^8.0.1",
-    "@babel/generator": "^8.0.0",
-    "@babel/traverse": "^8.0.4",
-    "jsdom": "^29.1.1",
-    "node-fetch": "^2.7.0"
+  "name": "diemdanhnhansuhr",
+  "version": "78.0.0",
+  "description": "Hệ Thống Điểm Danh & Quản Trị Nhân Sự Agari HR",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "push": "npx @google/clasp push",
+    "pull": "npx @google/clasp pull",
+    "deploy": "vercel --prod"
   },
-  "devDependencies": {
-    "@google/clasp": "^3.3.0"
-  }
+  "keywords": [
+    "agari",
+    "diem-danh",
+    "attendance",
+    "hr-ops",
+    "pwa",
+    "google-apps-script",
+    "vercel"
+  ],
+  "author": "Agari HR Team",
+  "license": "ISC"
 }

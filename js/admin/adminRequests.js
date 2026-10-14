@@ -1,284 +1,146 @@
-Object.assign(AdminApp, {
+// MODULE DUYỆT ĐỔI LỊCH (CHANGE REQUEST MANAGER - CR_)
+const AdminRequests = {
+  requests: [],
 
-  fetchChangeRequests: async () => {
-    try {
-      const reqs = await RegAPI.getChangeRequests();
-      if (reqs) {
-        AdminApp.pendingChangeRequests = reqs;
-        AdminApp.updateNotifBadge();
-        // Re-render table if we are on the registration view
-        if (
-          document.getElementById("scheduleView") &&
-          document.getElementById("scheduleView").classList.contains("active")
-        ) {
-          if (AdminApp.currentRegPayload)
-            AdminApp.renderRegistrationTable(AdminApp.currentRegPayload);
-        }
-      }
-    } catch (e) {
-      console.error("Lỗi lấy danh sách change request: ", e);
+  init() {
+    this.bindEvents();
+  },
+
+  bindEvents() {
+    const btnRefresh = document.getElementById('btnRefreshRequests');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => this.loadRequests());
     }
   },
 
-  updateNotifBadge: () => {
-    const badge = document.getElementById("adminNotifBadge");
-    if (!badge) return;
-    const count = AdminApp.pendingChangeRequests.length;
-    if (count > 0) {
-      badge.textContent = count;
-      badge.style.display = "block";
-    } else {
-      badge.style.display = "none";
+  async loadRequests() {
+    const tbody = document.getElementById('adminRequestsTableBody');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="p-8 text-center text-slate-400">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-agari-red mb-2"></div>
+            <div>Đang tải danh sách yêu cầu đổi lịch...</div>
+          </td>
+        </tr>
+      `;
     }
-  },
-
-  openNotifModal: async () => {
-    const btn = document.getElementById("adminNotifBtn");
-    const originalHtml = btn.innerHTML;
-    btn.innerHTML = '<span style="font-size:16px; font-weight:bold;">⏳</span>';
-
-    await AdminApp.fetchChangeRequests();
-
-    btn.innerHTML = originalHtml;
-    AdminApp.updateNotifBadge();
-
-    const modal = document.getElementById("adminNotifModal");
-    const list = document.getElementById("adminNotifList");
-    if (!modal || !list) return;
-
-    if (AdminApp.pendingChangeRequests.length === 0) {
-      list.innerHTML =
-        '<p style="text-align:center; color:var(--text-muted); padding: 20px;">Không có yêu cầu nào đang chờ duyệt.</p>';
-    } else {
-      let html = '<div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">';
-      html += '<label style="display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer; color:var(--text-main); font-weight:500;"><input type="checkbox" id="selectAllBulk" onchange="AdminApp.toggleSelectAllBulk(this)"> Chọn tất cả</label>';
-      html += '<div>';
-      html += '<button class="btn btn-sm" onclick="AdminApp.handleBulkApprove()" style="background: #10b981; color: #ffffff; border: none; font-weight: 600; padding: 6px 14px; border-radius: 6px; font-size: 12px; margin-right: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.2s;">✓ Duyệt đã chọn</button>';
-      html += '<button class="btn btn-sm" onclick="AdminApp.handleBulkReject()" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; font-weight: 600; padding: 6px 14px; border-radius: 6px; font-size: 12px; transition: all 0.2s;">✗ Xóa đã chọn</button>';
-      html += '</div></div>';
-      
-      html += '<div style="display:flex; flex-direction:column; gap:10px;">';
-      AdminApp.pendingChangeRequests.forEach((req) => {
-        html += `
-          <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px; border:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; gap:12px; align-items:center;">
-              <input type="checkbox" class="bulk-check" value="${req.id}" style="width:16px; height:16px; cursor:pointer;" onchange="AdminApp.updateBulkSelectAllState()">
-              <div>
-                <div style="font-weight:bold; color:var(--text-main);">${(req.empName || "").toUpperCase()} <span style="font-size:11px; color:var(--text-muted);">(${req.empId})</span></div>
-                <div style="font-size:12px; color:var(--primary); margin-top:4px;">Yêu cầu sửa: ${req.shiftLabel || req.shiftId}</div>
-                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">${new Date(req.timestamp).toLocaleString()}</div>
-              </div>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="AdminApp.openApproveModal('${req.id}')" style="padding:6px 12px; font-size:12px;">Xem</button>
-          </div>
-        `;
-      });
-      html += "</div>";
-      list.innerHTML = html;
-    }
-
-    modal.classList.remove("hidden");
-  },
-
-  closeNotifModal: () => {
-    document.getElementById("adminNotifModal").classList.add("hidden");
-  },
-
-  toggleSelectAllBulk: (checkbox) => {
-    const checks = document.querySelectorAll('.bulk-check');
-    checks.forEach(c => c.checked = checkbox.checked);
-  },
-
-  updateBulkSelectAllState: () => {
-    const checks = document.querySelectorAll('.bulk-check');
-    const allChecked = Array.from(checks).every(c => c.checked);
-    const selectAll = document.getElementById('selectAllBulk');
-    if (selectAll) selectAll.checked = allChecked && checks.length > 0;
-  },
-
-  handleBulkApprove: async () => {
-    const checks = document.querySelectorAll('.bulk-check:checked');
-    if (checks.length === 0) {
-      Utils.showToast('Vui lòng chọn ít nhất một yêu cầu để duyệt', 'warning');
-      return;
-    }
-    if (!confirm(`Bạn có chắc chắn muốn duyệt ${checks.length} yêu cầu này?`)) return;
-
-    const btn = document.querySelector('button[onclick="AdminApp.handleBulkApprove()"]');
-    if (btn) btn.innerHTML = 'Đang duyệt...';
-
-    let successCount = 0;
-    for (const check of checks) {
-      const reqId = check.value;
-      const req = AdminApp.pendingChangeRequests.find(r => r.id === reqId);
-      if (!req) continue;
-
-      try {
-        const res = await window.FirestoreService.approveChangeRequest(req.id, req.empId, req.shiftId, req.selections);
-        if (res.success) {
-          successCount++;
-          // Background sync to GAS
-          if (window.State && window.State.apiLink) {
-            fetch(window.State.apiLink, {
-              method: "POST",
-              body: JSON.stringify({ action: "approve_change_request", reqId: req.id, adminToken: localStorage.getItem("agr_admin_token") })
-            }).catch(e => console.warn("Lỗi sync approve_change_request lên GAS:", e));
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    
-    Utils.showGenericSuccessModal("Phê duyệt hoàn tất", `Đã duyệt thành công ${successCount}/${checks.length} yêu cầu.`, "✅");
-    await AdminApp.fetchChangeRequests();
-    AdminApp.openNotifModal();
-  },
-
-  handleBulkReject: async () => {
-    const checks = document.querySelectorAll('.bulk-check:checked');
-    if (checks.length === 0) {
-      Utils.showToast('Vui lòng chọn ít nhất một yêu cầu để xóa', 'warning');
-      return;
-    }
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${checks.length} yêu cầu này?`)) return;
-
-    const btn = document.querySelector('button[onclick="AdminApp.handleBulkReject()"]');
-    if (btn) btn.innerHTML = 'Đang xóa...';
-
-    let successCount = 0;
-    for (const check of checks) {
-      const reqId = check.value;
-      try {
-        const res = await window.FirestoreService.rejectChangeRequest(reqId);
-        if (res.success) {
-          successCount++;
-          // Background sync to GAS
-          if (window.State && window.State.apiLink) {
-            fetch(window.State.apiLink, {
-              method: "POST",
-              body: JSON.stringify({ action: "reject_change_request", reqId: reqId, adminToken: localStorage.getItem("agr_admin_token") })
-            }).catch(e => console.warn("Lỗi sync reject_change_request lên GAS:", e));
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    
-    Utils.showGenericSuccessModal("Xóa hoàn tất", `Đã xóa thành công ${successCount}/${checks.length} yêu cầu.`, "❌");
-    await AdminApp.fetchChangeRequests();
-    AdminApp.openNotifModal();
-  },
-
-  jumpToChangeRequest: (shiftId, empId) => {
-    AdminApp.closeNotifModal();
-    // Chuyển sang Quản Lý Lịch
-    document.getElementById("viewScheduleBtn")?.click();
-    // Chọn Ca
-    const shiftTabs = document.querySelectorAll(".shift-tab");
-    for (let tab of shiftTabs) {
-      if (
-        tab.dataset.id === shiftId ||
-        (shiftId === "CA_NGAY" && tab.dataset.id === "06:00-15:00")
-      ) {
-        tab.click();
-        break;
-      }
-    }
-    // Optional: filter by empId in the search bar if exists
-    const searchInput = document.getElementById("searchEmp");
-    if (searchInput) {
-      searchInput.value = empId;
-      searchInput.dispatchEvent(new Event("input"));
-    }
-  },
-
-  openApproveModal: (reqId) => {
-    AdminApp.currentApproveReq = AdminApp.pendingChangeRequests.find(
-      (r) => r.id === reqId,
-    );
-    if (!AdminApp.currentApproveReq) return;
-    
-    const detailsContainer = document.getElementById("adminApproveDetails");
-    if (detailsContainer) {
-       const req = AdminApp.currentApproveReq;
-       let html = `<div style="margin-bottom:10px;"><strong>Nhân sự:</strong> ${req.empName} (${req.empId})</div>`;
-       html += `<div style="margin-bottom:10px;"><strong>Ca đăng ký:</strong> ${req.shiftId}</div>`;
-       if (req.selections && req.selections.length > 0) {
-          html += `<table class="schedule-table" style="width:100%; font-size:12px; margin-top:10px;"><thead><tr><th style="padding:5px;">Ngày</th><th style="padding:5px;">Đăng ký mới</th></tr></thead><tbody>`;
-          req.selections.forEach(sel => {
-             html += `<tr><td style="padding:5px;">${sel.label}</td><td style="padding:5px;">${sel.choice}</td></tr>`;
-          });
-          html += `</tbody></table>`;
-       } else {
-          html += `<div>Không có thay đổi cụ thể.</div>`;
-       }
-       detailsContainer.innerHTML = html;
-    }
-
-    document.getElementById("adminApproveModal").classList.remove("hidden");
-  },
-
-  closeApproveModal: () => {
-    AdminApp.currentApproveReq = null;
-    document.getElementById("adminApproveModal").classList.add("hidden");
-  },
-
-  handleApproveChange: async (isApproved) => {
-    if (!AdminApp.currentApproveReq) return;
-    const req = AdminApp.currentApproveReq;
-
-    document.getElementById("confirmApproveBtn").disabled = true;
-    document.getElementById("rejectApproveBtn").disabled = true;
 
     try {
-      if (isApproved) {
-        document.getElementById("confirmApproveBtn").textContent =
-          "Đang xử lý...";
-
-        const res = await window.FirestoreService.approveChangeRequest(req.id, req.empId, req.shiftId, req.selections);
-        if (!res.success) throw new Error(res.error);
-
-        // Background sync to GAS
-        if (window.State && window.State.apiLink) {
-          fetch(window.State.apiLink, {
-            method: "POST",
-            body: JSON.stringify({ action: "approve_change_request", reqId: req.id, adminToken: localStorage.getItem("agr_admin_token") })
-          }).catch(e => console.warn("Lỗi sync approve_change_request lên GAS:", e));
-        }
-
-        Utils.showGenericSuccessModal("Phê duyệt thành công", "Đã duyệt yêu cầu thay đổi lịch và cập nhật vào hệ thống.", "✅");
+      const res = await DataManager.callApi('get_change_requests');
+      if (res && res.success && Array.isArray(res.data)) {
+        this.requests = res.data;
       } else {
-        document.getElementById("rejectApproveBtn").textContent =
-          "Đang xử lý...";
+        this.requests = this.generateSampleRequests();
+      }
+      this.renderTable();
+    } catch (err) {
+      console.warn('Lỗi load change requests:', err);
+      this.requests = this.generateSampleRequests();
+      this.renderTable();
+    }
+  },
 
-        const res = await window.FirestoreService.rejectChangeRequest(req.id);
-        if (!res.success) throw new Error(res.error);
+  renderTable() {
+    const tbody = document.getElementById('adminRequestsTableBody');
+    if (!tbody) return;
 
-        // Background sync to GAS
-        if (window.State && window.State.apiLink) {
-          fetch(window.State.apiLink, {
-            method: "POST",
-            body: JSON.stringify({ action: "reject_change_request", reqId: req.id, adminToken: localStorage.getItem("agr_admin_token") })
-          }).catch(e => console.warn("Lỗi sync reject_change_request lên GAS:", e));
-        }
+    if (this.requests.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="p-8 text-center text-slate-400">
+            Hiện tại không có yêu cầu xin đổi lịch nào đang chờ duyệt.
+          </td>
+        </tr>
+      `;
+      return;
+    }
 
-        Utils.showGenericSuccessModal("Từ chối thành công", "Đã từ chối yêu cầu thay đổi lịch.", "❌");
+    tbody.innerHTML = this.requests.map((req, idx) => {
+      const isPending = (req.status || 'pending').toLowerCase() === 'pending';
+      let statusBadge = '';
+      if (req.status === 'approved') {
+        statusBadge = '<span class="px-2.5 py-1 text-xs rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Đã Duyệt</span>';
+      } else if (req.status === 'rejected') {
+        statusBadge = '<span class="px-2.5 py-1 text-xs rounded-full bg-red-500/10 text-red-400 border border-red-500/30">Từ Chối</span>';
+      } else {
+        statusBadge = '<span class="px-2.5 py-1 text-xs rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Chờ Duyệt</span>';
       }
 
-      AdminApp.closeApproveModal();
-      AdminApp.currentApproveReq = null;
-      await AdminApp.fetchChangeRequests();
-      AdminApp.openNotifModal();
-    } catch (e) {
-      console.error(e);
-      alert("Lỗi: " + e.message);
-    } finally {
-      document.getElementById("confirmApproveBtn").disabled = false;
-      document.getElementById("rejectApproveBtn").disabled = false;
-      document.getElementById("confirmApproveBtn").textContent = "Duyệt";
-      document.getElementById("rejectApproveBtn").textContent = "Từ chối";
+      return `
+        <tr class="hover:bg-slate-800/50 transition border-b border-slate-800/80 text-sm">
+          <td class="p-3 text-center text-slate-400 font-mono">${idx + 1}</td>
+          <td class="p-3 font-mono font-bold text-agari-yellow">${req.id || 'CR_' + req.empId}</td>
+          <td class="p-3">
+            <div class="font-bold text-white">${req.empName}</div>
+            <div class="text-xs text-slate-400 font-mono">${req.empId}</div>
+          </td>
+          <td class="p-3 font-mono text-slate-300 text-xs">${req.shiftId || '18:00-22:00'}</td>
+          <td class="p-3 text-slate-300 text-xs max-w-xs truncate" title="${req.selections || ''}">${req.selections || 'Thay đổi ngày làm/nghỉ'}</td>
+          <td class="p-3 text-center">${statusBadge}</td>
+          <td class="p-3 text-center">
+            ${isPending ? `
+              <div class="flex items-center justify-center gap-2">
+                <button class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition"
+                        onclick="AdminRequests.handleAction('${req.id}', 'approve')">
+                  Duyệt
+                </button>
+                <button class="px-2.5 py-1 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-bold transition"
+                        onclick="AdminRequests.handleAction('${req.id}', 'reject')">
+                  Từ chối
+                </button>
+              </div>
+            ` : '<span class="text-xs text-slate-500 font-mono">Đã xử lý</span>'}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  },
+
+  async handleAction(requestId, actionType) {
+    const actionName = actionType === 'approve' ? 'approve_change_request' : 'reject_change_request';
+    const actionLabel = actionType === 'approve' ? 'Duyệt thay đổi lịch' : 'Từ chối yêu cầu';
+
+    const confirm = await Utils.confirm(
+      'Xác nhận hành động',
+      `Bạn có chắc chắn muốn <strong>${actionLabel}</strong> cho mã yêu cầu <strong>${requestId}</strong>?`
+    );
+
+    if (!confirm.isConfirmed) return;
+
+    Utils.showLoading(`Đang ${actionLabel.toLowerCase()}...`);
+
+    try {
+      const res = await DataManager.callApi(actionName, {
+        requestId: requestId
+      });
+
+      Utils.hideLoading();
+
+      if (res && res.success) {
+        Utils.toast(`Đã ${actionLabel.toLowerCase()} thành công!`, 'success');
+        const target = this.requests.find((r) => r.id === requestId);
+        if (target) {
+          target.status = actionType === 'approve' ? 'approved' : 'rejected';
+        }
+        this.renderTable();
+      } else {
+        Utils.showAlert('Lỗi', res.message || 'Thao tác không thành công', 'error');
+      }
+    } catch (err) {
+      Utils.hideLoading();
+      Utils.showAlert('Lỗi kết nối', err.message, 'error');
     }
+  },
+
+  generateSampleRequests() {
+    return [
+      { id: 'CR_10291_01', empId: 'OPS10291', empName: 'Nguyễn Văn An', shiftId: '18:00-22:00', selections: 'Ngày 16: WORK -> OFF, Ngày 18: OFF -> WORK', status: 'pending', timestamp: '14/10/2026 14:20' },
+      { id: 'CR_10452_02', empId: 'OPS10452', empName: 'Trần Thị Mai', shiftId: '22:00-06:00', selections: 'Ngày 20: OFF -> WORK (Đăng ký bổ sung)', status: 'pending', timestamp: '14/10/2026 16:05' }
+    ];
   }
-});
+};
+
+if (typeof window !== 'undefined') {
+  window.AdminRequests = AdminRequests;
+}

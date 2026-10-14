@@ -1,4 +1,8 @@
-
-# Clasp config
-.clasp.json
-node_modules
+node_modules/
+.DS_Store
+Thumbs.db
+.clasp.json.local
+.env
+.env.local
+.vscode/
+.idea/

@@ -1,0 +1,199 @@
+/* AGARI HR - DESIGN SYSTEM & COMPONENT STYLING */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Agari Brand Palette */
+  --agari-red: #D90012;
+  --agari-red-dark: #B3000E;
+  --agari-red-gradient: linear-gradient(135deg, #D90012 0%, #FF2A3A 100%);
+  --agari-yellow: #FBBF24;
+  --agari-yellow-light: #FDE047;
+
+  /* Admin Dark Theme */
+  --admin-bg: #0B1120;
+  --admin-card: #0F172A;
+  --admin-sidebar: #080D1A;
+  --admin-border: #1E293B;
+
+  /* Status */
+  --status-success: #00D48E;
+  --status-warning: #FFB800;
+  --status-danger: #FF4757;
+
+  /* Z-Index Rules: Max 1050 to avoid covering SweetAlert2 (1060) */
+  --z-modal-backdrop: 1040;
+  --z-modal-content: 1050;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: #FAFAFA;
+  color: #0F172A;
+  min-height: 100vh;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Monospace font for technical elements */
+.font-mono,
+.mono-text,
+.badge-code,
+.shift-time,
+.cccd-text,
+.salary-amount {
+  font-family: var(--font-mono) !important;
+}
+
+/* Agari Gradient */
+.bg-agari-gradient {
+  background: var(--agari-red-gradient);
+}
+
+.text-agari-red {
+  color: var(--agari-red);
+}
+
+.bg-agari-red {
+  background-color: var(--agari-red);
+}
+
+.border-agari-red {
+  border-color: var(--agari-red);
+}
+
+.bg-agari-yellow {
+  background-color: var(--agari-yellow);
+}
+
+.text-agari-yellow {
+  color: var(--agari-yellow);
+}
+
+/* Mobile-first PC breakout */
+.container-breakout {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 1536px) {
+  .container-breakout {
+    max-width: 1440px;
+  }
+}
+
+/* Custom Modals Constraint (Z-INDEX <= 1050) */
+.custom-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(11, 17, 32, 0.75);
+  backdrop-filter: blur(4px);
+  z-index: 1040 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.custom-modal-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.custom-modal-content {
+  background: #FFFFFF;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 36rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  z-index: 1050 !important;
+  transform: translateY(20px) scale(0.98);
+  transition: transform 0.25s ease;
+}
+
+.custom-modal-backdrop.active .custom-modal-content {
+  transform: translateY(0) scale(1);
+}
+
+/* Dark mode glassmorphism card */
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Pulse animation for Live feeds */
+@keyframes pulse-live {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 212, 142, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(0, 212, 142, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 212, 142, 0); }
+}
+
+.pulse-live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-success);
+  animation: pulse-live 2s infinite;
+}
+
+/* Subtle Shimmer for loading */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Print styles for salary & roster */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+}

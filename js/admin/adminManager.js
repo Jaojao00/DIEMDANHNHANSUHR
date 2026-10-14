@@ -1,318 +1,198 @@
-Object.assign(AdminApp, {
+// THAO TÁC QUẢN TRỊ NÂNG CAO (ADMIN MANAGER - ĐIỀU HÀNH CA TRỰC)
+const AdminManager = {
+  init() {
+    this.bindEvents();
+  },
 
-  openManagerModal: () => {
-    document.getElementById("managerModal").classList.remove("hidden");
-    document.getElementById("pasteDataArea").value = "";
-    document.getElementById("previewContainer").classList.add("hidden");
-    document.getElementById("saveScheduleBtn").disabled = true;
-
-    const datePicker = document.getElementById("scheduleDatePicker");
-    if (datePicker) {
-      const savedDate = localStorage.getItem("agr_schedule_date");
-      if (savedDate) {
-        datePicker.value = savedDate;
-      } else {
-        const d = new Date();
-        datePicker.value = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
-      }
-      
-      const resetCb = document.getElementById("resetStatusCheckbox");
-      if (resetCb) {
-        resetCb.checked = (datePicker.value !== savedDate);
-        datePicker.addEventListener("change", () => {
-           resetCb.checked = (datePicker.value !== localStorage.getItem("agr_schedule_date"));
-        });
-      }
+  bindEvents() {
+    // Nút Lưu Lịch (ghi đè Google Sheets & Firebase)
+    const btnSaveRoster = document.getElementById('btnSaveRosterPositions');
+    if (btnSaveRoster) {
+      btnSaveRoster.addEventListener('click', () => this.handleSaveRosterPositions());
     }
 
-    // Render shift buttons inside modal
-    const btnsContainer = document.getElementById("managerShiftBtns");
-    btnsContainer.innerHTML = State.shifts
-      .filter(s => !s.hidden)
-      .map(
-        (s) => `
-      <div class="mgr-shift-btn ${s.id === State.selectedShiftId ? "active" : ""}" data-shift="${s.id}" style="--tab-color:${s.color}">
-        <span>${s.label}</span>
-        <span class="mgr-shift-time">${s.id}</span>
-      </div>
-    `,
-      )
-      .join("");
+    // Nút Thêm Nhân Sự Đột Xuất
+    const btnAddEmp = document.getElementById('btnAddTempEmployee');
+    if (btnAddEmp) {
+      btnAddEmp.addEventListener('click', () => this.promptAddEmployee());
+    }
 
-    btnsContainer.querySelectorAll(".mgr-shift-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        btnsContainer
-          .querySelectorAll(".mgr-shift-btn")
-          .forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        State.selectedShiftId = btn.dataset.shift; // Sync shift
-        AdminApp.renderShiftTabs(); // Sync background UI
-        AdminApp.loadData();
-      });
+    // Nút OFF Hàng Loạt
+    const btnMassOff = document.getElementById('btnMassOffEmployees');
+    if (btnMassOff) {
+      btnMassOff.addEventListener('click', () => this.promptMassOff());
+    }
+  },
+
+  /**
+   * Lưu lại toàn bộ vị trí đã chỉnh sửa inline lên Google Sheets & Firebase
+   */
+  async handleSaveRosterPositions() {
+    const shiftSelect = document.getElementById('adminShiftSelect');
+    const shiftId = shiftSelect ? shiftSelect.value : DataManager.state.currentShift;
+
+    // Lấy toàn bộ input vị trí trong bảng
+    const rows = document.querySelectorAll('#adminRosterTableBody tr[data-id]');
+    if (!rows.length) {
+      Utils.toast('Không có dữ liệu ca để lưu', 'warning');
+      return;
+    }
+
+    rows.forEach((row) => {
+      const empId = row.dataset.id;
+      const targetEmp = DataManager.state.roster.find((e) => e.id === empId);
+      if (targetEmp) {
+        if (!targetEmp.positions) targetEmp.positions = {};
+        const inputs = row.querySelectorAll('.pos-input');
+        inputs.forEach((inp) => {
+          const key = inp.dataset.posKey;
+          targetEmp.positions[key] = inp.value.trim();
+        });
+      }
     });
-  },
 
-  parsePastedData: () => {
-    const text = document.getElementById("pasteDataArea").value.trim();
-    if (!text) {
-      Utils.showToast("Vui lòng dán dữ liệu vào ô trống", "warning");
-      return;
-    }
-
-    const shift = State.shifts.find((s) => s.id === State.selectedShiftId);
-    if (!shift || !shift.colHeaders) {
-      Utils.showToast("Không tìm thấy cấu hình ca làm việc!", "error");
-      return;
-    }
-
-    const rows = text.split("\n");
-    const parsedData = [];
-
-    // Bỏ qua dòng tiêu đề nếu có
-    let startIndex = 0;
-    while (
-      startIndex < rows.length &&
-      (rows[startIndex].toLowerCase().includes("stt") ||
-        rows[startIndex].toLowerCase().includes("mã") ||
-        rows[startIndex].split("\t").length < 3)
-    ) {
-      startIndex++;
-    }
-
-    for (let i = startIndex; i < rows.length; i++) {
-      const cols = rows[i].split("\t"); // TSV từ Excel/Sheets
-      if (cols.length >= 3 && cols[1].trim() !== "") {
-        // Đọc positions[] theo số lượng colHeaders của ca
-        const positions = shift.colHeaders.map(
-          (_, pi) => cols[4 + pi]?.trim() || "",
-        );
-        const empId = cols[1]?.trim() || "";
-        const empName = cols[2]?.trim() || "";
-        let existingStatus = "pending";
-        let existingTimestamp = "";
-        let existingPhone = "";
-        let newNote = cols[shift.noteColIndex]?.trim() || "";
-
-        const resetCb = document.getElementById("resetStatusCheckbox");
-        const shouldReset = resetCb ? resetCb.checked : false;
-
-        if (!shouldReset && State.scheduleData && State.scheduleData.length > 0) {
-           const existingEmp = State.scheduleData.find(e => 
-              (e.id && empId && e.id.toLowerCase() === empId.toLowerCase()) || 
-              (e.name && empName && e.name.toLowerCase() === empName.toLowerCase())
-           );
-           
-           if (existingEmp) {
-               existingStatus = existingEmp.status || "pending";
-               existingTimestamp = existingEmp.timestamp || "";
-               existingPhone = existingEmp.phone || "";
-               if (existingEmp.note && !newNote) {
-                   newNote = existingEmp.note;
-               }
-           }
-        }
-
-        parsedData.push({
-          stt: cols[0]?.trim() || i + 1 - startIndex,
-          id: empId,
-          name: empName,
-          dinhDanh: cols[3]?.trim() || "",
-          positions: positions,
-          note: newNote,
-          status: existingStatus,
-          timestamp: existingTimestamp,
-          phone: existingPhone
-        });
-      }
-    }
-
-    if (parsedData.length === 0) {
-      Utils.showToast(
-        "Không phân tích được dòng dữ liệu nào hợp lệ. Đảm bảo copy từ Excel/Google Sheets.",
-        "error",
-      );
-      return;
-    }
-
-    // Hiển thị preview với cột đúng theo ca
-    document.getElementById("previewCount").textContent =
-      `(${parsedData.length} nhân viên)`;
-    document.getElementById("previewContainer").classList.remove("hidden");
-
-    const previewCols = [
-      "STT",
-      "Mã NV",
-      "Họ Tên",
-      ...shift.colHeaders.slice(0, 3),
-      "Ghi Chú",
-    ];
-    const thead = `<tr>${previewCols.map((h) => `<th>${h}</th>`).join("")}</tr>`;
-    const tbody = parsedData
-      .slice(0, 5)
-      .map((r) => {
-        const pos = r.positions || [];
-        return `<tr><td>${r.stt}</td><td>${escapeHTML(r.id)}</td><td>${escapeHTML(r.name)}</td>${pos
-          .slice(0, 3)
-          .map((p) => `<td>${p}</td>`)
-          .join("")}<td>${escapeHTML(r.note)}</td></tr>`;
-      })
-      .join("");
-
-    document.getElementById("previewTableWrap").innerHTML = `
-      <table class="preview-table">
-        ${thead}
-        <tbody>
-          ${tbody}
-          ${parsedData.length > 5 ? `<tr><td colspan="${previewCols.length}" style="text-align:center;color:var(--text-muted);font-style:italic">... và ${parsedData.length - 5} dòng nữa</td></tr>` : ""}
-        </tbody>
-      </table>
-    `;
-
-    // Lưu tạm vào state để khi bấm "Lưu" thì đẩy xuống Storage
-    State._tempParsedData = parsedData;
-    document.getElementById("saveScheduleBtn").disabled = false;
-  },
-
-  savePastedSchedule: async () => {
-    if (!State._tempParsedData || State._tempParsedData.length === 0) return;
-
-    let dateChanged = false;
-    const datePicker = document.getElementById("scheduleDatePicker");
-    if (datePicker && datePicker.value) {
-      const oldDate = localStorage.getItem("agr_schedule_date");
-      if (oldDate && oldDate !== datePicker.value) {
-        dateChanged = true;
-      }
-      localStorage.setItem("agr_schedule_date", datePicker.value);
-      const mainDateInput = document.getElementById("mainScheduleDateInput");
-      if (mainDateInput) {
-        const parts = datePicker.value.split("-");
-        if (parts.length === 3) {
-          mainDateInput.textContent = `${parts[2]}/${parts[1]}/${parts[0]}`;
-        } else {
-          mainDateInput.textContent = datePicker.value;
-        }
-      }
-    }
+    Utils.showLoading('Đang lưu lịch và đồng bộ lên Google Sheets...');
 
     try {
-      await DataManager.saveSchedule(
-        State.selectedShiftId,
-        State._tempParsedData,
-      );
-      Utils.showToast(
-        `Đã lưu thành công ${State._tempParsedData.length} nhân viên cho ${State.selectedShiftId}`,
-      );
-      document.getElementById("managerModal").classList.add("hidden");
-      AdminApp.loadData(); // Tải lại bảng admin
-      
-      if (dateChanged) {
-        setTimeout(() => {
-          if (confirm("Bạn vừa thay đổi ngày làm việc.\nBạn có muốn XÓA TOÀN BỘ trạng thái điểm danh của TẤT CẢ CÁC CA để bắt đầu ngày mới không?")) {
-            DataManager.resetAllShifts().then(() => AdminApp.loadData());
-          }
-        }, 500);
+      const res = await DataManager.callApi('save', {
+        shift: shiftId,
+        date: DataManager.state.currentDate,
+        roster: DataManager.state.roster
+      });
+
+      Utils.hideLoading();
+
+      // Lưu đệm LocalStorage
+      DataManager.saveCachedRoster(shiftId, DataManager.state.roster);
+
+      if (res && res.success) {
+        Utils.showAlert('Đã lưu thành công', 'Bảng phân bổ vị trí đã được cập nhật lên Google Sheets và Firebase.', 'success');
+      } else {
+        Utils.toast('Đã lưu tạm thời vào bộ nhớ cục bộ (Offline)', 'info');
       }
-    } catch (e) {
-      Utils.showToast("Lỗi lưu dữ liệu: " + e.message, "error");
+    } catch (err) {
+      Utils.hideLoading();
+      Utils.showAlert('Lỗi', err.message, 'error');
     }
   },
 
-  openSettingsModal: () => {
-    document.getElementById("apiLinkInput").value = State.apiLink;
-    const dfEl = document.getElementById("regDateFrom");
-    const dtEl = document.getElementById("regDateTo");
-    if (dfEl) dfEl.value = localStorage.getItem("agr_reg_date_from") || "";
-    if (dtEl) dtEl.value = localStorage.getItem("agr_reg_date_to") || "";
-    document.getElementById("settingsModal").classList.remove("hidden");
-  },
+  /**
+   * Thêm nhân viên CTV đột xuất vào ca trực
+   */
+  async promptAddEmployee() {
+    if (typeof Swal === 'undefined') return;
 
-  closeSettings: () => {
-    document.getElementById("settingsModal").classList.add("hidden");
-  },
-
-  saveSettings: async () => {
-    // Save API Link
-    const newApiLink = document.getElementById("apiLinkInput").value.trim();
-    if (newApiLink !== State.apiLink) {
-      State.apiLink = newApiLink;
-      localStorage.setItem("agr_api_url", newApiLink);
-    }
-
-    // Save Reg Date Range — đồng bộ lên backend trước, chỉ lưu local khi thành công
-    const regFrom = document.getElementById("regDateFrom");
-    const regTo = document.getElementById("regDateTo");
-    const regDateFrom = regFrom ? regFrom.value : "";
-    const regDateTo = regTo ? regTo.value : "";
-    
-    if (regDateFrom && regDateTo) {
-      if (new Date(regDateFrom) > new Date(regDateTo)) {
-        Utils.showToast("Lỗi: Ngày kết thúc không thể nhỏ hơn ngày bắt đầu!", "error");
-        return;
-      }
-    }
-
-    if (regDateFrom || regDateTo) {
-      try {
-        if (!window.FirestoreService) throw new Error("FirestoreService chưa được khởi tạo!");
-        const result = await window.FirestoreService.saveConfig(regDateFrom, regDateTo);
-        
-        if (!result.success) {
-          Utils.showToast("Lỗi lưu cấu hình đăng ký: " + result.error, "error");
-          return; // Giữ modal mở để admin thử lại
+    const { value: formValues } = await Swal.fire({
+      title: 'Thêm Nhân Sự Vào Ca Đột Xuất',
+      html: `
+        <div class="text-left space-y-3 p-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Mã NV / CTV:</label>
+            <input id="swal_emp_id" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: OPS11999" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
+            <input id="swal_emp_name" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Lê Quốc Bảo" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại / Zalo:</label>
+            <input id="swal_emp_phone" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: 0912345678" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Vị trí đầu ca:</label>
+            <input id="swal_emp_pos" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Xả xe 1" />
+          </div>
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonColor: '#D90012',
+      confirmButtonText: 'Thêm vào ca',
+      cancelButtonText: 'Đóng',
+      preConfirm: () => {
+        const id = document.getElementById('swal_emp_id').value.trim();
+        const name = document.getElementById('swal_emp_name').value.trim();
+        const phone = document.getElementById('swal_emp_phone').value.trim();
+        const pos = document.getElementById('swal_emp_pos').value.trim();
+        if (!id || !name) {
+          Swal.showValidationMessage('Vui lòng nhập Mã và Họ tên nhân viên!');
+          return false;
         }
-        
-        // Background sync to GAS
-        if (State.apiLink) {
-           fetch(State.apiLink, {
-             method: 'POST',
-             body: JSON.stringify({ action: 'save_reg_config', startDate: regDateFrom, endDate: regDateTo, adminToken: localStorage.getItem("agr_admin_token") })
-           }).catch(e => console.warn("Lỗi sync config lên GAS:", e));
-        }
-        
-        // Backend thành công → cập nhật localStorage
-        if (regDateFrom) localStorage.setItem("agr_reg_date_from", regDateFrom);
-        if (regDateTo) localStorage.setItem("agr_reg_date_to", regDateTo);
-      } catch (err) {
-        Utils.showToast("Lỗi lưu cấu hình: " + err.message, "error");
-        return; // Giữ modal mở để admin thử lại
+        return { id, name, phone, pos };
       }
+    });
+
+    if (formValues) {
+      const newEmp = {
+        stt: DataManager.state.roster.length + 1,
+        id: Utils.sanitizeId(formValues.id),
+        name: formValues.name,
+        phone: formValues.phone,
+        identity: 'A-OS',
+        status: 'pending',
+        checkinTime: '',
+        positions: { '18H-20H': formValues.pos, '20H-22H': 'Chưa xếp' }
+      };
+
+      DataManager.state.roster.push(newEmp);
+      DataManager.recalculateStats();
+      AdminUI.updateStatsCards();
+      AdminUI.renderRosterTable();
+      Utils.toast(`Đã thêm nhân sự: ${newEmp.name}`, 'success');
+    }
+  },
+
+  /**
+   * OFF Hàng Loạt nhiều nhân sự
+   */
+  async promptMassOff() {
+    const confirm = await Utils.confirm(
+      'Xác nhận OFF Hàng Loạt',
+      'Bạn có muốn chuyển toàn bộ nhân sự đang ở trạng thái <strong>Chưa điểm danh</strong> sang <strong>XIN OFF</strong>?'
+    );
+
+    if (!confirm.isConfirmed) return;
+
+    let count = 0;
+    DataManager.state.roster.forEach((e) => {
+      if ((e.status || '').toLowerCase() === 'pending') {
+        e.status = 'off';
+        count++;
+      }
+    });
+
+    DataManager.recalculateStats();
+    AdminUI.updateStatsCards();
+    AdminUI.renderRosterTable();
+    Utils.toast(`Đã chuyển ${count} nhân sự sang trạng thái OFF!`, 'info');
+  },
+
+  /**
+   * Chuyển đổi trạng thái điểm danh thủ công
+   */
+  toggleEmployeeStatus(empId) {
+    const emp = DataManager.state.roster.find((e) => e.id === empId);
+    if (!emp) return;
+
+    const currentStatus = (emp.status || 'pending').toLowerCase();
+    if (currentStatus === 'confirmed') {
+      emp.status = 'pending';
+      emp.checkinTime = '';
+    } else if (currentStatus === 'pending') {
+      emp.status = 'confirmed';
+      emp.checkinTime = Utils.getCurrentVNTime();
     } else {
-      // Offline mode — chỉ lưu localStorage
-      if (regFrom && regFrom.value)
-        localStorage.setItem("agr_reg_date_from", regFrom.value);
-      if (regTo && regTo.value)
-        localStorage.setItem("agr_reg_date_to", regTo.value);
-
-      // Save to Firebase for employee registration screen sync
-      if (window.FirebaseDB?.db) {
-        const { doc, setDoc } = window.FirebaseDB;
-        const configRef = doc(window.FirebaseDB.db, "config", "admin");
-        setDoc(
-          configRef,
-          {
-            regDateFrom: regFrom ? regFrom.value : "",
-            regDateTo: regTo ? regTo.value : "",
-          },
-          { merge: true },
-        ).catch((e) => console.error("Firebase config save error:", e));
-      }
+      emp.status = 'pending';
     }
 
-    AdminApp.closeSettings();
-    AdminApp.loadData();
-    Utils.showToast("Đã lưu cài đặt", "success");
-  },
-
-  updateScheduleCopyButton: () => {
-    const btn = document.getElementById('btnCopySelected');
-    const btnDel = document.getElementById('btnDeleteSelected');
-    const countSpan = document.getElementById('copySelectedCount');
-    const countSpanDel = document.getElementById('deleteSelectedCount');
-    const checked = document.querySelectorAll('.schedule-checkbox:checked, .reg-checkbox:checked').length;
-    if (countSpan) countSpan.textContent = checked;
-    if (countSpanDel) countSpanDel.textContent = checked;
-    if (btn) btn.style.display = checked > 0 ? 'inline-flex' : 'none';
-    if (btnDel) btnDel.style.display = checked > 0 ? 'inline-flex' : 'none';
+    DataManager.recalculateStats();
+    AdminUI.updateStatsCards();
+    AdminUI.renderRosterTable();
+    AdminUI.renderActivityFeed();
+    Utils.toast(`Đã cập nhật: ${emp.name} (${emp.status})`, 'success');
   }
-});
+};
+
+if (typeof window !== 'undefined') {
+  window.AdminManager = AdminManager;
+}

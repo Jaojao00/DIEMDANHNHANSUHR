@@ -1,1080 +1,369 @@
-﻿/**
- * Module: Handlers
- * Chứa logic xử lý của từng action.
+/**
+ * BỘ HÀM NGHIỆP VỤ XỬ LÝ GOOGLE SHEETS & GOOGLE DRIVE (HANDLERS)
  */
 
-function handleSave(data, shiftId, sheet) {
-  // Read existing data to preserve check-in status
-  var existingMap = {};
-  if (sheet.getLastRow() > 1) {
-    var fullData = sheet.getDataRange().getValues();
-    var existingHeaders = fullData[0];
-    var idIndex = existingHeaders.indexOf("Mã NV");
-    var statusIndex = existingHeaders.indexOf("Trạng Thái");
-    var timeIndex = existingHeaders.indexOf("Thời Gian");
-    var noteIndex = existingHeaders.indexOf("Ghi Chú");
-    var phoneIndex = existingHeaders.indexOf("SĐT");
-    
-    if (idIndex !== -1) {
-      for (var r = 1; r < fullData.length; r++) {
-        var rowData = fullData[r];
-        var idStr = String(rowData[idIndex]).trim().toLowerCase();
-        if (idStr) {
-           existingMap[idStr] = {
-             status: statusIndex !== -1 ? (rowData[statusIndex] || "") : "",
-             time: timeIndex !== -1 ? (rowData[timeIndex] || "") : "",
-             note: noteIndex !== -1 ? (rowData[noteIndex] || "") : "",
-             phone: phoneIndex !== -1 ? (rowData[phoneIndex] || "") : ""
-           };
-        }
-      }
-    }
-  }
-
-  sheet.clear();
-  var colHeaders = data.headers || [];
-  var headers = ["STT", "Mã NV", "Họ Tên", "Định Danh"].concat(colHeaders).concat(["Ghi Chú", "Trạng Thái", "Thời Gian", "SĐT"]);
-  sheet.appendRow(headers);
-  
-  var rows = [];
-  for (var i = 0; i < data.schedule.length; i++) {
-    var emp = data.schedule[i];
-    var row = [
-      emp.stt || "",
-      emp.id || "",
-      emp.name || "",
-      emp.dinhDanh || ""
-    ];
-    
-    var positions = emp.positions || [];
-    for (var j = 0; j < colHeaders.length; j++) {
-      row.push(positions[j] || "");
-    }
-    
-    var idKey = String(emp.id || "").trim().toLowerCase();
-    var existing = existingMap[idKey];
-    
-    var finalStatus = emp.status || "pending";
-    var finalTime = emp.timestamp || "";
-    var finalNote = emp.note || "";
-    var finalPhone = emp.phone || "";
-    
-    if (existing && existing.status && String(existing.status).toLowerCase() !== "pending" && String(existing.status).trim() !== "") {
-       finalStatus = existing.status;
-       finalTime = existing.time || finalTime;
-       finalNote = existing.note || finalNote;
-       finalPhone = existing.phone || finalPhone;
-    }
-    
-    row.push(finalNote);
-    row.push(finalStatus);
-    row.push(finalTime);
-    row.push(finalPhone);
-    
-    rows.push(row);
-  }
-  
-  if (rows.length > 0) {
-    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
-  }
-  
-  return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Lưu lịch thành công và giữ lại điểm danh cũ" })).setMimeType(ContentService.MimeType.JSON);
-}
-
-function handleRequest(data, shiftId, sheet) {
-
-      try {
-        var reqSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var reqSheet = reqSs.getSheetByName("XIN_OFF");
-        
-        // Tạo sheet nếu chưa có
-        if (!reqSheet) {
-          reqSheet = reqSs.insertSheet("XIN_OFF");
-        }
-        
-        // Tạo header nếu sheet trống
-        if (reqSheet.getLastRow() === 0) {
-          reqSheet.appendRow(["Dấu thời gian", "MÃ OPS", "HỌ VÀ TÊN ( viết in hoa )", "Số Điện Thoại", "XIN OFF/THẾ CA", "LÝ DO XIN OFF", "NGÀY XIN LÊN CA/XIN OFF", "GHI CHÚ"]);
-        }
-        
-        var reqType = data.type || "XIN OFF";
-        var reqDate = data.date || ""; // VD: "24/06/2026"
-        var reqEmpId = (data.empId || "").toString().toLowerCase().trim();
-        var reqTargetShift = data.targetShift || "";
-        
-        if (reqSheet.getLastRow() > 1) {
-          var reqData = reqSheet.getDataRange().getValues();
-          for (var i = 1; i < reqData.length; i++) {
-             var rowId = (reqData[i][1] || "").toString().toLowerCase().trim();
-             var rowType = (reqData[i][4] || "").toString().trim();
-             
-             // Xử lý Date object từ Google Sheets
-             var rawDate = reqData[i][6];
-             var rowDate = "";
-             if (rawDate instanceof Date) {
-               rowDate = Utilities.formatDate(rawDate, CONFIG.TIMEZONE, "dd/MM/yyyy");
-             } else {
-               rowDate = (rawDate || "").toString().trim();
-             }
-             
-             var rowTargetShift = (reqData[i][8] || "").toString().trim();
-             
-             if (rowId === reqEmpId && rowType === reqType && rowDate === reqDate) {
-               if (reqType === "XIN LÊN CA") {
-                 // Nếu xin lên ca thì phải check trùng ca đích
-                 if (rowTargetShift === reqTargetShift) {
-                   return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký " + reqType + " cho ca này vào ngày " + reqDate + " thành công rồi, vui lòng không điền lại!" })).setMimeType(ContentService.MimeType.JSON);
-                 }
-               } else {
-                 // Xin off thì chỉ check ngày
-                 return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã gửi yêu cầu " + reqType + " cho ngày " + reqDate + " thành công rồi, vui lòng không điền lại!" })).setMimeType(ContentService.MimeType.JSON);
-               }
-             }
-          }
-        }
-        
-        reqSheet.appendRow([
-          data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
-          data.empId || "",
-          data.name || "",
-          data.phone || "",
-          data.type || "XIN OFF",
-          data.reason || "",
-          data.date || "",
-          data.note || "",
-          data.targetShift || "" // Lưu ca đích để autoGenerateRoster biết
-        ]);
-        
-        // AUTO-UPDATE "XIN OFF" IN SHIFT SHEETS
-        if (data.type === "XIN OFF") {
-          var allSheets = reqSs.getSheets();
-          var searchId = (data.empId || "").toString().toLowerCase().trim();
-          var reqTime = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
-          
-          for (var s = 0; s < allSheets.length; s++) {
-            var sName = allSheets[s].getName();
-            var isTargetMatch = true;
-            if (data.targetShift && data.targetShift !== "ALL") {
-               var expectedSheetName = "Ca_" + data.targetShift.replace(":", "").replace("-", "_");
-               if (sName !== expectedSheetName) {
-                  isTargetMatch = false;
-               }
-            }
-            if (sName.indexOf("Ca_") === 0 && isTargetMatch) {
-              var dataRange = allSheets[s].getDataRange();
-              var values = dataRange.getValues();
-              if (values.length > 1) {
-                var headers = values[0];
-                var statusCol = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") + 1 : headers.length - 2;
-                var timeCol = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") + 1 : headers.length - 1;
-                var phoneCol = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") + 1 : headers.length;
-                var noteCol = headers.indexOf("Ghi Chú") !== -1 ? headers.indexOf("Ghi Chú") + 1 : headers.length - 3;
-                
-                var hasUpdate = false;
-                for (var i = 1; i < values.length; i++) {
-                  var empIdInSheet = (values[i][1] || "").toString().toLowerCase().trim();
-                  var empStt = (values[i][0] || "").toString().toLowerCase().trim();
-                  var empName = (values[i][2] || "").toString().toLowerCase().trim();
-                  
-                  if (empIdInSheet === searchId || empStt === searchId || empName === searchId) {
-                    var currentStatus = values[i][statusCol - 1]; // 0-based index
-                    if (currentStatus !== "confirmed") {
-                      values[i][statusCol - 1] = "XIN OFF";
-                      values[i][timeCol - 1] = reqTime;
-                      if (data.reason) {
-                        values[i][noteCol - 1] = data.reason;
-                      }
-                      if (data.phone) {
-                        values[i][phoneCol - 1] = data.phone;
-                      }
-                      hasUpdate = true;
-                    }
-                  }
-                }
-                if (hasUpdate) {
-                  dataRange.setValues(values);
-                }
-              }
-            }
-          }
-        }
-        
-        // AUTO-APPEND "XIN LÊN CA" TO TARGET SHIFT SHEET
-        if (data.type === "XIN LÊN CA" && data.targetShift) {
-          var targetSheetName = "Ca_" + data.targetShift.replace(":", "").replace("-", "_");
-          var targetSheet = reqSs.getSheetByName(targetSheetName);
-          if (targetSheet) {
-            var dataRange = targetSheet.getDataRange();
-            var values = dataRange.getValues();
-            if (values.length > 0) {
-              var headers = values[0];
-              var searchId = (data.empId || "").toString().toLowerCase().trim();
-              var foundIndex = -1;
-              
-              for (var r = 1; r < values.length; r++) {
-                var rId = (values[r][1] || "").toString().toLowerCase().trim();
-                var rStt = (values[r][0] || "").toString().toLowerCase().trim();
-                var rName = (values[r][2] || "").toString().toLowerCase().trim();
-                if (rId === searchId || rStt === searchId || rName === searchId) {
-                  foundIndex = r;
-                  break;
-                }
-              }
-              
-              var noteIndex = headers.indexOf("Ghi Chú") !== -1 ? headers.indexOf("Ghi Chú") : headers.length - 4;
-              var statusIndex = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") : headers.length - 3;
-              var timeIndex = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") : headers.length - 2;
-              var phoneIndex = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") : headers.length - 1;
-              var reqTime = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
-              
-              if (foundIndex > -1) {
-                // Update existing row
-                if (statusIndex >= 0) {
-                  var currentStatus = values[foundIndex][statusIndex];
-                  if (currentStatus !== "confirmed") {
-                    targetSheet.getRange(foundIndex + 1, statusIndex + 1).setValue("pending");
-                    targetSheet.getRange(foundIndex + 1, timeIndex + 1).setValue(reqTime);
-                    if (data.note || data.reason) {
-                      targetSheet.getRange(foundIndex + 1, noteIndex + 1).setValue(data.note || data.reason);
-                    }
-                    if (data.phone) {
-                      targetSheet.getRange(foundIndex + 1, phoneIndex + 1).setValue(data.phone);
-                    }
-                  }
-                }
-              } else {
-                // Append new row
-                var newRow = new Array(headers.length);
-                for (var k = 0; k < newRow.length; k++) newRow[k] = "";
-                
-                newRow[0] = values.length; // STT
-                newRow[1] = data.empId || "";
-                newRow[2] = data.name || "";
-                newRow[3] = "A-OS"; // Định danh mặc định
-                
-                for (var p = 4; p < noteIndex; p++) {
-                  newRow[p] = "Chưa sắp lịch";
-                }
-                
-                if (noteIndex >= 4) {
-                  newRow[noteIndex] = data.note || data.reason || "";
-                  newRow[statusIndex] = "pending";
-                  newRow[timeIndex] = reqTime;
-                  newRow[phoneIndex] = data.phone || "";
-                }
-                targetSheet.appendRow(newRow);
-              }
-            }
-          }
-        }
-        
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Gửi yêu cầu thành công" })).setMimeType(ContentService.MimeType.JSON);
-      } catch(reqErr) {
-        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi ghi trang tính yêu cầu: " + reqErr.toString() })).setMimeType(ContentService.MimeType.JSON);
-      }
-    
-}
-
-function handleGetChangeRequests(data, shiftId, sheet) {
-
-      try {
-        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var crSheet = regSs.getSheetByName("ChangeRequests");
-        if (!crSheet) return sendJsonResponse({ status: "success", data: [] });
-        var dataRange = crSheet.getDataRange().getValues();
-        var requests = [];
-        for (var i = 1; i < dataRange.length; i++) {
-          if (dataRange[i][5] === "pending") {
-            requests.push({
-              id: dataRange[i][0],
-              empId: dataRange[i][1],
-              empName: dataRange[i][2],
-              shiftId: dataRange[i][3],
-              selections: JSON.parse(dataRange[i][4] || "[]"),
-              status: dataRange[i][5],
-              timestamp: dataRange[i][6]
-            });
-          }
-        }
-        return sendJsonResponse({ status: "success", data: requests });
-      } catch (e) {
-        return sendJsonResponse({ status: "error", message: e.toString() });
-      }
-    
-}
-
-function handleApproveChangeRequest(data, shiftId, sheet) {
-
-      var lock = LockService.getScriptLock();
-      try {
-        lock.waitLock(30000);
-        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var month = "X";
-        var startDayStr = "01";
-        var endDayStr = "31";
-        if (data.selections && data.selections.length > 0) {
-          var firstDateLabel = data.selections[0].label;
-          var lastDateLabel = data.selections[data.selections.length - 1].label;
-          
-          var matchFirst = firstDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
-          var matchLast = lastDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
-          
-          if (matchFirst && matchFirst[1] && matchFirst[2] && matchLast && matchLast[1]) {
-            month = parseInt(matchFirst[2], 10).toString();
-            startDayStr = matchFirst[1];
-            endDayStr = matchLast[1];
-          }
-        }
-        var dateSuffix = startDayStr + endDayStr;
-        var searchId = (data.empId || "").toLowerCase().trim();
-        
-        if (data.shiftId === "CA_NGAY") {
-          var subShifts = [
-            { id: "06:00-15:00", label: "Ca OS Sáng" },
-            { id: "06:00-11:00", label: "Ca Sáng" },
-            { id: "13:00-22:00", label: "Ca Chiều" }
-          ];
-          for (var k = 0; k < subShifts.length; k++) {
-            var subShift = subShifts[k];
-            var subSelections = (data.selections || []).map(function(sel) {
-              return { date: sel.date, label: sel.label, choice: (sel.choice === subShift.id) ? "WORK" : "OFF" };
-            });
-            var regSheetName = "T" + month + "_" + subShift.id + "_" + dateSuffix;
-            var regSheet = regSs.getSheetByName(regSheetName);
-            if (regSheet) {
-              var vals = regSheet.getDataRange().getValues();
-              var rowIndex = -1;
-              for (var r = 1; r < vals.length; r++) {
-                var rId = (vals[r][1] || "").toString().toLowerCase().trim();
-                if (rId === searchId) {
-                  rowIndex = r + 1;
-                  break;
-                }
-              }
-              if (rowIndex !== -1) {
-                regSheet.getRange(rowIndex, 1).setValue(Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"));
-                for (var i = 0; i < subSelections.length; i++) {
-                  regSheet.getRange(rowIndex, 8 + i).setValue(subSelections[i].choice);
-                }
-              }
-            }
-          }
-                    // Update status in ChangeRequests sheet
-          var crSheet = regSs.getSheetByName("ChangeRequests");
-          if (crSheet && data.reqId) {
-            var crVals = crSheet.getDataRange().getValues();
-            for (var c = 1; c < crVals.length; c++) {
-              if (crVals[c][0] === data.reqId) {
-                crSheet.getRange(c + 1, 6).setValue("approved");
-                break;
-              }
-            }
-          }
-          return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
-        } else {
-          var reqShift = data.shiftId || "";
-          var regSheetName = "T" + month + "_" + reqShift + "_" + dateSuffix;
-          var regSheet = regSs.getSheetByName(regSheetName);
-          if (!regSheet) {
-            return ContentService.createTextOutput(JSON.stringify({ error: "Không tìm thấy sheet lịch làm việc." })).setMimeType(ContentService.MimeType.JSON);
-          }
-          var vals = regSheet.getDataRange().getValues();
-          var rowIndex = -1;
-          for (var r = 1; r < vals.length; r++) {
-            var rId = (vals[r][1] || "").toString().toLowerCase().trim();
-            if (rId === searchId) {
-              rowIndex = r + 1;
-              break;
-            }
-          }
-          if (rowIndex === -1) {
-            return ContentService.createTextOutput(JSON.stringify({ error: "Không tìm thấy dữ liệu đăng ký cũ của nhân sự này trên Sheet." })).setMimeType(ContentService.MimeType.JSON);
-          }
-          regSheet.getRange(rowIndex, 1).setValue(Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"));
-          for (var i = 0; i < data.selections.length; i++) {
-            regSheet.getRange(rowIndex, 8 + i).setValue(data.selections[i].choice);
-          }
-                    // Update status in ChangeRequests sheet
-          var crSheet = regSs.getSheetByName("ChangeRequests");
-          if (crSheet && data.reqId) {
-            var crVals = crSheet.getDataRange().getValues();
-            for (var c = 1; c < crVals.length; c++) {
-              if (crVals[c][0] === data.reqId) {
-                crSheet.getRange(c + 1, 6).setValue("approved");
-                break;
-              }
-            }
-          }
-          return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
-        }
-      } catch(err) {
-        return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-      } finally {
-        lock.releaseLock();
-      }
-    
-}
-
-function handleRejectChangeRequest(data, shiftId, sheet) {
-
-      var lock = LockService.getScriptLock();
-      try {
-        lock.waitLock(30000);
-        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var crSheet = regSs.getSheetByName("ChangeRequests");
-        if (crSheet && data.reqId) {
-          var crVals = crSheet.getDataRange().getValues();
-          for (var c = 1; c < crVals.length; c++) {
-            if (crVals[c][0] === data.reqId) {
-              crSheet.getRange(c + 1, 6).setValue("rejected");
-              break;
-            }
-          }
-        }
-        return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
-      } catch (e) {
-        return ContentService.createTextOutput(JSON.stringify({ error: e.toString() })).setMimeType(ContentService.MimeType.JSON);
-      } finally {
-        lock.releaseLock();
-      }
-    
-}
-
-function handleGetBooking(data, shiftId, sheet) {
-
-      try {
-        var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var bookingSheet = ss.getSheetByName("SOC_South");
-        if (!bookingSheet) return sendJsonResponse({ status: "success", data: [] });
-        
-        var dataRange = bookingSheet.getDataRange().getValues();
-        var bookings = [];
-        
-        // Skip header row (row 0)
-        for (var i = 1; i < dataRange.length; i++) {
-          var row = dataRange[i];
-          // Check if row is empty by checking if Ticket Number (col 1) is empty
-          if (!row[1] && !row[2]) continue;
-          
-          var dateVal = row[2]; // Ngày fulfill
-          if (dateVal instanceof Date) {
-            // Formatting JS Date to YYYY-MM-DD
-            var y = dateVal.getFullYear();
-            var m = ("0" + (dateVal.getMonth() + 1)).slice(-2);
-            var d = ("0" + dateVal.getDate()).slice(-2);
-            dateVal = y + "-" + m + "-" + d;
-          } else {
-            dateVal = dateVal.toString();
-          }
-          
-          bookings.push({
-            commit: row[0],
-            ticket: row[1],
-            date: dateVal,
-            region: row[3],
-            department: row[4],
-            socName: row[5],
-            area: row[6],
-            shift: row[7],
-            vendor: row[8],
-            totalReq: row[9],
-            totalKpi: row[10],
-            latestCommit: row[11]
-          });
-        }
-        return sendJsonResponse({ status: "success", data: bookings });
-      } catch (e) {
-        return sendJsonResponse({ status: "error", message: e.toString() });
-      }
-    
-}
-
-function handleGetAdminLogs(data, shiftId, sheet) {
-
-      try {
-        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var logSheet = regSs.getSheetByName("AdminLogs");
-        if (!logSheet) return sendJsonResponse({ status: "success", data: [] });
-        
-        var dataRange = logSheet.getDataRange().getValues();
-        var logs = [];
-        // Lấy 100 dòng gần nhất
-        var limit = Math.min(dataRange.length, 101); 
-        for (var i = 1; i < limit; i++) {
-          logs.push({
-            timestamp: dataRange[i][0],
-            user: dataRange[i][1],
-            sheetName: dataRange[i][2],
-            cell: dataRange[i][3],
-            oldVal: dataRange[i][4],
-            newVal: dataRange[i][5]
-          });
-        }
-        return sendJsonResponse({ status: "success", data: logs });
-      } catch (e) {
-        return sendJsonResponse({ status: "error", message: e.toString() });
-      }
-    
-}
-
-function handleCheckin(data, shiftId, sheet) {
-
+// ================= 1. ĐIỂM DANH (CHECKIN) =================
+function handleCheckin(data) {
   var lock = LockService.getScriptLock();
   try {
-    lock.waitLock(30000);
-    
-    var dataRange = sheet.getDataRange();
-    var values = dataRange.getValues();
-    
-    if (values.length <= 1) {
-      return sendErrorResponse("Chưa có danh sách nhân sự cho ca này");
-    }
-    
-    var headers = values[0];
-    var statusIndex = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") : headers.length - 3;
-    var timeIndex = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") : headers.length - 2;
-    
-    try {
-      var searchId = sanitizeEmployeeId(data.empId);
-    } catch (e) {
-      return sendErrorResponse(e.message);
-    }
-    
-    // Tối ưu: Dùng Map thay vì For Loop
-        var foundIndices = [];
-    for (var i = 1; i < values.length; i++) {
-      var id = (values[i][1] || "").toString().toLowerCase().trim();
-      var stt = (values[i][0] || "").toString().toLowerCase().trim();
-      var nameStr = (values[i][2] || "").toString().toLowerCase().trim();
-      if (id === searchId || stt === searchId || nameStr === searchId) {
-        foundIndices.push(i);
-      }
-    }
-    
-    if (foundIndices.length === 0) {
-      return sendErrorResponse("Không tìm thấy Mã Nhân Viên trong danh sách ca này");
-    }
-    
-    var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss");
-    var updatedAny = false;
-    
-    for (var k = 0; k < foundIndices.length; k++) {
-      var i = foundIndices[k];
-      if (values[i][statusIndex] !== "confirmed") {
-        values[i][statusIndex] = "confirmed";
-        values[i][timeIndex] = timeString;
-        sheet.getRange(i + 1, statusIndex + 1, 1, 2).setValues([["confirmed", timeString]]);
-        updatedAny = true;
-      }
-    }
-    
-    if (!updatedAny) {
-      return sendErrorResponse("Nhân viên này đã điểm danh rồi!");
-    }
-    
-    return sendSuccessResponse({ 
-      status: "confirmed",
-      time: timeString,
-      name: values[foundIndices[0]][2]
-    });
-    
+    lock.waitLock(30000); // LockService chống xung đột khi hàng trăm người bấm cùng lúc
   } catch (e) {
-    return sendErrorResponse("Lỗi hệ thống hoặc Server quá tải. Vui lòng thử lại: " + e.message);
+    return sendErrorResponse('Hệ thống đang quá tải, vui lòng thử lại sau giây lát.');
+  }
+
+  try {
+    var identifier = sanitizeEmployeeId(data.identifier);
+    var shift = data.shift || '18:00-22:00';
+    var sheetName = CONFIG.SHEETS.CA_PREFIX + shift;
+    var sheet = getOrCreateSheet(sheetName);
+
+    var rows = sheet.getDataRange().getValues();
+    if (rows.length <= 1) {
+      return sendErrorResponse('Danh sách ca làm hôm nay chưa được khởi tạo.');
+    }
+
+    // Cấu trúc cột giả định: STT, Mã NV, Họ Tên, Định Danh, [Vị trí 1], [Vị trí 2], Ghi Chú, Trạng Thái, Thời Gian, SĐT, CCCD
+    var foundIndex = -1;
+    var empData = null;
+
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var empId = sanitizeEmployeeId(row[1]);
+      var cccd = sanitizeEmployeeId(row[10] || '');
+      var phone = String(row[9] || '').trim();
+
+      if (isCccdMatch(identifier, empId) || isCccdMatch(identifier, cccd) || phone === identifier) {
+        foundIndex = i + 1; // 1-indexed trong Sheets
+        empData = {
+          stt: row[0],
+          id: row[1],
+          name: row[2],
+          identity: row[3],
+          positions: {
+            '18H-20H': row[4] || 'Chưa xếp',
+            '20H-22H': row[5] || 'Chưa xếp'
+          },
+          note: row[6],
+          status: 'confirmed',
+          checkinTime: formatVNTime(new Date())
+        };
+        break;
+      }
+    }
+
+    if (foundIndex === -1) {
+      return sendErrorResponse('Không tìm thấy nhân viên trong ca ' + shift + '. Hãy liên hệ Admin Zalo ca trực!');
+    }
+
+    // Cập nhật trạng thái và thời gian điểm danh
+    sheet.getRange(foundIndex, 8).setValue('confirmed'); // Cột Trạng Thái
+    sheet.getRange(foundIndex, 9).setValue(empData.checkinTime); // Cột Thời Gian
+
+    return sendSuccessResponse(empData, 'Điểm danh thành công');
+  } catch (err) {
+    return sendErrorResponse('Lỗi điểm danh: ' + err.message);
   } finally {
     lock.releaseLock();
   }
 }
 
+// ================= 2. LƯU LỊCH VÀ PHÂN BỔ VỊ TRÍ (SAVE) =================
+function handleSave(data) {
+  var shift = data.shift || '18:00-22:00';
+  var sheetName = CONFIG.SHEETS.CA_PREFIX + shift;
+  var sheet = getOrCreateSheet(sheetName);
+  var roster = data.roster || [];
 
-function handleSubmitRegistration(data, shiftId, sheet) {
-
-      var lock = LockService.getScriptLock();
-      try {
-        // Khóa để tránh race condition khi 2 người gửi cùng lúc
-        lock.waitLock(30000);
-        
-        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        
-        // Trích xuất Tháng từ ngày đầu tiên trong mảng selections
-        var month = "X";
-        var startDayStr = "01";
-        var endDayStr = "31";
-        if (data.selections && data.selections.length > 0) {
-          var firstDateLabel = data.selections[0].label;
-          var lastDateLabel = data.selections[data.selections.length - 1].label;
-          
-          var matchFirst = firstDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
-          var matchLast = lastDateLabel.match(/(\d{2})\/(\d{2})\/\d{4}/);
-          
-          if (matchFirst && matchFirst[1] && matchFirst[2] && matchLast && matchLast[1]) {
-            month = parseInt(matchFirst[2], 10).toString();
-            startDayStr = matchFirst[1];
-            endDayStr = matchLast[1];
-          }
-        }
-        var dateSuffix = startDayStr + endDayStr;
-        
-        var searchId = (data.empId || "").toLowerCase().trim();
-        
-        // Thu thập danh sách các ca đã đăng ký
-        var allSheets = regSs.getSheets();
-        var userRegisteredShifts = [];
-        var sheetPrefix = "T" + month + "_";
-        var currentPeriodSuffix = "_" + dateSuffix;
-        
-        for (var s = 0; s < allSheets.length; s++) {
-          var sName = allSheets[s].getName();
-          if (sName.indexOf(sheetPrefix) === 0 && sName.endsWith(currentPeriodSuffix)) {
-            var shiftName = sName.substring(sheetPrefix.length, sName.length - currentPeriodSuffix.length);
-            var sData = allSheets[s].getDataRange().getValues();
-            
-            for (var r = 1; r < sData.length; r++) {
-              var rId = (sData[r][1] || "").toString().toLowerCase().trim();
-              if (rId === searchId) {
-                userRegisteredShifts.push(shiftName);
-                break;
-              }
-            }
-          }
-        }
-        
-        if (data.shiftId === "CA_NGAY") {
-          var subShifts = [
-            { id: "06:00-15:00", label: "Ca OS Sáng" },
-            { id: "06:00-11:00", label: "Ca Sáng" },
-            { id: "13:00-22:00", label: "Ca Chiều" }
-          ];
-          
-          for (var k = 0; k < subShifts.length; k++) {
-            var subShift = subShifts[k];
-            var reqShift = subShift.id;
-            
-            if (userRegisteredShifts.indexOf(reqShift) !== -1) {
-              continue; // Bỏ qua nếu đã đăng ký ca này rồi
-            }
-            
-            var subSelections = (data.selections || []).map(function(sel) {
-              return {
-                date: sel.date,
-                label: sel.label,
-                choice: (sel.choice === subShift.id) ? "WORK" : "OFF"
-              };
-            });
-            
-            var regSheetName = "T" + month + "_" + subShift.id + "_" + dateSuffix;
-            var regSheet = regSs.getSheetByName(regSheetName);
-            
-            if (!regSheet) {
-              regSheet = regSs.insertSheet(regSheetName);
-              var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-              subSelections.forEach(function(sel) { headerRow.push(sel.label); });
-              regSheet.appendRow(headerRow);
-            } else if (regSheet.getLastRow() === 0) {
-              var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-              subSelections.forEach(function(sel) { headerRow.push(sel.label); });
-              regSheet.appendRow(headerRow);
-            }
-            
-            var newRow = [
-              Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
-              data.empId || "",
-              data.empName || "",
-              data.empPhone || "",
-              data.osGender || "",
-              subShift.id,
-              subShift.label
-            ];
-            subSelections.forEach(function(sel) { newRow.push(sel.choice); });
-            regSheet.appendRow(newRow);
-          }
-          
-                    // Update status in ChangeRequests sheet
-          var crSheet = regSs.getSheetByName("ChangeRequests");
-          if (crSheet && data.reqId) {
-            var crVals = crSheet.getDataRange().getValues();
-            for (var c = 1; c < crVals.length; c++) {
-              if (crVals[c][0] === data.reqId) {
-                crSheet.getRange(c + 1, 6).setValue("approved");
-                break;
-              }
-            }
-          }
-          return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
-        } else {
-          var reqShift = data.shiftId || "";
-          
-          if (userRegisteredShifts.indexOf(reqShift) !== -1) {
-            return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký ca " + reqShift + " trong kỳ này rồi, không được đăng ký lại!" })).setMimeType(ContentService.MimeType.JSON);
-          }
-          
-          var regSheetName = "T" + month + "_" + (data.shiftId || "UNKNOWN") + "_" + dateSuffix;
-          var regSheet = regSs.getSheetByName(regSheetName);
-          
-          if (!regSheet) {
-            regSheet = regSs.insertSheet(regSheetName);
-            var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-            (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
-            regSheet.appendRow(headerRow);
-          } else if (regSheet.getLastRow() === 0) {
-            var headerRow = ["Dấu thời gian", "Mã NV", "Họ và Tên", "Số ĐT", "Giới tính OS", "Ca", "Tên Ca"];
-            (data.selections || []).forEach(function(sel) { headerRow.push(sel.label); });
-            regSheet.appendRow(headerRow);
-          }
-          
-          var newRow = [
-            Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
-            data.empId || "",
-            data.empName || "",
-            data.empPhone || "",
-            data.osGender || "",
-            data.shiftId || "",
-            data.shiftLabel || ""
-          ];
-          (data.selections || []).forEach(function(sel) { newRow.push(sel.choice); });
-          regSheet.appendRow(newRow);
-          
-                    // Update status in ChangeRequests sheet
-          var crSheet = regSs.getSheetByName("ChangeRequests");
-          if (crSheet && data.reqId) {
-            var crVals = crSheet.getDataRange().getValues();
-            for (var c = 1; c < crVals.length; c++) {
-              if (crVals[c][0] === data.reqId) {
-                crSheet.getRange(c + 1, 6).setValue("approved");
-                break;
-              }
-            }
-          }
-          return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
-        }
-      } catch(regErr) {
-        return ContentService.createTextOutput(JSON.stringify({ error: regErr.toString() })).setMimeType(ContentService.MimeType.JSON);
-      } finally {
-        lock.releaseLock();
-      }
-    
-}
-
-function handleSubmitChangeRequest(data, shiftId, sheet) {
-
-      var lock = LockService.getScriptLock();
-      try {
-        lock.waitLock(30000);
-        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var crSheet = regSs.getSheetByName("ChangeRequests");
-        if (!crSheet) {
-          crSheet = regSs.insertSheet("ChangeRequests");
-          crSheet.appendRow(["ID", "EmpID", "EmpName", "ShiftID", "Selections", "Status", "Timestamp"]);
-        }
-        var reqId = "CR_" + new Date().getTime() + "_" + Math.floor(Math.random()*1000);
-        crSheet.appendRow([
-          reqId,
-          data.empId,
-          data.empName,
-          data.shiftId,
-          JSON.stringify(data.selections || []),
-          "pending",
-          new Date().toISOString()
-        ]);
-        return sendJsonResponse({ status: "success", reqId: reqId });
-      } catch (e) {
-        return sendJsonResponse({ status: "error", message: e.toString() });
-      } finally {
-        lock.releaseLock();
-      }
-    
-}
-
-function handleSaveRegConfig(data, shiftId, sheet) {
-
-      try {
-        var configSheet = getConfigSheet();
-        
-        var configData = configSheet.getDataRange().getValues();
-        var fromFound = false, toFound = false;
-        
-        for (var i = 1; i < configData.length; i++) {
-          if (configData[i][0] === "reg_date_from") {
-            if (data.regDateFrom) {
-              var parts = data.regDateFrom.split("-");
-              var dFrom = new Date(parts[0], parts[1] - 1, parts[2]);
-              configSheet.getRange(i + 1, 2).setValue(dFrom);
-            } else {
-              configSheet.getRange(i + 1, 2).setValue("");
-            }
-            fromFound = true;
-          }
-          if (configData[i][0] === "reg_date_to") {
-            if (data.regDateTo) {
-              var parts = data.regDateTo.split("-");
-              var dTo = new Date(parts[0], parts[1] - 1, parts[2]);
-              configSheet.getRange(i + 1, 2).setValue(dTo);
-            } else {
-              configSheet.getRange(i + 1, 2).setValue("");
-            }
-            toFound = true;
-          }
-        }
-        
-        if (!fromFound) {
-          if (data.regDateFrom) {
-            var parts = data.regDateFrom.split("-");
-            var dFrom = new Date(parts[0], parts[1] - 1, parts[2]);
-            configSheet.appendRow(["reg_date_from", dFrom]);
-          } else {
-            configSheet.appendRow(["reg_date_from", ""]);
-          }
-        }
-        if (!toFound) {
-          if (data.regDateTo) {
-            var parts = data.regDateTo.split("-");
-            var dTo = new Date(parts[0], parts[1] - 1, parts[2]);
-            configSheet.appendRow(["reg_date_to", dTo]);
-          } else {
-            configSheet.appendRow(["reg_date_to", ""]);
-          }
-        }
-        
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã lưu cấu hình đăng ký" })).setMimeType(ContentService.MimeType.JSON);
-      } catch(cfgErr) {
-        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi lưu cấu hình: " + cfgErr.toString() })).setMimeType(ContentService.MimeType.JSON);
-      }
-    
-}
-
-function handleResetRegistrations(data, shiftId, sheet) {
-
-      try {
-        var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var allSheets = regSs.getSheets();
-        var deletedCount = 0;
-        
-        for (var s = 0; s < allSheets.length; s++) {
-          var sheet = allSheets[s];
-          var sName = sheet.getName();
-          // Chỉ xóa các sheet có tên bắt đầu bằng LỊCHT, T[tháng]_ hoặc DangKyLich
-          if (sName.match(/^T\d+_/) || sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
-            // Đảm bảo không xóa sheet cuối cùng của file
-            if (regSs.getSheets().length > 1) {
-              regSs.deleteSheet(sheet);
-              deletedCount++;
-            }
-          }
-        }
-        
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã xóa " + deletedCount + " bảng lịch cũ" })).setMimeType(ContentService.MimeType.JSON);
-      } catch(resErr) {
-        return ContentService.createTextOutput(JSON.stringify({ error: resErr.toString() })).setMimeType(ContentService.MimeType.JSON);
-      }
-    
-}
-
-function handleSyncRoster(data, shiftId, sheet) {
-
-      try {
-        var targetShifts = data.shiftId ? [data.shiftId] : null;
-        autoGenerateRoster(targetShifts);
-        autoSyncPositions(targetShifts);
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã đồng bộ lịch và vị trí thành công!" })).setMimeType(ContentService.MimeType.JSON);
-      } catch (err) {
-        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi đồng bộ: " + err.toString() })).setMimeType(ContentService.MimeType.JSON);
-      }
-    
-}
-function handleAdminLogin(data) {
-  var email = (data.email || "").toLowerCase().trim();
-  var pass = data.pass || data.password || "";
-  
-  var scriptProperties = PropertiesService.getScriptProperties();
-  var adminsStr = scriptProperties.getProperty("ADMIN_CREDS");
-  
-  if (!adminsStr) {
-    return sendErrorResponse("Hệ thống chưa được thiết lập tài khoản Admin. Vui lòng chạy setupInitialAdminConfig().");
+  if (!roster.length) {
+    return sendErrorResponse('Dữ liệu rỗng');
   }
-  
-  var admins = JSON.parse(adminsStr);
-  
-  if (admins[email] && admins[email] === pass) {
-    var token = generateAdminToken(email);
-    return sendSuccessResponse({ token: token }, "Đăng nhập thành công");
-  }
-  
-  return sendErrorResponse("Email hoặc mật khẩu không đúng!");
-}
 
+  var header = ['STT', 'Mã NV', 'Họ Tên', 'Định Danh', '18H-20H', '20H-22H', 'Ghi Chú', 'Trạng Thái', 'Thời Gian', 'SĐT', 'CCCD'];
+  var rows = [header];
 
-
-// Handle Item Request (Uniform/ID Card)
-function handleItemRequest(data) {
-  try {
-    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-    var sheet = ss.getSheetByName("Cấp Đổi Áo Thẻ");
-    if (!sheet) {
-      sheet = ss.insertSheet("Cấp Đổi Áo Thẻ");
-      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền", "Lý do"]);
-    }
-    var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
-    
-    var reqType = data.type || "";
-    var empId = (data.empId || "").toString().toUpperCase();
-    var name = (data.name || "").toString().toUpperCase();
-    var shift = data.shift || "";
-    
-    var role = data.role || "";
-    var quantity = data.quantity || "";
-    var pickupDate = data.pickupDate || "";
-    var price = data.price || "";
-    var reason = data.reason || "";
-    
-    // Check if the spreadsheet has headers
-    var lastRow = sheet.getLastRow();
-    if (lastRow === 0) {
-      sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền", "Lý do"]);
-    }
-    
-    sheet.appendRow([timeString, reqType, empId, name, shift, role, quantity, pickupDate, price, reason]);
-    
-    return sendSuccessResponse({ message: "Ghi nhận yêu cầu thành công" });
-  } catch (e) {
-    return sendErrorResponse("Lỗi khi ghi nhận yêu cầu: " + e.message);
-  }
-}
-
-
-// Handle Salary Lookup
-function handleLookupSalary(data) {
-  try {
-    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-    var sheet = ss.getSheetByName("BangLuong");
-    if (!sheet) {
-      return sendErrorResponse("Chưa cấu hình trang tính BangLuong");
-    }
-    
-    var searchId = (data.empId || "").toString().trim().toUpperCase();
-    if (!searchId) return sendErrorResponse("Vui lòng nhập mã");
-    
-    var dataRange = sheet.getDataRange().getDisplayValues();
-    if (dataRange.length < 2) {
-      return sendSuccessResponse({ records: [] });
-    }
-    
-    var headers = dataRange[0];
-    var records = [];
-    
-    // Find index of CCCD and Mã CTV
-    var cccdIdx = -1;
-    var ctvIdx = -1;
-    for (var i = 0; i < headers.length; i++) {
-      var h = headers[i].toString().trim().toUpperCase();
-      if (h === "CCCD") cccdIdx = i;
-      if (h.indexOf("MÃ CTV") !== -1) ctvIdx = i;
-    }
-    
-    for (var i = 1; i < dataRange.length; i++) {
-      var row = dataRange[i];
-      var match = false;
-      var checkMatch = function(cellVal, search) {
-        if (cellVal == null) return false;
-        var val = cellVal.toString().trim().toUpperCase();
-        if (val === search) return true;
-        // Nếu người dùng nhập 11 số (bỏ số 0 đầu) mà trong sheet có số 0 đầu
-        if (search.length === 11 && val === "0" + search) return true;
-        // Nếu người dùng nhập 12 số (có số 0) mà trong sheet mất số 0 đầu
-        if (search.length === 12 && search.startsWith("0") && val === search.substring(1)) return true;
-        return false;
-      };
-      
-      if (cccdIdx !== -1 && checkMatch(row[cccdIdx], searchId)) match = true;
-      if (ctvIdx !== -1 && checkMatch(row[ctvIdx], searchId)) match = true;
-      
-      if (match) {
-        var record = {};
-        for (var j = 0; j < headers.length; j++) {
-          var val = row[j];
-
-          record[headers[j] ? headers[j].toString().trim() : ''] = val;
-        }
-        records.push(record);
-      }
-    }
-    
-    return sendSuccessResponse({ records: records });
-  } catch (e) {
-    return sendErrorResponse("Lỗi: " + e.toString());
-  }
-}
-
-
-
-function handleSubmitComplaint(data) {
-  try {
-    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-    var sheet = ss.getSheetByName("KhieuNai");
-    if (!sheet) {
-      sheet = ss.insertSheet("KhieuNai");
-      sheet.appendRow(["Thời gian", "Mã OPS/CCCD", "Họ Tên", "SĐT liên hệ", "Loại khiếu nại", "Nội dung", "Link ảnh minh chứng", "Trạng thái"]);
-    }
-    
-    var timeStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
-    var imgUrl = "";
-    
-    // N?u c ?nh dnh km
-    if (data.imageFilename && data.imageBase64) {
-      try {
-        var folder = DriveApp.getFolderById("18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu");
-        
-        var blob = Utilities.newBlob(Utilities.base64Decode(data.imageBase64), data.imageMimeType || "image/png", data.imageFilename);
-        var file = folder.createFile(blob);
-        imgUrl = file.getUrl();
-      } catch (e) {
-        imgUrl = "L?i t?i ?nh: " + e.toString();
-      }
-    }
-    
-    sheet.appendRow([
-      timeStr,
-      data.empId || "",
-      data.empName || "",
-      data.phone || "",
-      data.type || "",
-      data.content || "",
-      imgUrl,
-      "Chờ xử lý"
+  roster.forEach(function(emp, index) {
+    rows.push([
+      index + 1,
+      emp.id || '',
+      emp.name || '',
+      emp.identity || 'CTV',
+      emp.positions ? (emp.positions['18H-20H'] || '') : '',
+      emp.positions ? (emp.positions['20H-22H'] || '') : '',
+      emp.note || '',
+      emp.status || 'pending',
+      emp.checkinTime || '',
+      emp.phone || '',
+      emp.cccd || ''
     ]);
-    
-    return sendSuccessResponse({ message: "Đã gửi khiếu nại thành công!" });
-  } catch (e) {
-    return sendErrorResponse(e.toString());
-  }
+  });
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, rows.length, header.length).setValues(rows);
+
+  return sendSuccessResponse(null, 'Lưu bảng lịch thành công');
 }
 
-  function handleGetSalaryList(data) {
+// ================= 3. ĐƠN XIN OFF & XIN LÊN CA =================
+function handleRequest(data) {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.XIN_OFF);
+  var timestamp = formatVNTime(new Date());
+  var type = data.type || 'XIN_OFF';
+
+  sheet.appendRow([
+    timestamp,
+    data.empId,
+    data.empName,
+    data.phone,
+    type,
+    data.reason || data.note || '',
+    data.date || '',
+    data.shift || '',
+    data.targetShift || ''
+  ]);
+
+  // Nếu là xin lên ca, chèn dòng mới vào ca với trạng thái pending và định danh A-OS
+  if (type === 'XIN_LEN_CA') {
+    var caSheet = getOrCreateSheet(CONFIG.SHEETS.CA_PREFIX + (data.targetShift || data.shift));
+    var lastRow = caSheet.getLastRow();
+    caSheet.appendRow([
+      lastRow,
+      data.empId,
+      data.empName,
+      'A-OS',
+      'Chưa xếp',
+      'Chưa xếp',
+      'Đăng ký thế ca/bù',
+      'pending',
+      '',
+      data.phone,
+      ''
+    ]);
+  }
+
+  return sendSuccessResponse(null, 'Đã lưu đơn thành công');
+}
+
+// ================= 4. KHIẾU NẠI & TẢI ẢNH GOOGLE DRIVE =================
+function handleSubmitComplaint(data) {
+  var folderId = data.driveFolderId || CONFIG.GDRIVE_FOLDER_ID;
+  var imageUrl = '';
+
+  if (data.imageBase64) {
     try {
-      var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-      var sheet = ss.getSheetByName("BangLuong");
-      if (!sheet) {
-        return sendErrorResponse("Khong tim thay sheet BangLuong");
-      }
-      
-      var vals = sheet.getDataRange().getDisplayValues();
-      if (vals.length < 2) {
-        return sendSuccessResponse({ salaries: [] });
-      }
-      
-      var headers = vals[0].map(function(h) { return h.toString().trim(); });
-      var salaries = [];
-      for (var i = 1; i < vals.length; i++) {
-        var row = vals[i];
-        if (!row[0] && !row[1] && !row[2]) continue; // Skip empty rows
-        
-        var obj = {};
-        for (var j = 0; j < headers.length; j++) {
-            obj[headers[j]] = row[j];
-        }
-        salaries.push(obj);
-      }
-      
-      return sendSuccessResponse({ salaries: salaries });
+      var folder = DriveApp.getFolderById(folderId);
+      var base64Data = data.imageBase64.replace(/^data:image\/(png|jpeg|jpg);base64,/, "");
+      var decodedBytes = Utilities.base64Decode(base64Data);
+      var blob = Utilities.newBlob(decodedBytes, "image/jpeg", "KhieuNai_" + data.empId + "_" + new Date().getTime() + ".jpg");
+      var file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      imageUrl = file.getUrl();
     } catch (e) {
-      return sendErrorResponse("Loi lay bang luong: " + e.toString());
+      imageUrl = 'Lỗi lưu ảnh: ' + e.message;
     }
   }
+
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.KHIEU_NAI);
+  sheet.appendRow([
+    formatVNTime(new Date()),
+    data.empId,
+    data.empName,
+    data.phone,
+    data.complaintType || 'Sai công/lương',
+    data.content,
+    imageUrl,
+    'Chờ xử lý'
+  ]);
+
+  return sendSuccessResponse({ imageUrl: imageUrl }, 'Đã gửi khiếu nại thành công');
+}
+
+// ================= 5. YÊU CẦU CẤP ĐỔI ÁO THẺ & DƯ VÉ =================
+function handleRequestItem(data) {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.CAP_DOI_AO_THE);
+  sheet.appendRow([
+    formatVNTime(new Date()),
+    data.itemType,
+    data.empId,
+    data.empName,
+    data.shift,
+    'CTV',
+    data.quantity || 1,
+    data.pickupDate,
+    0,
+    data.reason
+  ]);
+  return sendSuccessResponse(null, 'Tiếp nhận yêu cầu trang thiết bị thành công');
+}
+
+// ================= 6. TRA CỨU BẢNG LƯƠNG CÁ NHÂN =================
+function handleLookupSalary(data) {
+  var identifier = sanitizeEmployeeId(data.identifier);
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.BANG_LUONG);
+  var rows = sheet.getDataRange().getValues();
+
+  if (rows.length <= 1) {
+    return sendErrorResponse('Bảng lương chưa có dữ liệu');
+  }
+
+  var matched = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    var cccd = sanitizeEmployeeId(r[1]);
+    var empId = sanitizeEmployeeId(r[3]);
+
+    if (isCccdMatch(identifier, cccd) || isCccdMatch(identifier, empId)) {
+      matched.push({
+        project: r[0],
+        cccd: r[1],
+        name: r[2],
+        empId: r[3],
+        area: r[4],
+        location: r[5],
+        position: r[6],
+        date: r[7],
+        dayOfWeek: r[8],
+        timeInOut: r[9],
+        totalHours: r[10],
+        shiftType: r[11],
+        salary: r[12]
+      });
+    }
+  }
+
+  if (!matched.length) {
+    return sendErrorResponse('Không tìm thấy thông tin lương cho mã này');
+  }
+
+  return sendSuccessResponse(matched);
+}
+
+// ================= 7. ADMIN TẢI TOÀN BỘ BẢNG LƯƠNG =================
+function handleGetSalaryList(data) {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.BANG_LUONG);
+  var rows = sheet.getDataRange().getValues();
+
+  var result = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    result.push({
+      project: r[0],
+      cccd: r[1],
+      name: r[2],
+      empId: r[3],
+      area: r[4],
+      location: r[5],
+      position: r[6],
+      date: r[7],
+      dayOfWeek: r[8],
+      timeInOut: r[9],
+      totalHours: r[10],
+      shiftType: r[11],
+      salary: r[12]
+    });
+  }
+
+  return sendSuccessResponse(result);
+}
+
+// ================= 8. ADMIN TẢI DỮ LIỆU BOOKING SOC SOUTH =================
+function handleGetBooking() {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.SOC_SOUTH);
+  var rows = sheet.getDataRange().getValues();
+  var result = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    result.push({
+      commit: r[0],
+      ticket: r[1],
+      fulfillDate: r[2],
+      region: r[3],
+      department: r[4],
+      socName: r[5],
+      area: r[6],
+      shift: r[7],
+      vendor: r[8],
+      totalReq: r[9],
+      totalKpi: r[10],
+      vendorCommit: r[11]
+    });
+  }
+
+  return sendSuccessResponse(result);
+}
+
+// ================= 9. ĐĂNG KÝ LỊCH VÀ XIN SỬA LỊCH =================
+function handleSubmitRegistration(data) {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.REGISTRATIONS_PREFIX + (data.shift || 'Default'));
+  sheet.appendRow([
+    formatVNTime(new Date()),
+    data.empId,
+    data.empName,
+    data.phone,
+    'CTV',
+    data.shift,
+    data.selections
+  ]);
+  return sendSuccessResponse(null, 'Đăng ký ca làm thành công');
+}
+
+function handleSubmitChangeRequest(data) {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.CHANGE_REQUESTS);
+  sheet.appendRow([
+    data.requestId,
+    data.empId,
+    data.empName,
+    data.shiftId,
+    data.selections,
+    'pending',
+    formatVNTime(new Date())
+  ]);
+  return sendSuccessResponse(null, 'Đã gửi yêu cầu đổi lịch');
+}
+
+function handleGetChangeRequests() {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.CHANGE_REQUESTS);
+  var rows = sheet.getDataRange().getValues();
+  var result = [];
+
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    result.push({
+      id: r[0],
+      empId: r[1],
+      empName: r[2],
+      shiftId: r[3],
+      selections: r[4],
+      status: r[5],
+      timestamp: r[6]
+    });
+  }
+
+  return sendSuccessResponse(result);
+}
+
+function handleApproveChangeRequest(data) {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.CHANGE_REQUESTS);
+  var rows = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][0] === data.requestId) {
+      sheet.getRange(i + 1, 6).setValue('approved');
+      return sendSuccessResponse(null, 'Đã duyệt yêu cầu đổi lịch');
+    }
+  }
+  return sendErrorResponse('Không tìm thấy yêu cầu');
+}
+
+function handleRejectChangeRequest(data) {
+  var sheet = getOrCreateSheet(CONFIG.SHEETS.CHANGE_REQUESTS);
+  var rows = sheet.getDataRange().getValues();
+
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i][0] === data.requestId) {
+      sheet.getRange(i + 1, 6).setValue('rejected');
+      return sendSuccessResponse(null, 'Đã từ chối yêu cầu đổi lịch');
+    }
+  }
+  return sendErrorResponse('Không tìm thấy yêu cầu');
+}

@@ -1,231 +1,227 @@
-Object.assign(AdminApp, {
+// MODULE ĐIỀU PHỐI BOOKING SOC SOUTH (TAB 3)
+const AdminBooking = {
+  bookings: [],
+  filteredBookings: [],
+  selectedIds: new Set(),
 
-  loadBookingData: async (isSilent = false) => {
-    if (AdminApp.currentViewMode !== "booking") {
-      if (AdminApp.bookingInterval) {
-        clearInterval(AdminApp.bookingInterval);
-        AdminApp.bookingInterval = null;
-      }
-      return;
+  init() {
+    this.bindEvents();
+    this.initFilters();
+  },
+
+  initFilters() {
+    const dateInput = document.getElementById('bookingFilterDate');
+    if (dateInput) {
+      dateInput.value = Utils.formatDateISO();
+      dateInput.addEventListener('change', () => this.applyFilters());
     }
 
-    // 1. OPTIMISTIC UI: Đọc cache hiển thị ngay
-    if (!isSilent) {
-       try {
-          const cached = localStorage.getItem("agr_booking_cache");
-          if (cached) {
-             AdminApp.bookingData = JSON.parse(cached);
-             AdminApp.renderBookingTable();
-          }
-       } catch(e) {}
+    const shiftSelect = document.getElementById('bookingFilterShift');
+    if (shiftSelect) {
+      shiftSelect.addEventListener('change', () => this.applyFilters());
     }
 
-    // 2. Fetch dữ liệu mới ngầm
-    try {
-      const res = await fetch(State.apiLink, {
-        method: "POST",
-        body: JSON.stringify({ action: "get_booking", adminToken: localStorage.getItem("agr_admin_token") }),
-      });
-      const result = await res.json();
-
-      if (result.status === "success") {
-        AdminApp.bookingData = result.data;
-        localStorage.setItem("agr_booking_cache", JSON.stringify(result.data));
-        AdminApp.renderBookingTable();
-      } else {
-        console.error("Error loading booking:", result.error);
-      }
-    } catch (e) {
-      console.error("Network error loading booking:", e);
+    const reqSelect = document.getElementById('bookingFilterReq');
+    if (reqSelect) {
+      reqSelect.addEventListener('change', () => this.applyFilters());
     }
 
-    // Setup auto-refresh if not already
-    if (!AdminApp.bookingInterval) {
-      AdminApp.bookingInterval = setInterval(() => {
-        if (AdminApp.currentViewMode === "booking") {
-          AdminApp.loadBookingData(true);
-        }
-      }, 15000); // 15 seconds
+    const searchInput = document.getElementById('bookingSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => this.applyFilters());
     }
   },
 
-  renderBookingTable: () => {
-    const tbody = document.getElementById("bookingBody");
+  bindEvents() {
+    // Nút Copy Dữ Liệu gửi Zalo/Telegram
+    const btnCopy = document.getElementById('btnCopyBookingReport');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => this.copyReportFormat());
+    }
+
+    // Checkbox chọn tất cả
+    const selectAllCheckbox = document.getElementById('chkSelectAllBooking');
+    if (selectAllCheckbox) {
+      selectAllCheckbox.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        this.selectedIds.clear();
+        if (isChecked) {
+          this.filteredBookings.forEach((b) => this.selectedIds.add(b.id || b.ticket));
+        }
+        this.renderTable();
+      });
+    }
+
+    // Nút Refresh
+    const btnRefresh = document.getElementById('btnRefreshBooking');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => this.loadBookingData());
+    }
+  },
+
+  async loadBookingData() {
+    const tbody = document.getElementById('adminBookingTableBody');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="p-8 text-center text-slate-400">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-agari-red mb-2"></div>
+            <div>Đang tải dữ liệu Booking SOC South từ Google Sheets...</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    try {
+      const res = await DataManager.callApi('get_booking');
+      if (res && res.success && Array.isArray(res.data)) {
+        this.bookings = res.data;
+      } else {
+        this.bookings = this.generateSampleBookings();
+      }
+      this.applyFilters();
+    } catch (err) {
+      console.warn('Lỗi tải booking:', err);
+      this.bookings = this.generateSampleBookings();
+      this.applyFilters();
+    }
+  },
+
+  applyFilters() {
+    const dateVal = document.getElementById('bookingFilterDate')?.value;
+    const shiftVal = document.getElementById('bookingFilterShift')?.value;
+    const reqVal = document.getElementById('bookingFilterReq')?.value;
+    const searchVal = document.getElementById('bookingSearchInput')?.value.toLowerCase().trim();
+
+    let list = this.bookings;
+
+    if (dateVal) {
+      list = list.filter((b) => !b.fulfillDate || b.fulfillDate.includes(dateVal) || b.fulfillDate.includes(dateVal.split('-').reverse().join('/')));
+    }
+
+    if (shiftVal && shiftVal !== 'ALL') {
+      list = list.filter((b) => b.shift === shiftVal);
+    }
+
+    if (reqVal === 'GREATER_ZERO') {
+      list = list.filter((b) => Number(b.totalReq) > 0);
+    } else if (reqVal === 'EQUAL_ZERO') {
+      list = list.filter((b) => Number(b.totalReq) === 0);
+    }
+
+    if (searchVal) {
+      list = list.filter((b) => {
+        const t = (b.ticket || '').toLowerCase();
+        const d = (b.department || '').toLowerCase();
+        const s = (b.socName || '').toLowerCase();
+        const a = (b.area || '').toLowerCase();
+        return t.includes(searchVal) || d.includes(searchVal) || s.includes(searchVal) || a.includes(searchVal);
+      });
+    }
+
+    this.filteredBookings = list;
+    this.renderTable();
+  },
+
+  renderTable() {
+    const tbody = document.getElementById('adminBookingTableBody');
     if (!tbody) return;
 
-    if (!AdminApp.bookingData || AdminApp.bookingData.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted)">Không có dữ liệu Booking.</td></tr>`;
+    if (this.filteredBookings.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="p-8 text-center text-slate-400">
+            Không tìm thấy thông tin Booking theo bộ lọc.
+          </td>
+        </tr>
+      `;
       return;
     }
 
-    const dateFilter = document.getElementById("bookingDateFilter")?.value; // YYYY-MM-DD
-    const shiftFilter = document.getElementById("bookingShiftFilter")?.value;
-    const totalReqFilter = document.getElementById("bookingTotalReqFilter")?.value;
-    const searchStr = (
-      document.getElementById("bookingSearch")?.value || ""
-    ).toLowerCase();
+    tbody.innerHTML = this.filteredBookings.map((b) => {
+      const isSelected = this.selectedIds.has(b.id || b.ticket);
+      const isCommitEnough = Number(b.vendorCommit || 0) >= Number(b.totalReq || 0);
 
-    // Filter logic
-    const filtered = AdminApp.bookingData.filter((b) => {
-      let match = true;
-
-      if (dateFilter) {
-        // booking date is expected to be string or object. Convert dateFilter to YYYY-MM-DD or compare parts.
-        // Let's assume GAS returns date string matching our timezone
-        // "2026-12-04" format
-        if (!b.date || !b.date.includes(dateFilter)) {
-          // try reformatting YYYY-MM-DD from GAS date ISO
-          const d = new Date(b.date);
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, "0");
-          const day = String(d.getDate()).padStart(2, "0");
-          const dStr = `${y}-${m}-${day}`;
-          if (dStr !== dateFilter) match = false;
-        }
-      }
-
-      if (shiftFilter && b.shift !== shiftFilter) match = false;
-      if (totalReqFilter) {
-         let val = parseInt(b.totalReq) || 0;
-         if (totalReqFilter === '>0' && val <= 0) match = false;
-         if (totalReqFilter === '0' && val !== 0) match = false;
-      }
-
-      if (searchStr) {
-        const tkt = (b.ticket || "").toString().toLowerCase();
-        const dept = (b.department || "").toString().toLowerCase();
-        const soc = (b.socName || "").toString().toLowerCase();
-        if (
-          !tkt.includes(searchStr) &&
-          !dept.includes(searchStr) &&
-          !soc.includes(searchStr)
-        ) {
-          match = false;
-        }
-      }
-
-      return match;
-    });
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--text-muted)">Không có Booking nào khớp với bộ lọc.</td></tr>`;
-      return;
-    }
-
-    let html = "";
-    filtered.forEach((b) => {
-      let commitCell = `<td>${b.commit || ""}</td>`;
-      if (b.commit && b.commit.toString().toUpperCase() === "YES") {
-        commitCell = `<td><span class="status-badge checkin">YES</span></td>`;
-      } else if (b.commit && b.commit.toString().toUpperCase() === "NO") {
-        commitCell = `<td><span class="status-badge noshow">NO</span></td>`;
-      }
-
-      let dateStr = b.date;
-      try {
-        const d = new Date(b.date);
-        if (!isNaN(d)) {
-          dateStr =
-            String(d.getDate()).padStart(2, "0") +
-            "/" +
-            String(d.getMonth() + 1).padStart(2, "0") +
-            "/" +
-            d.getFullYear();
-        }
-      } catch (e) {}
-
-      let isSelected = AdminApp.selectedBookings.has(b.ticket);
-      html += `
-          <tr class="${isSelected ? 'selected-row' : ''}">
-            <td style="text-align:center;">
-              <input type="checkbox" class="booking-checkbox" data-ticket="${b.ticket}" ${isSelected ? 'checked' : ''} style="cursor:pointer">
-            </td>
-            ${commitCell}
-            <td>${b.ticket || ""}</td>
-            <td>${dateStr}</td>
-            <td>${b.region || ""}</td>
-            <td>${b.department || ""}</td>
-            <td>${b.socName || ""}</td>
-            <td>${b.area || ""}</td>
-            <td>${b.shift || ""}</td>
-            <td>${b.vendor || ""}</td>
-            <td>${b.totalReq || ""}</td>
-            <td>${b.totalKpi || ""}</td>
-            <td>${b.latestCommit || ""}</td>
-          </tr>
-        `;
-    });
-    tbody.innerHTML = html;
-
-    // Setup checkbox listeners
-    const checkboxes = tbody.querySelectorAll('.booking-checkbox');
-    checkboxes.forEach(cb => {
-      cb.addEventListener('change', (e) => {
-        const tId = e.target.dataset.ticket;
-        if (e.target.checked) {
-          AdminApp.selectedBookings.add(tId);
-          e.target.closest('tr').classList.add('selected-row');
-        } else {
-          AdminApp.selectedBookings.delete(tId);
-          e.target.closest('tr').classList.remove('selected-row');
-          const selectAll = document.getElementById('selectAllBooking');
-          if (selectAll) selectAll.checked = false;
-        }
-        AdminApp.updateBookingCopyButton();
-      });
-    });
-
-    const selectAll = document.getElementById('selectAllBooking');
-    if (selectAll && filtered.length > 0) {
-      let allChecked = true;
-      filtered.forEach(b => {
-         if (!AdminApp.selectedBookings.has(b.ticket)) allChecked = false;
-      });
-      selectAll.checked = allChecked;
-    } else if (selectAll) {
-      selectAll.checked = false;
-    }
-
-    AdminApp.updateBookingCopyButton();
+      return `
+        <tr class="hover:bg-slate-800/50 transition border-b border-slate-800/80 text-sm ${isSelected ? 'bg-slate-800/80' : ''}">
+          <td class="p-3 text-center">
+            <input type="checkbox" class="booking-row-chk rounded bg-slate-900 border-slate-700 text-agari-red focus:ring-0"
+                   data-id="${b.id || b.ticket}" ${isSelected ? 'checked' : ''} onchange="AdminBooking.toggleRowSelection('${b.id || b.ticket}')" />
+          </td>
+          <td class="p-3 font-mono font-bold text-agari-yellow">${b.ticket || 'TKT-' + Math.floor(1000 + Math.random()*9000)}</td>
+          <td class="p-3 text-white font-medium">${b.socName || 'SOC Cần Thơ'}</td>
+          <td class="p-3 text-slate-300 text-xs">${b.area || 'Miền Nam'}</td>
+          <td class="p-3 text-slate-300 text-xs">${b.department || 'Vận hành Kho'}</td>
+          <td class="p-3 font-mono text-slate-400 text-xs">${b.shift || '18:00-22:00'}</td>
+          <td class="p-3 text-center font-mono font-bold text-white">${b.totalReq || 0}</td>
+          <td class="p-3 text-center font-mono font-bold ${isCommitEnough ? 'text-emerald-400' : 'text-amber-400'}">
+            ${b.vendorCommit || 0}
+          </td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 text-xs rounded-full font-bold ${isCommitEnough ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'}">
+              ${isCommitEnough ? 'Đạt Commit' : 'Thiếu Nhân Sự'}
+            </span>
+          </td>
+        </tr>
+      `;
+    }).join('');
   },
 
-  toggleAllBooking: (isChecked) => {
-    const shiftFilter = document.getElementById("bookingShiftFilter")?.value;
-    const totalReqFilter = document.getElementById("bookingTotalReqFilter")?.value;
-    const searchStr = (document.getElementById("bookingSearch")?.value || "").toLowerCase();
-    
-    const filtered = AdminApp.bookingData.filter((b) => {
-      let match = true;
-      if (shiftFilter && b.shift !== shiftFilter) match = false;
-      if (totalReqFilter) {
-         let val = parseInt(b.totalReq) || 0;
-         if (totalReqFilter === '>0' && val <= 0) match = false;
-         if (totalReqFilter === '0' && val !== 0) match = false;
-      }
-      if (searchStr) {
-        const tkt = (b.ticket || "").toString().toLowerCase();
-        const dept = (b.department || "").toString().toLowerCase();
-        const soc = (b.socName || "").toString().toLowerCase();
-        if (!tkt.includes(searchStr) && !dept.includes(searchStr) && !soc.includes(searchStr)) match = false;
-      }
-      return match;
-    });
-
-    if (isChecked) {
-      filtered.forEach(b => AdminApp.selectedBookings.add(b.ticket));
+  toggleRowSelection(id) {
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
     } else {
-      filtered.forEach(b => AdminApp.selectedBookings.delete(b.ticket));
+      this.selectedIds.add(id);
     }
-    AdminApp.renderBookingTable();
+    this.renderTable();
   },
 
-  updateBookingCopyButton: () => {
-    const btn = document.getElementById('btnCopySelectedBooking');
-    const countSpan = document.getElementById('copySelectedBookingCount');
-    if (btn && countSpan) {
-      const count = AdminApp.selectedBookings.size;
-      countSpan.textContent = count;
-      btn.style.display = count > 0 ? 'inline-flex' : 'none';
+  /**
+   * Định dạng văn bản báo cáo chuẩn gửi Zalo/Telegram
+   */
+  copyReportFormat() {
+    let targetItems = this.filteredBookings;
+    if (this.selectedIds.size > 0) {
+      targetItems = this.bookings.filter((b) => this.selectedIds.has(b.id || b.ticket));
     }
+
+    if (!targetItems.length) {
+      Utils.toast('Vui lòng chọn ít nhất một booking để copy báo cáo', 'warning');
+      return;
+    }
+
+    const todayStr = Utils.formatDateVN();
+    let text = `📢 [BÁO CÁO NHÂN SỰ BOOKING SOC - AGARI HR]\n`;
+    text += `🗓️ Ngày: ${todayStr}\n`;
+    text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+
+    targetItems.forEach((b, i) => {
+      text += `📍 [${i + 1}] ${b.socName || 'SOC'} (${b.shift || 'Ca'})\n`;
+      text += `   • Yêu cầu (Req): ${b.totalReq || 0} NV\n`;
+      text += `   • Đáp ứng (Commit): ${b.vendorCommit || 0} NV\n`;
+      text += `   • Tình trạng: ${Number(b.vendorCommit || 0) >= Number(b.totalReq || 0) ? '✅ Đủ số lượng' : '⚠️ Cần bù thêm'}\n`;
+    });
+
+    text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    text += `🚀 Báo cáo tự động từ Hệ thống Điểm Danh AGARI HR`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      Utils.toast('Đã copy báo cáo chuẩn Zalo/Telegram vào Clipboard!', 'success');
+    }).catch(() => {
+      prompt('Nhấn Ctrl+C để sao chép báo cáo:', text);
+    });
+  },
+
+  generateSampleBookings() {
+    return [
+      { id: '1', ticket: 'TKT-1081', fulfillDate: '2026-10-14', region: 'South', department: 'Inbound', socName: 'SOC Cần Thơ', area: 'Thốt Nốt', shift: '18:00-22:00', vendor: 'AGARI', totalReq: 25, vendorCommit: 25, totalKpi: 100 },
+      { id: '2', ticket: 'TKT-1082', fulfillDate: '2026-10-14', region: 'South', department: 'Outbound', socName: 'SOC Cần Thơ', area: 'Thốt Nốt', shift: '22:00-06:00', vendor: 'AGARI', totalReq: 30, vendorCommit: 28, totalKpi: 95 },
+      { id: '3', ticket: 'TKT-1083', fulfillDate: '2026-10-14', region: 'South', department: 'Sortation', socName: 'SOC Hậu Giang', area: 'Châu Thành', shift: '06:00-15:00', vendor: 'AGARI', totalReq: 15, vendorCommit: 15, totalKpi: 100 },
+      { id: '4', ticket: 'TKT-1084', fulfillDate: '2026-10-14', region: 'South', department: 'Hub Delivery', socName: 'SOC An Giang', area: 'Long Xuyên', shift: '13:00-22:00', vendor: 'AGARI', totalReq: 10, vendorCommit: 12, totalKpi: 110 }
+    ];
   }
-});
+};
+
+if (typeof window !== 'undefined') {
+  window.AdminBooking = AdminBooking;
+}

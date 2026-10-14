@@ -1,41 +1,59 @@
+/**
+ * BACKEND UTILITIES (AGARI HR)
+ */
 
-function sendJsonResponse(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj))
+function sendJsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function sanitizeEmployeeId(empId) {
-  if (!empId) return "";
-  var cleanId = empId.toString().trim().toLowerCase();
-  if (!/^[a-z0-9-_]*$/.test(cleanId)) throw new Error("Mã nhân viên chứa ký tự không hợp lệ");
-  if (cleanId.length > 50) throw new Error("Mã nhân viên quá dài");
-  return cleanId;
-}
-
-function buildEmployeeIndex(values, idColIndex) {
-  var index = {};
-  for (var i = 1; i < values.length; i++) {
-    var empId = (values[i][idColIndex] || "").toString().toLowerCase().trim();
-    if (empId) index[empId] = i;
-  }
-  return index;
-}
-
-
-function sendErrorResponse(errorMsg, statusCode) {
-  var obj = { success: false, error: errorMsg };
-  if (statusCode) obj.statusCode = statusCode;
-  return sendJsonResponse(obj);
-}
-
-
 function sendSuccessResponse(data, message) {
-  var obj = { success: true };
-  if (data) {
-    for (var key in data) {
-      obj[key] = data[key];
-    }
+  return sendJsonResponse({
+    success: true,
+    message: message || 'Thao tác thành công',
+    data: data || null,
+    timestamp: new Date().toISOString()
+  });
+}
+
+function sendErrorResponse(message, code) {
+  return sendJsonResponse({
+    success: false,
+    message: message || 'Đã có lỗi xảy ra',
+    code: code || 500,
+    timestamp: new Date().toISOString()
+  });
+}
+
+function getMasterSpreadsheet() {
+  return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+}
+
+function getOrCreateSheet(sheetName) {
+  var ss = getMasterSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
   }
-  if (message) obj.message = message;
-  return sendJsonResponse(obj);
+  return sheet;
+}
+
+function sanitizeEmployeeId(id) {
+  if (!id) return '';
+  return String(id).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function formatVNTime(date) {
+  return Utilities.formatDate(date || new Date(), CONFIG.TIMEZONE, "yyyy-MM-dd HH:mm:ss");
+}
+
+function isCccdMatch(id1, id2) {
+  var a = sanitizeEmployeeId(id1);
+  var b = sanitizeEmployeeId(id2);
+  if (!a || !b) return false;
+  if (a === b) return true;
+  // Xử lý mất số 0 đầu 11 vs 12 số (Nguyên tắc 8)
+  if (a.length === 11 && b.length === 12 && '0' + a === b) return true;
+  if (a.length === 12 && b.length === 11 && a === '0' + b) return true;
+  return false;
 }

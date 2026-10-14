@@ -1,130 +1,100 @@
-﻿const CACHE_NAME = 'hr-app-v77';
-const ASSETS_TO_CACHE = [
+// Service Worker Agari HR (Offline-First & Smart Caching)
+const CACHE_NAME = 'hr-app-v78';
+
+const STATIC_ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './app.js',
-  './config.js',
-  './dataManager.js',
-  './employee.js',
-  './utils.js',
-  './logo.png',
-  './theme-ma.css?v=2',
-  './assets/mid-autumn-bg.webp'
+  './css/style.css',
+  './js/config.js',
+  './js/utils.js',
+  './js/firebaseInit.js',
+  './js/dataManager.js',
+  './js/employee.js',
+  './js/app.js',
+  './js/admin/adminCore.js',
+  './js/admin/adminUI.js',
+  './js/admin/adminSalary.js',
+  './js/admin/adminBooking.js',
+  './js/admin/adminRequests.js',
+  './js/admin/adminRegistration.js',
+  './js/admin/adminManager.js',
+  './js/registration/regAPI.js',
+  './js/registration/regApp.js',
+  './manifest.json'
 ];
 
-self.addEventListener('install', event => {
+// Cài đặt Service Worker và lưu tĩnh cache
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(ASSETS_TO_CACHE);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Caching static assets:', CACHE_NAME);
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('[SW] Cache addAll warning:', err);
+      });
+    })
   );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
+// Xóa bỏ các cache cũ khi kích hoạt phiên bản mới
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            console.log('[SW] Removing old cache:', key);
+            return caches.delete(key);
+          }
+        })
       );
     })
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
-  // Only cache GET requests
-  if (event.request.method !== 'GET') return;
-  
-  // Don't cache requests to Google Apps Script / external APIs
-  if (event.request.url.includes('script.google.com') || event.request.url.includes('firebase')) {
+// Xử lý fetch: Network First cho API, Cache First với Network Fallback cho Static
+self.addEventListener('fetch', (event) => {
+  const requestUrl = new URL(event.request.url);
+
+  // Không cache request đến Google Apps Script API hoặc Firebase
+  if (
+    requestUrl.hostname.includes('script.google.com') ||
+    requestUrl.hostname.includes('googleapis.com') ||
+    requestUrl.hostname.includes('firestore') ||
+    requestUrl.hostname.includes('firebase')
+  ) {
+    return; // Pass through to network
+  }
+
+  // Network first cho tài nguyên HTML, fallback cache
+  if (event.request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request) || caches.match('./index.html'))
+    );
     return;
   }
 
+  // Stale-while-revalidate cho tài nguyên static
   event.respondWith(
-    caches.match(event.request)
-      .then(cachedResponse => {
-        // Return cached response if found, else fetch from network
-        return cachedResponse || fetch(event.request).then(response => {
-          // Update cache with new response
-          if (response && response.status === 200 && event.request.url.startsWith('http')) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseClone);
-            });
+    caches.match(event.request).then((cachedResponse) => {
+      const fetchPromise = fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
-          return response;
-        });
-      })
-      .catch(() => {
-        // If both cache and network fail, could return offline page here
-      })
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
+
+      return cachedResponse || fetchPromise;
+    })
   );
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
