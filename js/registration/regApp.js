@@ -23,9 +23,11 @@ const RegApp = {
         d.setDate(today.getDate() + i);
         const dateStr = Utils.formatDateISO(d);
         const dayOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][d.getDay()];
+        const dayFormatted = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         days.push({
           date: dateStr,
           display: `${dayOfWeek}, ${d.getDate()}/${d.getMonth() + 1}`,
+          label: `${dayFormatted} (${dayOfWeek})`,
           dayNum: d.getDate()
         });
       }
@@ -33,9 +35,11 @@ const RegApp = {
       while (curr <= end) {
         const dateStr = Utils.formatDateISO(curr);
         const dayOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][curr.getDay()];
+        const dayFormatted = `${String(curr.getDate()).padStart(2, '0')}/${String(curr.getMonth() + 1).padStart(2, '0')}/${curr.getFullYear()}`;
         days.push({
           date: dateStr,
           display: `${dayOfWeek}, ${curr.getDate()}/${curr.getMonth() + 1}`,
+          label: `${dayFormatted} (${dayOfWeek})`,
           dayNum: curr.getDate()
         });
         curr.setDate(curr.getDate() + 1);
@@ -93,51 +97,67 @@ const RegApp = {
   async handleSubmitRegistration(e) {
     e.preventDefault();
     const form = e.target;
-    const empId = form.empId.value.trim();
+    const empId = form.empId.value.trim().toUpperCase();
     const empName = form.empName.value.trim();
     const phone = form.phone.value.trim();
-    const shift = form.shift.value;
+    const shiftSelect = form.shift;
+    const shiftId = shiftSelect.value;
+    const selectedOptText = shiftSelect.options[shiftSelect.selectedIndex]?.text || '';
+    const matchLabel = selectedOptText.match(/\((.*?)\)/);
+    const shiftLabel = matchLabel ? matchLabel[1] : 'Ca Tối';
+    const osGender = form.osGender ? form.osGender.value : 'OS NAM';
 
     if (!empId || !empName || !phone) {
       Utils.toast('Vui lòng điền đầy đủ thông tin cá nhân', 'warning');
       return;
     }
 
-    // Thu thập các ngày đã tích chọn
-    const selections = {};
-    this.currentCycleDays.forEach((day) => {
+    // Thu thập các ngày đã tích chọn thành mảng đối tượng { date, label, choice } chuẩn theo backend
+    const selectionsArray = this.currentCycleDays.map((day) => {
       const selected = form.querySelector(`input[name="day_${day.date}"]:checked`);
-      selections[day.date] = selected ? selected.value : 'WORK';
+      return {
+        date: day.date,
+        label: day.label,
+        choice: selected ? selected.value : 'WORK'
+      };
     });
 
-    Utils.showLoading('Đang lưu đăng ký lịch làm việc...');
+    Utils.showLoading('Đang gửi đăng ký lịch làm việc lên Google Sheets...');
 
     try {
-      const res = await RegAPI.submitRegistration({
+      const payload = {
         empId,
         empName,
+        empPhone: phone,
         phone,
-        shift,
-        selections: JSON.stringify(selections)
-      });
+        osGender,
+        shiftId,
+        shift: shiftId,
+        shiftLabel,
+        selections: selectionsArray
+      };
+
+      const res = await RegAPI.submitRegistration(payload);
 
       Utils.hideLoading();
 
       if (res && res.success) {
         Utils.showAlert(
           'Đăng Ký Thành Công!',
-          'Lịch làm việc của bạn đã được ghi nhận vào hệ thống. Quản trị viên sẽ tổng hợp vào danh sách ca trực.',
+          `Lịch làm việc của bạn (${empName} - ${shiftLabel}) đã được ghi nhận trực tiếp vào Google Sheets hệ thống.`,
           'success'
         );
         form.reset();
         window.App?.closeModal('modalDangKyLich');
       } else {
-        Utils.showAlert('Thông báo', res.message || 'Đã gửi lịch làm việc thành công!', 'success');
-        window.App?.closeModal('modalDangKyLich');
+        const errorMsg = (res && (res.error || res.message)) 
+          ? (res.error || res.message) 
+          : 'Không thể ghi nhận lên Google Sheets. Vui lòng kiểm tra lại!';
+        Utils.showAlert('Đăng Ký Thất Bại', errorMsg, 'error');
       }
     } catch (err) {
       Utils.hideLoading();
-      Utils.showAlert('Lỗi', err.message, 'error');
+      Utils.showAlert('Lỗi Kết Nối', err.message, 'error');
     }
   },
 

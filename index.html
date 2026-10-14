@@ -979,10 +979,10 @@
       </div>
 
       <form id="formSubmitRegistration" class="space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Mã CTV:</label>
-            <input type="text" name="empId" required placeholder="VD: OPS10291" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono" />
+            <input type="text" name="empId" required placeholder="VD: OPS10291" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono uppercase" />
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Họ Tên:</label>
@@ -993,11 +993,19 @@
             <input type="tel" name="phone" required placeholder="VD: 0912345678" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono" />
           </div>
           <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Giới tính OS:</label>
+            <select name="osGender" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold">
+              <option value="OS NAM">OS NAM</option>
+              <option value="OS NỮ">OS NỮ</option>
+            </select>
+          </div>
+          <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Ca cố định:</label>
             <select name="shift" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold">
               <option value="18:00-22:00">18:00 - 22:00 (Ca Tối)</option>
               <option value="22:00-06:00">22:00 - 06:00 (Ca Đêm)</option>
-              <option value="06:00-15:00">06:00 - 15:00 (Ca Sáng)</option>
+              <option value="06:00-11:00">06:00 - 11:00 (Ca Sáng)</option>
+              <option value="06:00-15:00">06:00 - 15:00 (Ca OS Sáng)</option>
               <option value="13:00-22:00">13:00 - 22:00 (Ca Chiều)</option>
             </select>
           </div>
