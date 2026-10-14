@@ -1,4 +1,4 @@
-﻿
+
 function doPost(e) {
   try {
     if (!e || !e.postData || !e.postData.contents) {
@@ -7,7 +7,7 @@ function doPost(e) {
     
     var data = JSON.parse(e.postData.contents);
     var action = data.action;
-    var shiftId = data.shiftId;
+    var shiftId = data.shiftId || data.shift;
     
     // Auth Check for Admin Actions
     var adminActions = ["save_reg_config", "reset_registrations", "reset_all_shifts", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs", "get_salary_list"];
@@ -34,6 +34,8 @@ function doPost(e) {
     // Routing
     switch (action) {
       case "save": return handleSave(data, shiftId, sheet);
+      case "load":
+      case "get_roster": return handleLoadRoster(shiftId, false);
       case "request": return handleRequest(data, shiftId, sheet);
       case "get_change_requests": return handleGetChangeRequests(data, shiftId, sheet);
       case "approve_change_request": return handleApproveChangeRequest(data, shiftId, sheet);
@@ -63,7 +65,7 @@ function doPost(e) {
 function doGet(e) {
   try {
     var action = e.parameter.action;
-    var shiftId = e.parameter.shiftId;
+    var shiftId = e.parameter.shiftId || e.parameter.shift;
     
     // Auth Check for Admin Actions in GET
     if (action === "get_shift_registrations") {
@@ -72,49 +74,8 @@ function doGet(e) {
       }
     }
     
-    if (action === "load" && shiftId) {
-      var sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
-      var ss = SpreadsheetApp.getActiveSpreadsheet();
-      var sheet = ss.getSheetByName(sheetName);
-      
-      if (!sheet) {
-        return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
-      }
-      
-      var dataRange = sheet.getDataRange();
-      var values = dataRange.getValues();
-      var headers = values[0] || [];
-      var noteIndex = headers.indexOf("Ghi Chú");
-      var N = noteIndex !== -1 ? noteIndex - 4 : headers.length - 8; // Số cột vị trí động
-      
-      if (values.length <= 1) {
-        return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
-      }
-      
-      var result = [];
-      for (var i = 1; i < values.length; i++) {
-        var r = values[i];
-        if (r[0] === "" && r[1] === "" && r[2] === "") continue;
-        
-        var positions = [];
-        for (var j = 0; j < N; j++) {
-          positions.push(r[4 + j] || "");
-        }
-        
-        result.push({
-          stt: r[0] || "",
-          id: r[1] || "",
-          name: r[2] || "",
-          dinhDanh: r[3] || "",
-          positions: positions,
-          note: r[4 + N] || "",
-          status: r[4 + N + 1] || "pending",
-          timestamp: r[4 + N + 2] || "",
-          phone: r[4 + N + 3] || ""
-        });
-      }
-      
-      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    if ((action === "load" || action === "get_roster") && shiftId) {
+      return handleLoadRoster(shiftId, true);
     }
     
     if (action === "load_requests") {

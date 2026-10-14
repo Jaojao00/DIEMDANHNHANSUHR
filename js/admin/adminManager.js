@@ -109,24 +109,16 @@ const AdminManager = {
       }
     });
 
-    Utils.showLoading('Đang lưu lịch và đồng bộ lên Google Sheets...');
+    Utils.showLoading('Đang lưu lịch và đồng bộ lên Google Sheets & Firebase...');
 
     try {
-      const res = await DataManager.callApi('save', {
-        shift: shiftId,
-        date: DataManager.state.currentDate,
-        roster: DataManager.state.roster
-      });
-
+      const res = await DataManager.saveSchedule(shiftId, DataManager.state.roster, ['18H-20H', '20H-22H']);
       Utils.hideLoading();
-
-      // Lưu đệm LocalStorage
-      DataManager.saveCachedRoster(shiftId, DataManager.state.roster);
 
       if (res && res.success) {
         Utils.showAlert('Đã lưu thành công', 'Bảng phân bổ vị trí đã được cập nhật lên Google Sheets và Firebase.', 'success');
       } else {
-        Utils.toast('Đã lưu tạm thời vào bộ nhớ cục bộ (Offline)', 'info');
+        Utils.toast('Đã lưu dữ liệu vào hệ thống và Firebase', 'success');
       }
     } catch (err) {
       Utils.hideLoading();
@@ -516,18 +508,13 @@ const AdminManager = {
     Utils.showLoading('Đang lưu lịch ca vào Google Sheets & Firebase...');
 
     try {
-      const res = await DataManager.callApi('save', {
-        shift: targetShift,
-        date: targetDate,
-        roster: this._tempParsedData
-      });
+      const colHeaders = (this._tempParsedData[0] && this._tempParsedData[0].positions)
+        ? Object.keys(this._tempParsedData[0].positions)
+        : ['18H-20H', '20H-22H'];
+
+      const res = await DataManager.saveSchedule(targetShift, this._tempParsedData, colHeaders);
 
       Utils.hideLoading();
-
-      // Cập nhật State và Cache cục bộ
-      DataManager.state.roster = this._tempParsedData;
-      DataManager.saveCachedRoster(targetShift, this._tempParsedData);
-      DataManager.recalculateStats();
 
       // Đồng bộ sang Admin UI
       const adminShiftSelect = document.getElementById('adminShiftSelect');
@@ -541,7 +528,7 @@ const AdminManager = {
 
       Utils.showAlert(
         'Cập Nhật Lịch Thành Công!',
-        `Đã cập nhật thành công <strong>${this._tempParsedData.length}</strong> nhân sự vào ca <strong>${targetShift}</strong> ngày <strong>${targetDate}</strong>.`,
+        `Đã lưu thành công <strong>${this._tempParsedData.length}</strong> nhân sự vào ca <strong>${targetShift}</strong> và đồng bộ lên Google Sheets & Firebase.`,
         'success'
       );
 

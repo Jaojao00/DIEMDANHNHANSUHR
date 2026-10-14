@@ -109,38 +109,99 @@ const DataManager = {
   },
 
   // ==================== QUẢN LÝ ROSTER CA LÀM ====================
+  async saveSchedule(shiftId, rosterData, headers = []) {
+    this.state.currentShift = shiftId;
+    this.state.roster = rosterData || [];
+    this.recalculateStats();
+
+    // 1. Cập nhật đệm LocalStorage
+    this.saveCachedRoster(shiftId, rosterData);
+
+    // 2. Lưu lên Firebase Firestore (Tầng 1)
+    if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+      try {
+        await FirebaseService.saveRoster(shiftId, rosterData);
+      } catch (e) {
+        console.warn('[DataManager] Firebase saveRoster:', e);
+      }
+    }
+
+    // 3. Đồng bộ lên Google Sheets qua GAS (Tầng 2)
+    try {
+      const colHeaders = headers && headers.length ? headers : ['18H-20H', '20H-22H'];
+      const res = await this.callApi('save', {
+        shiftId: shiftId,
+        headers: colHeaders,
+        schedule: rosterData,
+        roster: rosterData,
+        date: this.state.currentDate
+      });
+      return res;
+    } catch (err) {
+      console.warn('[DataManager] GAS save error:', err);
+      return { success: false, message: err.message };
+    }
+  },
+
   async loadRoster(shiftId, date = Utils.formatDateISO()) {
     this.state.currentShift = shiftId;
     this.state.currentDate = date;
 
-    // Tầng 1: Đọc từ Firebase Firestore trước (tránh phụ thuộc LocalStorage gây lỗi dữ liệu cũ)
+    // 1. Đọc từ Cache LocalStorage trước để giao diện tức thì
+    const cached = this.getCachedRoster(shiftId);
+    if (cached && Array.isArray(cached) && cached.length) {
+      this.state.roster = cached;
+      this.recalculateStats();
+    }
+
+    // 2. Đọc từ Firebase Firestore (Tầng 1)
     try {
       if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
         const firestoreRoster = await FirebaseService.loadRoster(shiftId);
-        if (firestoreRoster && firestoreRoster.length) {
+        if (firestoreRoster && Array.isArray(firestoreRoster) && firestoreRoster.length) {
           this.state.roster = firestoreRoster;
           this.recalculateStats();
+          this.saveCachedRoster(shiftId, firestoreRoster);
+          return this.state.roster;
         }
       }
     } catch (e) {
-      console.warn('[DataManager] Firestore loadRoster fallback:', e);
+      console.warn('[DataManager] Firestore loadRoster:', e);
     }
 
-    // Tầng 2: Đồng bộ trực tiếp từ Google Sheets qua GAS Web App
+    // 3. Đồng bộ từ Google Sheets qua GAS Web App (Tầng 2)
     try {
-      const res = await this.callApi('get_roster', { shift: shiftId, date: date });
-      if (res && res.success && Array.isArray(res.data)) {
+      // Gọi GET action=load
+      const url = `${CONFIG.APPS_SCRIPT_URL}?action=load&shiftId=${encodeURIComponent(shiftId)}`;
+      const getRes = await fetch(url).then((r) => r.json()).catch(() => null);
+      if (Array.isArray(getRes) && getRes.length > 0) {
+        this.state.roster = getRes;
+        this.recalculateStats();
+        this.saveCachedRoster(shiftId, getRes);
+        if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+          FirebaseService.saveRoster(shiftId, getRes);
+        }
+        return this.state.roster;
+      }
+
+      // Hoặc gọi POST get_roster
+      const res = await this.callApi('get_roster', { shiftId: shiftId, shift: shiftId, date: date });
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         this.state.roster = res.data;
         this.recalculateStats();
-        // Cập nhật lên Firebase Firestore để các máy khác nhận được ngay lập tức
+        this.saveCachedRoster(shiftId, res.data);
         if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
           FirebaseService.saveRoster(shiftId, res.data);
         }
-      } else if (!this.state.roster || !this.state.roster.length) {
-        this.initDemoRoster(shiftId);
+        return this.state.roster;
       }
     } catch (err) {
-      console.warn('[DataManager] Không thể đồng bộ trực tiếp:', err);
+      console.warn('[DataManager] GAS load error:', err);
+    }
+
+    // Nếu cả 3 nguồn đều trống thì mới nạp dữ liệu mẫu
+    if (!this.state.roster || !this.state.roster.length) {
+      this.initDemoRoster(shiftId);
     }
 
     return this.state.roster;

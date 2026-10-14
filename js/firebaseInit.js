@@ -119,13 +119,17 @@ const FirebaseService = {
     if (!this.isInitialized || !this.db) return false;
     try {
       const today = Utils.formatDateISO();
-      const rosterRef = this.db.doc(`rosters/${today}_${shiftId}`);
-      await rosterRef.set({
+      const cleanShiftId = shiftId.replace(/:/g, '').replace(/-/g, '_');
+      const payload = {
         date: today,
         shiftId: shiftId,
         employees: rosterData || [],
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      };
+      await Promise.all([
+        this.db.doc(`rosters/${today}_${cleanShiftId}`).set(payload, { merge: true }),
+        this.db.doc(`rosters/${cleanShiftId}`).set(payload, { merge: true })
+      ]);
       return true;
     } catch (e) {
       console.warn('[Firebase] saveRoster error:', e);
@@ -140,8 +144,17 @@ const FirebaseService = {
     if (!this.isInitialized || !this.db) return null;
     try {
       const today = Utils.formatDateISO();
-      const rosterRef = this.db.doc(`rosters/${today}_${shiftId}`);
-      const snap = await rosterRef.get();
+      const cleanShiftId = shiftId.replace(/:/g, '').replace(/-/g, '_');
+      
+      let snap = await this.db.doc(`rosters/${today}_${cleanShiftId}`).get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (Array.isArray(data.employees) && data.employees.length > 0) {
+          return data.employees;
+        }
+      }
+
+      snap = await this.db.doc(`rosters/${cleanShiftId}`).get();
       if (snap.exists) {
         const data = snap.data();
         if (Array.isArray(data.employees) && data.employees.length > 0) {

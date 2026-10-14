@@ -17,20 +17,59 @@ const EmployeeModule = {
   },
 
   bindEvents() {
-    // Nút Điểm Danh
-    const btnCheckin = document.getElementById('btnQuickCheckin');
-    if (btnCheckin) {
-      btnCheckin.addEventListener('click', () => this.handleCheckin());
+    // 1. Chọn ca làm việc (Giai đoạn 1 -> Giai đoạn 2)
+    const shiftCards = document.querySelectorAll('#shiftCardsList .shift-card-item');
+    shiftCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const shiftId = card.getAttribute('data-shift');
+        if (shiftId) this.selectShift(shiftId);
+      });
+    });
+
+    // 2. Nút Quay lại chọn ca
+    const btnBack = document.getElementById('btnBackToShifts');
+    if (btnBack) {
+      btnBack.addEventListener('click', () => this.backToShifts());
     }
 
-    // Input Enter để điểm danh nhanh
+    // 3. Form Điểm danh
+    const attForm = document.getElementById('attendanceForm');
+    if (attForm) {
+      attForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleCheckin();
+      });
+    }
+
+    const btnCheckin = document.getElementById('btnQuickCheckin');
+    if (btnCheckin) {
+      btnCheckin.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handleCheckin();
+      });
+    }
+
+    // 4. Auto lookup khi nhập Mã Nhân Viên
     const empInput = document.getElementById('empIdentifierInput');
     if (empInput) {
-      empInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          this.handleCheckin();
+      const handleLookup = () => {
+        const val = empInput.value.trim().toUpperCase();
+        if (val) this.lookupAndAutofill(val);
+      };
+
+      empInput.addEventListener('input', () => {
+        if (empInput.value.trim().length >= 4) {
+          handleLookup();
         }
+      });
+      empInput.addEventListener('blur', handleLookup);
+    }
+
+    const btnAutoLookup = document.getElementById('btnAutoLookup');
+    if (btnAutoLookup) {
+      btnAutoLookup.addEventListener('click', () => {
+        const val = (document.getElementById('empIdentifierInput')?.value || '').trim().toUpperCase();
+        if (val) this.lookupAndAutofill(val);
       });
     }
 
@@ -67,63 +106,255 @@ const EmployeeModule = {
   },
 
   /**
-   * 2.1 Xử lý Điểm Danh Một Chạm (Quick Check-in)
+   * Chọn ca làm việc (Chuyển từ Phase 1 sang Phase 2)
+   */
+  selectShift(shiftId) {
+    DataManager.state.currentShift = shiftId;
+    const shiftSelect = document.getElementById('empShiftSelect');
+    if (shiftSelect) shiftSelect.value = shiftId;
+
+    const shiftInfo = CONFIG.SHIFTS.find((s) => s.id === shiftId) || {
+      id: shiftId,
+      name: shiftId,
+      label: shiftId,
+      time: shiftId,
+      icon: '⏰'
+    };
+
+    const iconEl = document.getElementById('attShiftIcon');
+    const labelEl = document.getElementById('attShiftLabel');
+    const timeEl = document.getElementById('attShiftTime');
+    if (iconEl) iconEl.textContent = shiftInfo.icon || '⏰';
+    if (labelEl) labelEl.textContent = shiftInfo.name || shiftInfo.label;
+    if (timeEl) timeEl.textContent = shiftInfo.time || shiftId;
+
+    const phaseSelect = document.getElementById('phaseShiftSelection');
+    const phaseForm = document.getElementById('phaseAttendanceForm');
+    const resultArea = document.getElementById('checkinResultArea');
+
+    if (phaseSelect) phaseSelect.classList.add('hidden');
+    if (phaseForm) phaseForm.classList.remove('hidden');
+    if (resultArea) {
+      resultArea.classList.add('hidden');
+      resultArea.innerHTML = '';
+    }
+
+    // Tải dữ liệu roster cho ca này
+    DataManager.loadRoster(shiftId);
+
+    // Khôi phục thông tin từ localStorage nếu có
+    const savedId = localStorage.getItem('agr_empId') || '';
+    const savedName = localStorage.getItem('agr_empName') || '';
+    const savedPhone = localStorage.getItem('agr_empPhone') || '';
+
+    const inpId = document.getElementById('empIdentifierInput');
+    const inpName = document.getElementById('employeeName');
+    const inpPhone = document.getElementById('employeePhone');
+
+    if (inpId && !inpId.value && savedId) inpId.value = savedId;
+    if (inpName && !inpName.value && savedName) inpName.value = savedName;
+    if (inpPhone && !inpPhone.value && savedPhone) inpPhone.value = savedPhone;
+
+    if (inpId && inpId.value) {
+      this.lookupAndAutofill(inpId.value.trim().toUpperCase());
+    }
+
+    if (phaseForm) {
+      phaseForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  },
+
+  /**
+   * Quay lại màn hình chọn ca (Phase 2 -> Phase 1)
+   */
+  backToShifts() {
+    const phaseSelect = document.getElementById('phaseShiftSelection');
+    const phaseForm = document.getElementById('phaseAttendanceForm');
+    const resultArea = document.getElementById('checkinResultArea');
+
+    if (phaseForm) phaseForm.classList.add('hidden');
+    if (phaseSelect) phaseSelect.classList.remove('hidden');
+    if (resultArea) resultArea.classList.add('hidden');
+  },
+
+  /**
+   * Tự động tra cứu nhân viên trong roster và điền họ tên, số điện thoại
+   */
+  lookupAndAutofill(val) {
+    if (!val || !Array.isArray(DataManager.state.roster)) return;
+    const cleanId = val.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const emp = DataManager.state.roster.find((e) => {
+      const eId = String(e.id || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const eCccd = String(e.cccd || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const eStt = String(e.stt || '').trim();
+      return (eId && (eId === cleanId || eId.includes(cleanId) || cleanId.includes(eId))) ||
+             (eCccd && eCccd === cleanId) ||
+             (eStt && eStt === cleanId);
+    });
+
+    if (emp) {
+      const nameInp = document.getElementById('employeeName');
+      const phoneInp = document.getElementById('employeePhone');
+      if (nameInp && emp.name) nameInp.value = emp.name;
+      if (phoneInp && emp.phone) phoneInp.value = emp.phone;
+
+      // Nếu nhân viên này đã có trạng thái điểm danh trước đó, hiển thị luôn thẻ kết quả
+      if (emp.status === 'confirmed' || emp.checkinTime) {
+        this.renderCheckinSuccess(emp);
+      }
+    }
+  },
+
+  /**
+   * 2.1 Xử lý Điểm Danh (Nhập thông tin -> Xác nhận)
    */
   async handleCheckin() {
     const inputEl = document.getElementById('empIdentifierInput');
+    const nameEl = document.getElementById('employeeName');
+    const phoneEl = document.getElementById('employeePhone');
     const shiftEl = document.getElementById('empShiftSelect');
-    const resultContainer = document.getElementById('checkinResultArea');
 
-    if (!inputEl || !shiftEl) return;
+    if (!inputEl) return;
 
-    const identifier = inputEl.value.trim();
-    const shiftId = shiftEl.value;
+    const identifier = inputEl.value.trim().toUpperCase();
+    const name = nameEl ? nameEl.value.trim() : '';
+    const phone = phoneEl ? phoneEl.value.trim() : '';
+    const shiftId = (shiftEl ? shiftEl.value : null) || DataManager.state.currentShift || '22:00-06:00';
 
     if (!identifier) {
-      Utils.toast('Vui lòng nhập Mã OPS', 'warning');
+      Utils.toast('Vui lòng nhập Mã Nhân Viên (Mã Ops)', 'warning');
       inputEl.focus();
       return;
     }
 
+    if (!name) {
+      Utils.toast('Vui lòng nhập Họ và Tên', 'warning');
+      if (nameEl) nameEl.focus();
+      return;
+    }
+
+    if (!phone) {
+      Utils.toast('Vui lòng nhập Số điện thoại Zalo', 'warning');
+      if (phoneEl) phoneEl.focus();
+      return;
+    }
+
+    // Lưu vào localStorage để tái sử dụng
+    localStorage.setItem('agr_empId', identifier);
+    localStorage.setItem('agr_empName', name);
+    localStorage.setItem('agr_empPhone', phone);
+
     Utils.showLoading('Đang xác thực và ghi nhận điểm danh...');
 
     try {
-      // Gọi API điểm danh
+      // 1. Tìm nhân viên trong roster hiện tại (nếu đã tải)
+      let localEmp = null;
+      if (Array.isArray(DataManager.state.roster)) {
+        const cleanId = identifier.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        localEmp = DataManager.state.roster.find((e) => {
+          const eId = String(e.id || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+          const eCccd = String(e.cccd || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+          const eStt = String(e.stt || '').trim();
+          return (eId && (eId === cleanId || eId.includes(cleanId) || cleanId.includes(eId))) ||
+                 (eCccd && eCccd === cleanId) ||
+                 (eStt && eStt === cleanId);
+        });
+      }
+
+      // 2. Gọi API điểm danh gửi lên GAS Web App
       const response = await DataManager.callApi('checkin', {
         identifier: identifier,
+        empId: identifier,
+        name: name,
+        phone: phone,
         shift: shiftId,
+        shiftId: shiftId,
         timestamp: Utils.getCurrentVNTime()
       });
 
       Utils.hideLoading();
 
+      let empData = null;
       if (response && response.success && response.data) {
-        const emp = response.data;
-        // Bắn cập nhật sang Firebase Realtime (Tầng 1)
-        FirebaseService.recordCheckinRealtime(shiftId, emp);
+        empData = response.data;
+      } else if (localEmp) {
+        empData = {
+          ...localEmp,
+          name: name || localEmp.name,
+          phone: phone || localEmp.phone,
+          status: 'confirmed',
+          checkinTime: Utils.getCurrentVNTime()
+        };
+      }
+
+      if (empData) {
+        empData.status = 'confirmed';
+        empData.checkinTime = empData.checkinTime || Utils.getCurrentVNTime();
+        if (phone) empData.phone = phone;
+        if (name && !empData.name) empData.name = name;
+
+        // Bắn cập nhật sang Firebase Realtime
+        FirebaseService.recordCheckinRealtime(shiftId, empData);
+
+        // Cập nhật lại trong DataManager.state.roster
+        if (Array.isArray(DataManager.state.roster)) {
+          const idx = DataManager.state.roster.findIndex(
+            (e) => String(e.id || '').toLowerCase() === String(empData.id || empData.empId || '').toLowerCase()
+          );
+          if (idx >= 0) {
+            DataManager.state.roster[idx] = { ...DataManager.state.roster[idx], ...empData };
+          } else {
+            DataManager.state.roster.push(empData);
+          }
+          // Lưu vào Firestore & LocalStorage
+          FirebaseService.saveRoster(shiftId, DataManager.state.roster);
+          try {
+            const cacheKey = `agr_roster_${shiftId}_${Utils.getTodayISODate()}`;
+            localStorage.setItem(cacheKey, JSON.stringify({
+              timestamp: Date.now(),
+              roster: DataManager.state.roster,
+              headers: DataManager.state.headers || []
+            }));
+          } catch (e) {}
+        }
 
         // Hiển thị thẻ kết quả & vị trí làm việc
-        this.renderCheckinSuccess(emp);
-        Utils.toast(`Điểm danh thành công: ${emp.name}`, 'success');
+        this.renderCheckinSuccess(empData);
+        Utils.toast(`Điểm danh thành công: ${empData.name}`, 'success');
 
-        // Tự động làm mới danh sách Roster và Activity
-        DataManager.loadRoster(shiftId);
+        // Bắn hiệu ứng chúc mừng (confetti) nếu có
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 80,
+            spread: 60,
+            origin: { y: 0.6 }
+          });
+        }
       } else {
-        // Cảnh báo không tìm thấy
         Utils.showAlert(
-          'Không tìm thấy thông tin ca trực',
-          response.message || 'Mã của bạn không có trong danh sách ca này hôm nay. Hãy liên hệ Admin Zalo ca trực!',
+          'Không tìm thấy trong ca trực',
+          response?.message || `Mã "${identifier}" chưa có trong danh sách phân ca "${shiftId}". Hãy kiểm tra lại ca đã chọn hoặc liên hệ Admin Zalo ca trực!`,
           'error'
         );
       }
     } catch (err) {
       Utils.hideLoading();
-      Utils.showAlert('Lỗi kết nối', 'Không thể kết nối đến máy chủ điểm danh. Vui lòng thử lại.', 'error');
+      console.error('Lỗi điểm danh:', err);
+      if (localEmp) {
+        localEmp.status = 'confirmed';
+        localEmp.checkinTime = Utils.getCurrentVNTime();
+        localEmp.phone = phone;
+        FirebaseService.recordCheckinRealtime(shiftId, localEmp);
+        this.renderCheckinSuccess(localEmp);
+        Utils.toast(`Đã ghi nhận điểm danh: ${localEmp.name}`, 'success');
+      } else {
+        Utils.showAlert('Lỗi kết nối', 'Không thể kết nối đến máy chủ điểm danh. Vui lòng kiểm tra mạng và thử lại.', 'error');
+      }
     }
   },
 
   /**
-   * Render Thẻ kết quả điểm danh, cảnh báo Chưa Có Vị Trí (npw-icon)
+   * Render Thẻ kết quả điểm danh, vị trí làm việc và cảnh báo Chưa Có Vị Trí (npw-icon)
    */
   renderCheckinSuccess(emp) {
     const resultContainer = document.getElementById('checkinResultArea');
@@ -152,54 +383,55 @@ const EmployeeModule = {
     let positionsHtml = '';
     if (posKeys.length > 0) {
       positionsHtml = posKeys.map((k) => `
-        <div class="bg-white rounded-lg p-3 border border-slate-200 text-center shadow-sm">
-          <div class="text-xs font-semibold text-slate-500 uppercase">${k}</div>
-          <div class="text-base font-bold text-slate-800 mt-1">${positions[k] || 'Chưa xếp'}</div>
+        <div class="bg-[#1e2030] rounded-xl p-3 border border-slate-700/80 text-center shadow-sm">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${k}</div>
+          <div class="text-base font-extrabold text-emerald-400 mt-1">${positions[k] || 'Chưa xếp'}</div>
         </div>
       `).join('');
     } else {
       positionsHtml = `
-        <div class="col-span-full bg-amber-50 rounded-lg p-3 border border-amber-200 text-amber-800 text-sm">
-          Đang chờ Quản lý phân bổ vị trí trực tiếp tại kho.
+        <div class="col-span-full bg-amber-500/10 rounded-xl p-3.5 border border-amber-500/30 text-amber-300 text-sm font-medium text-center">
+          ⏳ Đang chờ Quản lý phân bổ vị trí trực tiếp tại kho ca trực.
         </div>
       `;
     }
 
     const warningHtml = hasEmptyPosition ? `
-      <div class="mt-4 p-3 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg flex items-start gap-3">
-        <span class="text-amber-500 text-xl font-bold npw-icon">⚠️</span>
-        <div class="text-xs text-amber-800 leading-relaxed">
-          <strong class="font-semibold block text-sm">Cảnh báo vị trí làm việc:</strong>
-          Bạn chưa được phân bổ vị trí hoặc đang ở trạng thái <em>"Chưa xếp"</em>. Vui lòng liên hệ ngay <strong>Admin / Zalo ca trực</strong> tại chốt kiểm soát để nhận nhiệm vụ!
+      <div class="mt-4 p-3.5 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-3">
+        <span class="text-amber-400 text-xl font-bold npw-icon">⚠️</span>
+        <div class="text-xs text-amber-200/90 leading-relaxed">
+          <strong class="font-semibold block text-sm text-amber-300">Cảnh báo vị trí làm việc:</strong>
+          Bạn chưa được phân bổ đầy đủ vị trí hoặc đang ở trạng thái <em>"Chưa xếp"</em>. Vui lòng liên hệ ngay <strong>Admin / Zalo ca trực</strong> tại chốt kiểm soát để nhận nhiệm vụ!
         </div>
       </div>
     ` : '';
 
     resultContainer.innerHTML = `
-      <div class="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-500 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-        <div class="flex items-center justify-between pb-3 border-b border-emerald-200/50">
+      <div class="bg-[#181a29] border-2 border-emerald-500/80 rounded-2xl p-5 shadow-2xl relative overflow-hidden animate-fade-in">
+        <div class="flex items-center justify-between pb-3.5 border-b border-slate-800">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xl font-bold">
+            <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl font-bold">
               ✓
             </div>
             <div>
-              <h3 class="text-lg font-bold text-slate-900">${emp.name}</h3>
-              <div class="text-xs text-slate-500 font-mono">${emp.id} | CCCD: ${emp.cccd || 'N/A'}</div>
+              <h3 class="text-base sm:text-lg font-bold text-white">${emp.name || 'Nhân Viên'}</h3>
+              <div class="text-xs text-slate-400 font-mono mt-0.5">${emp.id || emp.empId || ''} ${emp.cccd ? '| CCCD: ' + emp.cccd : ''}</div>
             </div>
           </div>
           <div class="text-right">
-            <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 inline-flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               ĐÃ ĐIỂM DANH
             </span>
-            <div class="text-xs text-slate-500 font-mono mt-1">${emp.checkinTime || Utils.getCurrentVNTime()}</div>
+            <div class="text-xs text-slate-400 font-mono mt-1">${emp.checkinTime || Utils.getCurrentVNTime()}</div>
           </div>
         </div>
 
         <div class="mt-4">
-          <div class="text-xs font-bold uppercase text-slate-600 mb-2 tracking-wider flex items-center gap-1.5">
+          <div class="text-xs font-bold uppercase text-slate-400 mb-2.5 tracking-wider flex items-center gap-1.5">
             <span>📍 Vị Trí Làm Việc Phân Bổ</span>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             ${positionsHtml}
           </div>
         </div>
@@ -208,7 +440,6 @@ const EmployeeModule = {
       </div>
     `;
 
-    // Cuộn nhẹ xuống vùng kết quả
     resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 

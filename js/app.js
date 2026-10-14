@@ -49,9 +49,11 @@ const App = {
       });
 
       const clockEl = document.getElementById('realtimeClockDisplay');
+      const clockSmEl = document.getElementById('attClockSm');
       const dateEl = document.getElementById('realtimeDateDisplay');
 
       if (clockEl) clockEl.textContent = timeStr;
+      if (clockSmEl) clockSmEl.textContent = timeStr;
       if (dateEl) dateEl.textContent = dateStr;
     };
 

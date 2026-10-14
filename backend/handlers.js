@@ -32,23 +32,34 @@ function handleSave(data, shiftId, sheet) {
   }
 
   sheet.clear();
+  var scheduleList = data.schedule || data.roster || [];
   var colHeaders = data.headers || [];
+  if ((!colHeaders || colHeaders.length === 0) && scheduleList.length > 0) {
+    if (scheduleList[0].positions && typeof scheduleList[0].positions === "object" && !Array.isArray(scheduleList[0].positions)) {
+      colHeaders = Object.keys(scheduleList[0].positions);
+    } else {
+      colHeaders = ["18H-20H", "20H-22H"];
+    }
+  }
+
   var headers = ["STT", "Mã NV", "Họ Tên", "Định Danh"].concat(colHeaders).concat(["Ghi Chú", "Trạng Thái", "Thời Gian", "SĐT"]);
   sheet.appendRow(headers);
   
   var rows = [];
-  for (var i = 0; i < data.schedule.length; i++) {
-    var emp = data.schedule[i];
+  for (var i = 0; i < scheduleList.length; i++) {
+    var emp = scheduleList[i];
     var row = [
-      emp.stt || "",
+      emp.stt || (i + 1),
       emp.id || "",
       emp.name || "",
-      emp.dinhDanh || ""
+      emp.dinhDanh || emp.identity || ""
     ];
     
-    var positions = emp.positions || [];
+    var positions = emp.positions || {};
     for (var j = 0; j < colHeaders.length; j++) {
-      row.push(positions[j] || "");
+      var hKey = colHeaders[j];
+      var pVal = Array.isArray(positions) ? (positions[j] || "") : (positions[hKey] || "");
+      row.push(pVal);
     }
     
     var idKey = String(emp.id || "").trim().toLowerCase();
@@ -78,7 +89,61 @@ function handleSave(data, shiftId, sheet) {
     sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
   }
   
-  return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Lưu lịch thành công và giữ lại điểm danh cũ" })).setMimeType(ContentService.MimeType.JSON);
+  return sendSuccessResponse({ count: rows.length }, "Lưu lịch thành công và giữ lại điểm danh cũ");
+}
+
+function handleLoadRoster(shiftId, returnPlainArray) {
+  if (!shiftId) {
+    return sendErrorResponse("Missing shiftId");
+  }
+  var sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    return returnPlainArray ? ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON) : sendSuccessResponse([]);
+  }
+  var dataRange = sheet.getDataRange();
+  var values = dataRange.getValues();
+  if (values.length <= 1) {
+    return returnPlainArray ? ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON) : sendSuccessResponse([]);
+  }
+  var headers = values[0] || [];
+  var noteIndex = headers.indexOf("Ghi Chú");
+  var N = noteIndex !== -1 ? noteIndex - 4 : headers.length - 8;
+  if (N < 0) N = 0;
+  var colHeaders = [];
+  for (var c = 0; c < N; c++) {
+    colHeaders.push(headers[4 + c] || ("Vị trí " + (c + 1)));
+  }
+  var result = [];
+  for (var i = 1; i < values.length; i++) {
+    var r = values[i];
+    if (r[0] === "" && r[1] === "" && r[2] === "") continue;
+    var posObj = {};
+    var posArr = [];
+    for (var j = 0; j < N; j++) {
+      var pVal = r[4 + j] || "";
+      posArr.push(pVal);
+      posObj[colHeaders[j]] = pVal;
+    }
+    result.push({
+      stt: r[0] || "",
+      id: r[1] || "",
+      name: r[2] || "",
+      dinhDanh: r[3] || "",
+      identity: r[3] || "",
+      positions: posObj,
+      positionList: posArr,
+      note: r[4 + N] || "",
+      status: (r[4 + N + 1] || "pending").toString().toLowerCase(),
+      timestamp: r[4 + N + 2] || "",
+      phone: r[4 + N + 3] || ""
+    });
+  }
+  if (returnPlainArray) {
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  }
+  return sendSuccessResponse(result);
 }
 
 function handleRequest(data, shiftId, sheet) {
@@ -533,15 +598,15 @@ function handleCheckin(data, shiftId, sheet) {
     var headers = values[0];
     var statusIndex = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") : headers.length - 3;
     var timeIndex = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") : headers.length - 2;
+    var phoneIndex = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") : headers.length - 1;
     
-    try {
-      var searchId = sanitizeEmployeeId(data.empId);
-    } catch (e) {
-      return sendErrorResponse(e.message);
+    var rawInput = (data.empId || data.identifier || "").toString().trim();
+    if (!rawInput) {
+      return sendErrorResponse("Vui lòng cung cấp Mã Nhân Viên");
     }
+    var searchId = rawInput.toLowerCase();
     
-    // Tối ưu: Dùng Map thay vì For Loop
-        var foundIndices = [];
+    var foundIndices = [];
     for (var i = 1; i < values.length; i++) {
       var id = (values[i][1] || "").toString().toLowerCase().trim();
       var stt = (values[i][0] || "").toString().toLowerCase().trim();
@@ -564,6 +629,9 @@ function handleCheckin(data, shiftId, sheet) {
         values[i][statusIndex] = "confirmed";
         values[i][timeIndex] = timeString;
         sheet.getRange(i + 1, statusIndex + 1, 1, 2).setValues([["confirmed", timeString]]);
+        if (data.phone && phoneIndex !== -1) {
+          sheet.getRange(i + 1, phoneIndex + 1).setValue(data.phone);
+        }
         updatedAny = true;
       }
     }
@@ -572,10 +640,21 @@ function handleCheckin(data, shiftId, sheet) {
       return sendErrorResponse("Nhân viên này đã điểm danh rồi!");
     }
     
+    var noteIndex = headers.indexOf("Ghi Chú");
+    var N = noteIndex !== -1 ? noteIndex - 4 : headers.length - 8;
+    var empPos = {};
+    if (N > 0) {
+      for (var p = 0; p < N; p++) {
+        empPos[headers[4 + p] || ("Vị trí " + (p + 1))] = values[foundIndices[0]][4 + p] || "";
+      }
+    }
+
     return sendSuccessResponse({ 
       status: "confirmed",
       time: timeString,
-      name: values[foundIndices[0]][2]
+      id: values[foundIndices[0]][1],
+      name: values[foundIndices[0]][2],
+      positions: empPos
     });
     
   } catch (e) {
