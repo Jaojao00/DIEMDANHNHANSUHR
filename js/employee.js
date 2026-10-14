@@ -79,7 +79,7 @@ const EmployeeModule = {
     const shiftId = shiftEl.value;
 
     if (!identifier) {
-      Utils.toast('Vui lòng nhập Mã OPS, CCCD hoặc Số điện thoại', 'warning');
+      Utils.toast('Vui lòng nhập Mã OPS', 'warning');
       inputEl.focus();
       return;
     }
