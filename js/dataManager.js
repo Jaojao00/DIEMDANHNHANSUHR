@@ -134,6 +134,7 @@ const DataManager = {
         headers: colHeaders,
         schedule: rosterData,
         roster: rosterData,
+        forceRosterStatus: true,
         date: this.state.currentDate
       });
       return res;

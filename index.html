@@ -166,6 +166,11 @@
                 <div>
                   <div class="text-slate-800 font-extrabold text-base sm:text-lg group-hover:text-purple-600 transition">Ca Đêm</div>
                   <div class="font-mono text-xs sm:text-sm text-purple-600 font-semibold tracking-wider mt-0.5">22:00 - 06:00</div>
+                  <div class="mt-1">
+                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
+                      ⏰ Điểm danh: 14h00 - 18h00
+                    </span>
+                  </div>
                 </div>
               </div>
               <div class="flex items-center gap-2">
@@ -862,6 +867,14 @@
         <button data-close-modal="modalXinOff" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
 
+      <!-- Thông báo khung giờ nhận đơn -->
+      <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed">
+        <span class="text-base flex-shrink-0">⏰</span>
+        <div>
+          <span class="font-bold">Khung giờ tiếp nhận đơn:</span> 06:00 - 18:00 hàng ngày. Sau 18:00 hệ thống tự động khóa cổng nhận đơn xin off.
+        </div>
+      </div>
+
       <form id="formXinOff" class="space-y-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS / Số CCCD:</label>
@@ -1341,11 +1354,13 @@
     <div class="custom-modal-content !bg-[#0f172a] !border !border-slate-800 text-white !max-w-sm p-6 rounded-2xl shadow-2xl relative">
       <button data-close-modal="modalCapNhatTrangThai" class="absolute top-4 right-4 w-7 h-7 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm transition">✕</button>
       
-      <h3 class="text-xl font-bold text-white text-center mb-6 tracking-tight">Cập Nhật Trạng Thái</h3>
+      <h3 class="text-xl font-bold text-white text-center mb-1 tracking-tight">Cập Nhật Trạng Thái</h3>
+      <div id="modalStatusTargetInfo" class="mb-4 text-xs text-center text-slate-300 bg-slate-800/80 p-3 rounded-xl border border-slate-700/60 font-mono">
+        <!-- Thông tin nhân sự sẽ hiển thị ở đây -->
+      </div>
       
-      <div class="relative mb-2">
-        <select id="modalStatusSelect" class="w-full bg-[#1e293b] text-white border-2 border-cyan-400 rounded-xl px-4 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400/50 appearance-none cursor-pointer">
-          <option value="" disabled selected>Chọn trạng thái...</option>
+      <div class="relative mb-4">
+        <select id="modalStatusSelect" class="w-full bg-[#1e293b] text-white border-2 border-cyan-400 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400/50 appearance-none cursor-pointer">
           <option value="pending">Chưa Điểm Danh</option>
           <option value="confirmed">Đã Điểm Danh</option>
           <option value="off">Xin Off</option>
@@ -1357,6 +1372,11 @@
           </svg>
         </div>
       </div>
+
+      <button id="btnConfirmApplyStatus" type="button" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/20 active:scale-[0.98] transition flex items-center justify-center gap-2">
+        <span>✓</span>
+        <span>Xác Nhận Cập Nhật</span>
+      </button>
       
       <input type="hidden" id="modalStatusTargetEmpId" value="" />
     </div>

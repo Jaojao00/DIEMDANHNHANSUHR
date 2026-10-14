@@ -239,6 +239,21 @@ const EmployeeModule = {
       return;
     }
 
+    // 0. Kiểm tra khung giờ điểm danh: Ca 22h-6h chỉ mở cổng từ 14h - 18h
+    if (shiftId === '22:00-06:00') {
+      const currentMinutes = Utils.getVNMinutesInDay();
+      const startMinutes = 14 * 60; // 14:00 (840 phút)
+      const endMinutes = 18 * 60;   // 18:00 (1080 phút)
+      if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+        Utils.showAlert(
+          'Ngoài Khung Giờ Điểm Danh',
+          'Ca Đêm (22:00 - 06:00) chỉ mở cổng điểm danh từ 14:00 đến 18:00 hàng ngày. Hiện tại ngoài khung giờ quy định, vui lòng quay lại trong khoảng 14h00 - 18h00 hoặc liên hệ Trực ca / Admin!',
+          'warning'
+        );
+        return;
+      }
+    }
+
     // Lưu vào localStorage để tái sử dụng
     localStorage.setItem('agr_empId', identifier);
     localStorage.setItem('agr_empName', name);
@@ -466,6 +481,19 @@ const EmployeeModule = {
 
     if (!empId || !empName || !phone || !offDate || !reason) {
       Utils.toast('Vui lòng điền đầy đủ tất cả các trường', 'warning');
+      return;
+    }
+
+    // Kiểm tra khung giờ xin nghỉ: Từ 06:00 đến 18:00 hàng ngày
+    const currentMinutes = Utils.getVNMinutesInDay();
+    const startMinutes = 6 * 60;  // 06:00 (360 phút)
+    const endMinutes = 18 * 60;   // 18:00 (1080 phút)
+    if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+      Utils.showAlert(
+        'Cổng Xin Nghỉ Đã Khóa',
+        'Hệ thống chỉ tiếp nhận đơn xin nghỉ (xin off) từ 06:00 đến 18:00 hàng ngày. Sau 18:00 hệ thống đã tự động khóa cổng. Vui lòng liên hệ trực tiếp Quản lý kho để báo cáo trường hợp đột xuất!',
+        'warning'
+      );
       return;
     }
 

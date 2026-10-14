@@ -45,9 +45,29 @@ const Utils = {
    */
   getCurrentVNTime() {
     return new Date().toLocaleString('vi-VN', {
-      timeZone: CONFIG.TIMEZONE,
+      timeZone: CONFIG.TIMEZONE || 'Asia/Ho_Chi_Minh',
       hour12: false
     });
+  },
+
+  /**
+   * Lấy thời gian hiện tại theo Date object chuẩn múi giờ Asia/Ho_Chi_Minh
+   */
+  getVNNow() {
+    try {
+      const vnStr = new Date().toLocaleString('en-US', { timeZone: CONFIG.TIMEZONE || 'Asia/Ho_Chi_Minh' });
+      return new Date(vnStr);
+    } catch (e) {
+      return new Date();
+    }
+  },
+
+  /**
+   * Lấy số phút trôi qua từ 00:00 trong ngày theo giờ Việt Nam (0 - 1439)
+   */
+  getVNMinutesInDay() {
+    const vnDate = this.getVNNow();
+    return vnDate.getHours() * 60 + vnDate.getMinutes();
   },
 
   /**

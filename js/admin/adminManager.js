@@ -75,8 +75,15 @@ const AdminManager = {
       });
     }
 
-    // Dropdown Cập Nhật Trạng Thái (Ảnh 1)
+    // Dropdown Cập Nhật Trạng Thái & Nút Xác Nhận (Ảnh 1)
     const modalStatusSelect = document.getElementById('modalStatusSelect');
+    const btnConfirmStatus = document.getElementById('btnConfirmApplyStatus');
+    if (btnConfirmStatus) {
+      btnConfirmStatus.addEventListener('click', () => {
+        const val = modalStatusSelect ? modalStatusSelect.value : '';
+        this.handleApplyStatus(val);
+      });
+    }
     if (modalStatusSelect) {
       modalStatusSelect.addEventListener('change', (e) => this.handleApplyStatus(e.target.value));
     }
@@ -98,7 +105,12 @@ const AdminManager = {
 
     rows.forEach((row) => {
       const empId = row.dataset.id;
-      const targetEmp = DataManager.state.roster.find((e) => e.id === empId);
+      const targetEmp = DataManager.state.roster.find((e) => 
+        Utils.isIdMatch(e.id, empId) || 
+        Utils.isIdMatch(e.cccd, empId) || 
+        String(e.id || '').trim().toLowerCase() === String(empId || '').trim().toLowerCase() ||
+        String(e.stt || '').trim() === String(empId || '').trim()
+      );
       if (targetEmp) {
         if (!targetEmp.positions) targetEmp.positions = {};
         const inputs = row.querySelectorAll('.pos-input');
@@ -235,56 +247,127 @@ const AdminManager = {
     const targetInput = document.getElementById('modalStatusTargetEmpId');
     if (targetInput) targetInput.value = empId;
 
+    const cleanEmpId = String(empId || '').trim();
+    const emp = DataManager.state.roster.find((e) => 
+      Utils.isIdMatch(e.id, cleanEmpId) || 
+      Utils.isIdMatch(e.cccd, cleanEmpId) || 
+      String(e.id || '').trim().toLowerCase() === cleanEmpId.toLowerCase() ||
+      String(e.stt || '').trim() === cleanEmpId
+    );
+
+    const infoEl = document.getElementById('modalStatusTargetInfo');
+    if (infoEl) {
+      if (emp) {
+        infoEl.innerHTML = `
+          <div class="font-bold text-sm text-white">${emp.name || 'Nhân viên'}</div>
+          <div class="text-[11px] text-cyan-400 font-mono mt-0.5">Mã: ${emp.id || emp.cccd || cleanEmpId} ${emp.identity ? '• ' + emp.identity : ''}</div>
+        `;
+      } else {
+        infoEl.innerHTML = `<span class="text-slate-300">Nhân sự: ${cleanEmpId}</span>`;
+      }
+    }
+
     const select = document.getElementById('modalStatusSelect');
     if (select) {
-      select.value = '';
+      const curStatus = (emp?.status || 'pending').toLowerCase();
+      if (curStatus === 'confirmed' || curStatus === 'đã điểm danh') {
+        select.value = 'confirmed';
+      } else if (curStatus === 'off' || curStatus === 'xin off') {
+        select.value = 'off';
+      } else if (curStatus === 'xin_len_ca' || curStatus === 'xin lên ca') {
+        select.value = 'xin_len_ca';
+      } else {
+        select.value = 'pending';
+      }
     }
 
     window.App?.openModal('modalCapNhatTrangThai');
   },
 
   /**
-   * Áp dụng trạng thái được chọn từ dropdown
+   * Áp dụng trạng thái được chọn từ dropdown hoặc nút bấm xác nhận
    */
-  handleApplyStatus(selectedStatus) {
+  async handleApplyStatus(selectedStatus) {
     const empId = this._targetStatusEmpId || document.getElementById('modalStatusTargetEmpId')?.value;
-    const emp = DataManager.state.roster.find((e) => e.id === empId);
-    if (!emp || !selectedStatus) return;
+    if (!empId) {
+      Utils.toast('Không tìm thấy thông tin nhân sự', 'warning');
+      return;
+    }
+
+    const cleanEmpId = String(empId || '').trim();
+    const emp = DataManager.state.roster.find((e) => 
+      Utils.isIdMatch(e.id, cleanEmpId) || 
+      Utils.isIdMatch(e.cccd, cleanEmpId) || 
+      String(e.id || '').trim().toLowerCase() === cleanEmpId.toLowerCase() ||
+      String(e.stt || '').trim() === cleanEmpId
+    );
+
+    if (!emp) {
+      Utils.toast('Không tìm thấy nhân viên trong danh sách ca!', 'error');
+      return;
+    }
+
+    const selectEl = document.getElementById('modalStatusSelect');
+    const targetStatus = selectedStatus || selectEl?.value || 'pending';
 
     let statusLabel = '';
-    if (selectedStatus === 'confirmed') {
+    if (targetStatus === 'confirmed') {
       emp.status = 'confirmed';
       emp.checkinTime = Utils.getCurrentVNTime();
       statusLabel = 'Đã Điểm Danh';
-    } else if (selectedStatus === 'pending') {
-      emp.status = 'pending';
-      emp.checkinTime = '';
-      statusLabel = 'Chưa Điểm Danh';
-    } else if (selectedStatus === 'off') {
+    } else if (targetStatus === 'off') {
       emp.status = 'off';
       emp.checkinTime = '';
       statusLabel = 'Xin Off';
-    } else if (selectedStatus === 'xin_len_ca') {
-      emp.status = 'pending';
+    } else if (targetStatus === 'xin_len_ca') {
+      emp.status = 'confirmed';
       emp.identity = 'A-OS';
       emp.checkinTime = Utils.getCurrentVNTime();
-      statusLabel = 'Xin Lên Ca';
+      statusLabel = 'Xin Lên Ca (Đã Điểm Danh)';
+    } else {
+      emp.status = 'pending';
+      emp.checkinTime = '';
+      statusLabel = 'Chưa Điểm Danh';
     }
 
     const shiftSelect = document.getElementById('adminShiftSelect');
     const shiftId = shiftSelect ? shiftSelect.value : DataManager.state.currentShift;
+
+    // 1. Lưu vào LocalStorage
     DataManager.saveCachedRoster(shiftId, DataManager.state.roster);
 
-    // Đồng bộ nhanh sang Firebase nếu có kết nối
-    if (typeof FirebaseService !== 'undefined' && FirebaseService.logCheckin) {
-      FirebaseService.logCheckin(shiftId, emp.id, emp.name, emp.status === 'confirmed');
+    // 2. Lưu lên Firebase Realtime Firestore (Tầng 1 - Realtime Cloud Layer)
+    if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+      FirebaseService.saveRoster(shiftId, DataManager.state.roster).catch((err) => {
+        console.warn('[Firebase] saveRoster error:', err);
+      });
+      if (emp.status === 'confirmed') {
+        FirebaseService.recordCheckinRealtime(shiftId, emp).catch((err) => {
+          console.warn('[Firebase] recordCheckinRealtime error:', err);
+        });
+      }
     }
 
+    // 3. Đồng bộ lên Google Sheets qua GAS (Tầng 2 - Database Cloud Layer)
+    DataManager.callApi('checkin', {
+      shift: shiftId,
+      shiftId: shiftId,
+      identifier: emp.id || emp.cccd || emp.stt,
+      empId: emp.id || emp.cccd,
+      name: emp.name,
+      forceStatus: emp.status,
+      timestamp: emp.checkinTime || ''
+    }).catch((err) => {
+      console.warn('[AdminManager] GAS checkin sync error:', err);
+    });
+
+    // 4. Tính lại số liệu thống kê & Re-render giao diện Bảng Admin
     DataManager.recalculateStats();
     AdminUI.updateStatsCards();
     AdminUI.renderRosterTable();
     AdminUI.renderActivityFeed();
 
+    // 5. Đóng modal và hiển thị toast
     window.App?.closeModal('modalCapNhatTrangThai');
     Utils.toast(`Đã cập nhật: ${emp.name} → ${statusLabel}`, 'success');
   },

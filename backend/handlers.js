@@ -66,11 +66,11 @@ function handleSave(data, shiftId, sheet) {
     var existing = existingMap[idKey];
     
     var finalStatus = emp.status || "pending";
-    var finalTime = emp.timestamp || "";
+    var finalTime = emp.timestamp || emp.checkinTime || "";
     var finalNote = emp.note || "";
     var finalPhone = emp.phone || "";
     
-    if (existing && existing.status && String(existing.status).toLowerCase() !== "pending" && String(existing.status).trim() !== "") {
+    if (!data.forceRosterStatus && existing && existing.status && String(existing.status).toLowerCase() !== "pending" && String(existing.status).trim() !== "") {
        finalStatus = existing.status;
        finalTime = existing.time || finalTime;
        finalNote = existing.note || finalNote;
@@ -627,15 +627,19 @@ function handleCheckin(data, shiftId, sheet) {
       return sendErrorResponse("Không tìm thấy Mã Nhân Viên trong danh sách ca này");
     }
     
-    var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss");
+    var forceMode = Boolean(data.forceStatus);
+    var targetStatus = (data.forceStatus || "confirmed").toString().trim();
+    var timeString = (targetStatus === "confirmed" || targetStatus === "xin_len_ca")
+      ? Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss")
+      : (data.timestamp || "");
     var updatedAny = false;
     
     for (var k = 0; k < foundIndices.length; k++) {
       var i = foundIndices[k];
-      if (values[i][statusIndex] !== "confirmed") {
-        values[i][statusIndex] = "confirmed";
+      if (forceMode || values[i][statusIndex] !== "confirmed") {
+        values[i][statusIndex] = targetStatus;
         values[i][timeIndex] = timeString;
-        sheet.getRange(i + 1, statusIndex + 1, 1, 2).setValues([["confirmed", timeString]]);
+        sheet.getRange(i + 1, statusIndex + 1, 1, 2).setValues([[targetStatus, timeString]]);
         if (data.phone && phoneIndex !== -1) {
           sheet.getRange(i + 1, phoneIndex + 1).setValue(data.phone);
         }
@@ -643,7 +647,7 @@ function handleCheckin(data, shiftId, sheet) {
       }
     }
     
-    if (!updatedAny) {
+    if (!updatedAny && !forceMode) {
       return sendErrorResponse("Nhân viên này đã điểm danh rồi!");
     }
     
@@ -657,7 +661,7 @@ function handleCheckin(data, shiftId, sheet) {
     }
 
     return sendSuccessResponse({ 
-      status: "confirmed",
+      status: targetStatus,
       time: timeString,
       id: values[foundIndices[0]][1],
       name: values[foundIndices[0]][2],
