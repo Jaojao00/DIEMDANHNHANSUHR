@@ -50,6 +50,7 @@ const EmployeeModule = {
     const formCapDoi = document.getElementById('formCapDoiAoThe');
     if (formCapDoi) {
       formCapDoi.addEventListener('submit', (e) => this.handleSubmitCapDoiAoThe(e));
+      this.initItemRequest();
     }
 
     // Form Khiếu Nại
@@ -311,45 +312,232 @@ const EmployeeModule = {
   },
 
   /**
-   * 2.2.3 Xử lý Cấp Đổi Áo Thẻ & Dư Vé
+   * 2.2.3 Xử lý Cấp Đổi Áo Thẻ & Dư Vé (Giao diện cũ phục hồi theo yêu cầu)
    */
+  initItemRequest() {
+    const typeRadios = document.getElementsByName('itemReqType');
+    typeRadios.forEach((radio) => {
+      radio.addEventListener('change', () => this.toggleItemReqFields());
+    });
+
+    const roleEl = document.getElementById('itemReqRole');
+    if (roleEl) {
+      roleEl.addEventListener('change', () => this.calculateItemPrice());
+    }
+
+    const qtyEl = document.getElementById('itemReqQuantity');
+    if (qtyEl) {
+      qtyEl.addEventListener('input', () => this.calculateItemPrice());
+      qtyEl.addEventListener('change', () => this.calculateItemPrice());
+    }
+
+    const openBtn = document.getElementById('openItemReqBtn');
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        const dateInput = document.getElementById('itemReqDate');
+        if (dateInput && !dateInput.value) {
+          dateInput.value = new Date().toISOString().split('T')[0];
+        }
+        this.toggleItemReqFields();
+      });
+    }
+
+    this.toggleItemReqFields();
+  },
+
+  toggleItemReqFields() {
+    let reqType = 'Đổi Áo';
+    const typeRadios = document.getElementsByName('itemReqType');
+    for (const radio of typeRadios) {
+      if (radio.checked) reqType = radio.value;
+    }
+
+    const reasonGroup = document.getElementById('itemReqReasonGroup');
+    const reasonSelect = document.getElementById('itemReqReason');
+    const shirtFields = document.getElementById('itemReqShirtFields');
+    const roleGroup = document.getElementById('itemReqRoleGroup');
+    const roleSelect = document.getElementById('itemReqRole');
+    const quantityGroup = document.getElementById('itemReqQuantityGroup');
+    const quantityInput = document.getElementById('itemReqQuantity');
+    const dateGroup = document.getElementById('itemReqDateGroup');
+    const dateLabel = document.getElementById('itemReqDateLabel');
+    const dateInput = document.getElementById('itemReqDate');
+    const priceGroup = document.getElementById('itemReqPriceGroup');
+
+    if (reasonGroup && reasonSelect) {
+      if (reqType === 'Đổi Áo') {
+        reasonGroup.style.display = 'block';
+        reasonSelect.required = true;
+        reasonSelect.innerHTML = '<option value="">-- Chọn Lý Do --</option><option value="Áo cũ rách">Áo cũ rách</option><option value="Mất áo do sự cố">Mất áo do sự cố</option><option value="Mua thêm áo">Mua thêm áo</option>';
+      } else if (reqType === 'Đổi Thẻ') {
+        reasonGroup.style.display = 'block';
+        reasonSelect.required = true;
+        reasonSelect.innerHTML = '<option value="">-- Chọn Lý Do --</option><option value="Mất thẻ">Mất thẻ</option><option value="Hư thẻ">Hư thẻ</option><option value="Cũ muốn cấp mới">Cũ muốn cấp mới</option><option value="Lý do khác">Lý do khác</option>';
+      } else {
+        // Dư vé
+        reasonGroup.style.display = 'none';
+        reasonSelect.required = false;
+        reasonSelect.innerHTML = '';
+      }
+    }
+
+    if (shirtFields) {
+      if (reqType === 'Đổi Áo') {
+        shirtFields.style.display = 'block';
+        if (roleGroup) roleGroup.style.display = 'block';
+        if (roleSelect) roleSelect.required = true;
+        if (quantityGroup) quantityGroup.style.display = 'block';
+        if (quantityInput) quantityInput.required = true;
+        if (dateGroup) dateGroup.style.display = 'block';
+        if (dateInput) dateInput.required = true;
+        if (dateLabel) dateLabel.innerHTML = 'NGÀY LẤY <span class="text-red-500">*</span>';
+        if (priceGroup) priceGroup.style.display = 'flex';
+      } else if (reqType === 'Dư vé') {
+        shirtFields.style.display = 'block';
+        if (roleGroup) roleGroup.style.display = 'none';
+        if (roleSelect) roleSelect.required = false;
+        if (quantityGroup) quantityGroup.style.display = 'none';
+        if (quantityInput) quantityInput.required = false;
+        if (dateGroup) dateGroup.style.display = 'block';
+        if (dateInput) dateInput.required = true;
+        if (dateLabel) dateLabel.innerHTML = 'NGÀY DƯ VÉ <span class="text-red-500">*</span>';
+        if (priceGroup) priceGroup.style.display = 'flex';
+      } else {
+        // Đổi Thẻ
+        shirtFields.style.display = 'none';
+        if (roleSelect) roleSelect.required = false;
+        if (quantityInput) quantityInput.required = false;
+        if (dateInput) dateInput.required = false;
+      }
+    }
+
+    this.calculateItemPrice();
+  },
+
+  calculateItemPrice() {
+    let reqType = 'Đổi Áo';
+    const typeRadios = document.getElementsByName('itemReqType');
+    for (const radio of typeRadios) {
+      if (radio.checked) reqType = radio.value;
+    }
+
+    const role = document.getElementById('itemReqRole')?.value || '';
+    const quantity = parseInt(document.getElementById('itemReqQuantity')?.value) || 1;
+    const priceEl = document.getElementById('itemReqPrice');
+    if (!priceEl) return;
+
+    if (reqType === 'Dư vé') {
+      priceEl.value = '30.000 đ';
+    } else if (reqType === 'Đổi Áo') {
+      if (role === 'OS') {
+        priceEl.value = (30000 * quantity).toLocaleString('vi-VN') + ' đ';
+      } else if (role === 'BPO') {
+        priceEl.value = (40000 * quantity).toLocaleString('vi-VN') + ' đ';
+      } else if (role === 'S-BPO') {
+        priceEl.value = 'C&B truy thu';
+      } else {
+        priceEl.value = '0 đ';
+      }
+    } else {
+      priceEl.value = '0 đ';
+    }
+  },
+
   async handleSubmitCapDoiAoThe(e) {
     e.preventDefault();
     const form = e.target;
-    const empId = form.empId.value.trim();
-    const empName = form.empName.value.trim();
-    const itemType = form.itemType.value;
-    const shift = form.shift.value;
-    const quantity = form.quantity.value;
-    const pickupDate = form.pickupDate.value;
-    const reason = form.reason.value.trim();
 
-    Utils.showLoading('Đang lưu yêu cầu cấp đổi...');
+    let reqType = 'Đổi Áo';
+    const typeRadios = document.getElementsByName('itemReqType');
+    for (const radio of typeRadios) {
+      if (radio.checked) reqType = radio.value;
+    }
+
+    const empId = (document.getElementById('itemReqEmpId')?.value || '').trim();
+    const name = (document.getElementById('itemReqName')?.value || '').trim();
+    const shift = document.getElementById('itemReqShift')?.value || '';
+
+    if (!empId || !name || !shift) {
+      Utils.toast('Vui lòng điền đầy đủ Mã nhân viên, Họ tên và Ca làm việc', 'warning');
+      return;
+    }
+
+    let role = '';
+    let quantity = '';
+    let pickupDate = '';
+    let price = '';
+    const reasonEl = document.getElementById('itemReqReason');
+    const reason = reasonEl ? reasonEl.value : '';
+
+    if ((reqType === 'Đổi Áo' || reqType === 'Đổi Thẻ') && !reason) {
+      Utils.toast('Vui lòng chọn lý do', 'warning');
+      return;
+    }
+
+    if (reqType === 'Đổi Áo') {
+      role = document.getElementById('itemReqRole')?.value || '';
+      quantity = document.getElementById('itemReqQuantity')?.value || '1';
+      pickupDate = document.getElementById('itemReqDate')?.value || '';
+      price = document.getElementById('itemReqPrice')?.value || '';
+      if (!role || !quantity || !pickupDate) {
+        Utils.toast('Vui lòng điền đầy đủ thông tin chức danh, số lượng và ngày lấy', 'warning');
+        return;
+      }
+    } else if (reqType === 'Dư vé') {
+      pickupDate = document.getElementById('itemReqDate')?.value || '';
+      price = document.getElementById('itemReqPrice')?.value || '30.000 đ';
+      if (!pickupDate) {
+        Utils.toast('Vui lòng chọn ngày dư vé', 'warning');
+        return;
+      }
+    } else if (reqType === 'Đổi Thẻ') {
+      price = '0 đ';
+    }
+
+    const submitBtn = document.getElementById('itemReqSubmitBtn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = 'Đang lưu yêu cầu...';
+    }
+
+    Utils.showLoading('Đang lưu yêu cầu vào hệ thống...');
 
     try {
       const res = await DataManager.callApi('request_item', {
-        empId,
-        empName,
-        itemType,
-        shift,
-        quantity,
-        pickupDate,
-        reason,
+        type: reqType,
+        empId: empId.toUpperCase(),
+        name: name.toUpperCase(),
+        shift: shift,
+        role: role,
+        quantity: quantity,
+        pickupDate: pickupDate,
+        price: price,
+        reason: reason,
         timestamp: Utils.getCurrentVNTime()
       });
 
       Utils.hideLoading();
 
       if (res && res.success) {
-        Utils.showAlert('Thành công', 'Yêu cầu trang thiết bị / vé xe đã được chuyển đến bộ phận hậu cần.', 'success');
+        Utils.showAlert(
+          'Đã Ghi Nhận Thành Công!',
+          `Yêu cầu <strong>${reqType}</strong> của bạn (${name} - ${empId.toUpperCase()}) đã được hệ thống ghi nhận tự động.<br><br><div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-xs font-bold leading-relaxed">✓ Hệ thống đã tự động lưu dữ liệu.<br>Bạn KHÔNG CẦN phải chụp màn hình hay trình báo lại cho Quản trị viên/Quản lý!</div>`,
+          'success'
+        );
         form.reset();
+        this.toggleItemReqFields();
         window.App?.closeModal('modalCapDoiAoThe');
       } else {
         Utils.showAlert('Lỗi', res.message || 'Lỗi gửi yêu cầu', 'error');
       }
     } catch (err) {
       Utils.hideLoading();
-      Utils.showAlert('Lỗi mạng', err.message, 'error');
+      Utils.showAlert('Lỗi kết nối', err.message, 'error');
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Gửi Yêu Cầu';
+      }
     }
   },
 
@@ -605,4 +793,8 @@ const EmployeeModule = {
 
 if (typeof window !== 'undefined') {
   window.EmployeeModule = EmployeeModule;
+  window.ItemRequestModule = {
+    toggleFields: () => EmployeeModule.toggleItemReqFields(),
+    calculatePrice: () => EmployeeModule.calculateItemPrice()
+  };
 }

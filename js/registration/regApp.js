@@ -122,7 +122,7 @@ const RegApp = {
       };
     });
 
-    Utils.showLoading('Đang gửi đăng ký lịch làm việc lên Google Sheets...');
+    Utils.showLoading('Đang lưu đăng ký lịch làm việc vào hệ thống...');
 
     try {
       const payload = {
@@ -144,7 +144,7 @@ const RegApp = {
       if (res && res.success) {
         Utils.showAlert(
           'Đăng Ký Thành Công!',
-          `Lịch làm việc của bạn (${empName} - ${shiftLabel}) đã được ghi nhận trực tiếp vào Google Sheets hệ thống.`,
+          `Lịch làm việc của bạn (${empName} - ${shiftLabel}) đã được ghi nhận thành công.<br><br><div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-xs font-bold leading-relaxed">✓ Hệ thống đã tự động lưu dữ liệu.<br>Bạn KHÔNG CẦN phải chụp màn hình hay trình báo lại cho Quản trị viên/Quản lý!</div>`,
           'success'
         );
         form.reset();
@@ -152,7 +152,7 @@ const RegApp = {
       } else {
         const errorMsg = (res && (res.error || res.message)) 
           ? (res.error || res.message) 
-          : 'Không thể ghi nhận lên Google Sheets. Vui lòng kiểm tra lại!';
+          : 'Không thể ghi nhận vào hệ thống. Vui lòng thử lại sau!';
         Utils.showAlert('Đăng Ký Thất Bại', errorMsg, 'error');
       }
     } catch (err) {

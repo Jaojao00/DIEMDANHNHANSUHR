@@ -198,13 +198,13 @@
           </button>
 
           <!-- Cấp Thẻ Đổi Áo & Dư Vé -->
-          <button data-open-modal="modalCapDoiAoThe" class="bg-white hover:bg-blue-50/50 border border-slate-200 hover:border-blue-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32">
-            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+          <button data-open-modal="modalCapDoiAoThe" id="openItemReqBtn" class="bg-white hover:bg-purple-50/50 border border-purple-200 hover:border-purple-400 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
+            <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
               👕
             </div>
             <div>
-              <div class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition">Đổi Áo, Thẻ, Vé</div>
-              <div class="text-[11px] text-slate-500">Cấp phát đồng phục</div>
+              <div class="font-bold text-slate-800 text-sm group-hover:text-purple-600 transition">Cấp phát & Dư vé</div>
+              <div class="text-[11px] text-slate-500">Đăng ký áo, thẻ hoặc báo dư vé</div>
             </div>
           </button>
 
@@ -843,51 +843,94 @@
 
   <!-- MODAL 3: CẤP ĐỔI ÁO THẺ & DƯ VÉ -->
   <div id="modalCapDoiAoThe" class="custom-modal-backdrop">
-    <div class="custom-modal-content p-6">
+    <div class="custom-modal-content p-6 max-w-lg w-full">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>👕</span> Cấp Đổi Thẻ Nhân Viên, Áo & Dư Vé
+          <span>👕</span> Yêu Cầu Cấp Phát & Dư Vé
         </h3>
-        <button data-close-modal="modalCapDoiAoThe" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+        <button type="button" data-close-modal="modalCapDoiAoThe" id="itemRequestModalCloseBtn" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
 
-      <form id="formCapDoiAoThe" class="space-y-4">
+      <form id="formCapDoiAoThe" autocomplete="off" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mã CTV / Nhân viên:</label>
-          <input type="text" name="empId" required placeholder="VD: OPS10291" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-2">LOẠI YÊU CẦU <span class="text-red-500">*</span></label>
+          <div class="flex items-center gap-4 sm:gap-6 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+            <label class="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-semibold text-slate-700">
+              <input type="radio" name="itemReqType" value="Đổi Áo" checked class="text-purple-600 focus:ring-purple-500" />
+              <span>ĐỔI ÁO</span>
+            </label>
+            <label class="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-semibold text-slate-700">
+              <input type="radio" name="itemReqType" value="Đổi Thẻ" class="text-purple-600 focus:ring-purple-500" />
+              <span>ĐỔI THẺ</span>
+            </label>
+            <label class="inline-flex items-center gap-2 cursor-pointer text-xs sm:text-sm font-semibold text-slate-700">
+              <input type="radio" name="itemReqType" value="Dư vé" class="text-purple-600 focus:ring-purple-500" />
+              <span>DƯ VÉ</span>
+            </label>
+          </div>
         </div>
+
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
-          <input type="text" name="empName" required placeholder="VD: Nguyễn Văn An" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqEmpId">MÃ NHÂN VIÊN <span class="text-red-500">*</span></label>
+          <input type="text" id="itemReqEmpId" name="empId" required placeholder="Ví dụ: OPS12345" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono uppercase focus:border-purple-600 focus:outline-none" />
         </div>
+
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Loại yêu cầu:</label>
-          <select name="itemType" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-semibold focus:border-agari-red focus:outline-none">
-            <option value="Đổi áo đồng phục">Đổi áo đồng phục (Bị rách/sai size)</option>
-            <option value="Cấp thẻ nhân viên mới">Cấp thẻ nhân viên mới (Bị mất/hỏng)</option>
-            <option value="Báo thừa vé xe">Báo thừa vé xe công ty</option>
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqName">HỌ VÀ TÊN <span class="text-red-500">*</span></label>
+          <input type="text" id="itemReqName" name="name" required placeholder="Nhập họ và tên..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm uppercase focus:border-purple-600 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqShift">CA LÀM VIỆC <span class="text-red-500">*</span></label>
+          <select id="itemReqShift" name="shift" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-semibold focus:border-purple-600 focus:outline-none">
+            <option value="">-- Chọn Ca --</option>
+            <option value="Ca Sáng">Ca Sáng (06:00-11:00)</option>
+            <option value="Ca OS Sáng">Ca OS Sáng (06:00-15:00)</option>
+            <option value="Ca Chiều">Ca Chiều (13:00-22:00)</option>
+            <option value="Ca Tối">Ca Tối (18:00-22:00)</option>
+            <option value="Ca Đêm">Ca Đêm (22:00-06:00)</option>
           </select>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Ca làm việc:</label>
-            <input type="text" name="shift" value="18:00-22:00" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono" />
+
+        <div id="itemReqReasonGroup">
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqReason">LÝ DO <span class="text-red-500">*</span></label>
+          <select id="itemReqReason" name="reason" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-purple-600 focus:outline-none">
+            <option value="">-- Chọn Lý Do --</option>
+            <option value="Áo cũ rách">Áo cũ rách</option>
+            <option value="Mất áo do sự cố">Mất áo do sự cố</option>
+            <option value="Mua thêm áo">Mua thêm áo</option>
+          </select>
+        </div>
+
+        <div id="itemReqShirtFields" class="space-y-4">
+          <div id="itemReqRoleGroup">
+            <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqRole">CHỨC DANH <span class="text-red-500">*</span></label>
+            <select id="itemReqRole" name="role" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-purple-600 focus:outline-none">
+              <option value="">-- Chọn Chức Danh --</option>
+              <option value="OS">OS (30.000 đ/áo)</option>
+              <option value="BPO">BPO (40.000 đ/áo)</option>
+              <option value="S-BPO">S-BPO (C&B truy thu)</option>
+            </select>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Số lượng:</label>
-            <input type="number" name="quantity" value="1" min="1" max="5" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono" />
+
+          <div id="itemReqQuantityGroup">
+            <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqQuantity">SỐ LƯỢNG <span class="text-red-500">*</span></label>
+            <input type="number" id="itemReqQuantity" name="quantity" value="1" min="1" max="10" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-purple-600 focus:outline-none" />
+          </div>
+
+          <div id="itemReqDateGroup">
+            <label class="block text-xs font-bold text-slate-700 mb-1" id="itemReqDateLabel" for="itemReqDate">NGÀY LẤY <span class="text-red-500">*</span></label>
+            <input type="date" id="itemReqDate" name="pickupDate" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-purple-600 focus:outline-none" />
+          </div>
+
+          <div id="itemReqPriceGroup" class="p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between">
+            <span class="text-xs font-bold text-purple-900">Chi phí dự kiến:</span>
+            <input type="text" id="itemReqPrice" name="price" readonly class="bg-transparent text-right font-bold text-purple-700 text-sm focus:outline-none" value="0 đ" />
           </div>
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Ngày đến lấy trang bị:</label>
-          <input type="date" name="pickupDate" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Lý do cụ thể:</label>
-          <input type="text" name="reason" placeholder="VD: Thẻ bị mờ mã vạch..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none" />
-        </div>
-        <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow transition">
-          Gửi Yêu Cầu Cấp Đổi
+
+        <button type="submit" id="itemReqSubmitBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white font-bold text-sm shadow-md transition">
+          Gửi Yêu Cầu
         </button>
       </form>
     </div>
