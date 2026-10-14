@@ -3,7 +3,7 @@
 > **Website chính thức:** [diemdanhnhansuhr.vercel.app](https://diemdanhnhansuhr.vercel.app/)  
 > **Master Google Spreadsheet:** `1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI`  
 > **Google Drive Khiếu Nại:** `18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu`  
-> **Google Apps Script Web App Endpoint:** `https://script.google.com/macros/s/AKfycby5jNluqcVJKvOnzQTMMXifq4Xl8IG7_U40_bMA0-ZPa8A60usIhcFdK5gNGb75qC4/exec`
+> **Google Apps Script Web App Endpoint:** `https://script.google.com/macros/s/AKfycbxX_YKQ-Ym6LKzJjbG3_s5D3VB2Cg2A-eW4aZWLH0QLVlaaLleoowndTtOdswPmquqr/exec`
 
 ---
 

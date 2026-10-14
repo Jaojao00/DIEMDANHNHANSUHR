@@ -446,8 +446,12 @@
               </div>
             </div>
 
-            <!-- Action Buttons: Thêm NV, Off hàng loạt, Lưu lịch -->
+            <!-- Action Buttons: Cập Nhật Lịch, Thêm NV, Off hàng loạt, Lưu lịch -->
             <div class="flex flex-wrap items-center gap-2">
+              <button id="btnOpenScheduleModal" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white shadow transition flex items-center gap-1.5">
+                <span>📋</span>
+                <span>Cập Nhật Lịch</span>
+              </button>
               <button id="btnAddTempEmployee" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition">
                 + Thêm Nhân Sự
               </button>
@@ -1079,6 +1083,111 @@
         <button data-close-modal="modalNoiQuy" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
           Đã Nắm Rõ Quy Định
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 9: CẬP NHẬT LỊCH LÀM VIỆC TỪ GOOGLE SHEETS (DÀNH CHO ADMIN) -->
+  <div id="modalCapNhatLich" class="custom-modal-backdrop">
+    <div class="custom-modal-content !max-w-4xl p-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <span>📅</span> Cập Nhật Lịch Làm Việc (Nhập Dữ Liệu Từ Sheets)
+        </h3>
+        <button data-close-modal="modalCapNhatLich" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Bộ chọn ca và ngày -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Ca cần cập nhật:</label>
+            <select id="importScheduleShift" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs font-bold focus:border-agari-red focus:outline-none">
+              <!-- Injected from config -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Ngày làm việc:</label>
+            <input type="date" id="importScheduleDate" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono focus:border-agari-red focus:outline-none" />
+          </div>
+        </div>
+
+        <!-- Vùng dán dữ liệu -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>📋</span>
+              <span>Dán dữ liệu từ Google Sheets:</span>
+            </label>
+            <span class="text-[11px] text-slate-400 font-mono">Bôi đen trên Sheet → Ctrl+C → Dán vào đây</span>
+          </div>
+          <textarea id="pasteScheduleArea" rows="6" placeholder="Dán dữ liệu lịch từ Google Sheets vào đây...&#10;Định dạng cột chuẩn: STT | Mã CTV | Họ Tên | Định Danh | Vị trí đầu ca | Vị trí xoay ca | Ghi chú..."
+                    class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs font-mono focus:border-agari-red focus:outline-none leading-relaxed"></textarea>
+          
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-2">
+            <div class="flex items-center gap-2">
+              <button id="btnParseScheduleData" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>Phân Tích Dữ Liệu</span>
+              </button>
+              <button id="btnClearSchedulePaste" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-600 transition">
+                Xóa
+              </button>
+            </div>
+
+            <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-medium select-none">
+              <input type="checkbox" id="chkResetCheckinStatus" checked class="rounded border-slate-300 text-agari-red focus:ring-0 cursor-pointer" />
+              <span>Bắt đầu ngày mới (Đặt lại trạng thái chưa điểm danh)</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Xem trước danh sách đã phân tích -->
+        <div id="previewScheduleContainer" class="hidden border border-slate-200 rounded-xl overflow-hidden">
+          <div class="bg-slate-100 px-4 py-2.5 border-b border-slate-200 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>👁️</span>
+              <span>Xem Trước Dữ Liệu Lịch Ca</span>
+            </span>
+            <span id="previewScheduleCount" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono">
+              0 nhân sự
+            </span>
+          </div>
+          <div class="max-h-60 overflow-y-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 sticky top-0">
+                <tr>
+                  <th class="p-2.5 text-center">STT</th>
+                  <th class="p-2.5">Mã CTV</th>
+                  <th class="p-2.5">Họ Tên</th>
+                  <th class="p-2.5">Định Danh</th>
+                  <th class="p-2.5">Vị Trí 1</th>
+                  <th class="p-2.5">Vị Trí 2</th>
+                </tr>
+              </thead>
+              <tbody id="previewScheduleTableBody" class="divide-y divide-slate-100 font-mono">
+                <!-- Injected via adminManager.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+          <button id="btnClearShiftSchedule" class="px-4 py-2.5 rounded-xl border border-red-300 hover:bg-red-50 text-red-600 text-xs font-bold transition flex items-center gap-1.5">
+            <span>🗑️</span>
+            <span>Xóa Lịch Ca Này</span>
+          </button>
+          <div class="flex items-center gap-2">
+            <button data-close-modal="modalCapNhatLich" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+              Đóng
+            </button>
+            <button id="btnSaveScheduleToSystem" disabled class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow transition flex items-center gap-1.5">
+              <span>✓</span>
+              <span>Lưu Lịch Vào Hệ Thống</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

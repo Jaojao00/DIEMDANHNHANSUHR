@@ -4,7 +4,7 @@ const CONFIG = {
   APP_NAME: 'Agari HR Operations Portal',
   
   // Google Apps Script REST API Web App Endpoint
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby5jNluqcVJKvOnzQTMMXifq4Xl8IG7_U40_bMA0-ZPa8A60usIhcFdK5gNGb75qC4/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxX_YKQ-Ym6LKzJjbG3_s5D3VB2Cg2A-eW4aZWLH0QLVlaaLleoowndTtOdswPmquqr/exec',
   
   // Google Spreadsheet Master ID
   SPREADSHEET_ID: '1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI',

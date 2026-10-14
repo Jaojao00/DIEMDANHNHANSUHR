@@ -22,6 +22,36 @@ const AdminManager = {
     if (btnMassOff) {
       btnMassOff.addEventListener('click', () => this.promptMassOff());
     }
+
+    // Nút Mở Modal Cập Nhật Lịch Từ Sheets
+    const btnOpenScheduleModal = document.getElementById('btnOpenScheduleModal');
+    if (btnOpenScheduleModal) {
+      btnOpenScheduleModal.addEventListener('click', () => this.openScheduleModal());
+    }
+
+    // Nút Phân Tích Dữ Liệu Dán
+    const btnParse = document.getElementById('btnParseScheduleData');
+    if (btnParse) {
+      btnParse.addEventListener('click', () => this.parsePastedScheduleData());
+    }
+
+    // Nút Xóa Vùng Dán
+    const btnClearPaste = document.getElementById('btnClearSchedulePaste');
+    if (btnClearPaste) {
+      btnClearPaste.addEventListener('click', () => this.clearPasteArea());
+    }
+
+    // Nút Lưu Lịch Đã Nhập Vào Hệ Thống
+    const btnSaveImported = document.getElementById('btnSaveScheduleToSystem');
+    if (btnSaveImported) {
+      btnSaveImported.addEventListener('click', () => this.savePastedSchedule());
+    }
+
+    // Nút Xóa Lịch Ca Này
+    const btnClearShift = document.getElementById('btnClearShiftSchedule');
+    if (btnClearShift) {
+      btnClearShift.addEventListener('click', () => this.clearShiftSchedule());
+    }
   },
 
   /**
@@ -190,6 +220,242 @@ const AdminManager = {
     AdminUI.renderRosterTable();
     AdminUI.renderActivityFeed();
     Utils.toast(`Đã cập nhật: ${emp.name} (${emp.status})`, 'success');
+  },
+
+  // ==================== CẬP NHẬT LỊCH LÀM VIỆC TỪ GOOGLE SHEETS ====================
+  _tempParsedData: [],
+
+  openScheduleModal() {
+    const shiftSelect = document.getElementById('importScheduleShift');
+    const adminShiftSelect = document.getElementById('adminShiftSelect');
+    if (shiftSelect) {
+      shiftSelect.innerHTML = CONFIG.SHIFTS.map((s) => {
+        const isCurrent = adminShiftSelect ? adminShiftSelect.value === s.id : s.isDefault;
+        return `<option value="${s.id}" ${isCurrent ? 'selected' : ''}>${s.label}</option>`;
+      }).join('');
+    }
+
+    const datePicker = document.getElementById('importScheduleDate');
+    const adminDate = document.getElementById('adminShiftDate');
+    if (datePicker) {
+      datePicker.value = adminDate && adminDate.value ? adminDate.value : Utils.formatDateISO();
+    }
+
+    this.clearPasteArea();
+    window.App?.openModal('modalCapNhatLich');
+  },
+
+  clearPasteArea() {
+    const area = document.getElementById('pasteScheduleArea');
+    const preview = document.getElementById('previewScheduleContainer');
+    const saveBtn = document.getElementById('btnSaveScheduleToSystem');
+
+    if (area) area.value = '';
+    if (preview) preview.classList.add('hidden');
+    if (saveBtn) saveBtn.disabled = true;
+    this._tempParsedData = [];
+  },
+
+  parsePastedScheduleData() {
+    const area = document.getElementById('pasteScheduleArea');
+    const text = area ? area.value.trim() : '';
+
+    if (!text) {
+      Utils.toast('Vui lòng dán dữ liệu lịch từ Google Sheets vào khung trước', 'warning');
+      return;
+    }
+
+    const rawRows = text.split(/\r?\n/);
+    const parsed = [];
+
+    // Tìm dòng bắt đầu dữ liệu (bỏ qua dòng tiêu đề STT, Mã CTV,...)
+    let startIndex = 0;
+    while (
+      startIndex < rawRows.length &&
+      (rawRows[startIndex].toLowerCase().includes('stt') ||
+        rawRows[startIndex].toLowerCase().includes('mã ctv') ||
+        rawRows[startIndex].toLowerCase().includes('họ tên') ||
+        rawRows[startIndex].split('\t').length < 2)
+    ) {
+      startIndex++;
+    }
+
+    const chkReset = document.getElementById('chkResetCheckinStatus');
+    const shouldReset = chkReset ? chkReset.checked : true;
+
+    for (let i = startIndex; i < rawRows.length; i++) {
+      const line = rawRows[i].trim();
+      if (!line) continue;
+
+      // Phân tách cột qua Tab (chuẩn khi copy từ Sheets/Excel) hoặc dấu gạch đứng / phẩy
+      let cols = line.split('\t');
+      if (cols.length < 3 && line.includes('|')) {
+        cols = line.split('|').map((c) => c.trim());
+      } else if (cols.length < 3 && line.includes(',')) {
+        cols = line.split(',').map((c) => c.trim());
+      }
+
+      if (cols.length >= 2) {
+        // Dự đoán cấu trúc: [0] STT, [1] Mã NV/CTV, [2] Họ Tên, [3] Định danh, [4] Vị trí 1, [5] Vị trí 2, [6] Ghi chú
+        const rawId = cols[1] !== undefined ? cols[1].trim() : '';
+        const rawName = cols[2] !== undefined ? cols[2].trim() : (cols[1] || '');
+        const identity = cols[3] !== undefined ? cols[3].trim() : 'CTV';
+        const pos1 = cols[4] !== undefined ? cols[4].trim() : '';
+        const pos2 = cols[5] !== undefined ? cols[5].trim() : '';
+        const note = cols[6] !== undefined ? cols[6].trim() : '';
+
+        if (rawId || rawName) {
+          const empId = Utils.sanitizeId(rawId) || `OPS_${parsed.length + 1}`;
+          
+          let empStatus = 'pending';
+          let checkinTime = '';
+
+          // Nếu không chọn reset ngày mới, bảo lưu trạng thái đã điểm danh của hôm nay nếu có
+          if (!shouldReset && DataManager.state.roster && DataManager.state.roster.length > 0) {
+            const existing = DataManager.state.roster.find((e) => Utils.isIdMatch(e.id, empId) || (e.name && e.name.toLowerCase() === rawName.toLowerCase()));
+            if (existing) {
+              empStatus = existing.status || 'pending';
+              checkinTime = existing.checkinTime || '';
+            }
+          }
+
+          parsed.push({
+            stt: parsed.length + 1,
+            id: empId,
+            name: rawName || empId,
+            identity: identity || 'CTV',
+            status: empStatus,
+            checkinTime: checkinTime,
+            note: note,
+            positions: {
+              '18H-20H': pos1 || 'Chưa xếp',
+              '20H-22H': pos2 || 'Chưa xếp'
+            }
+          });
+        }
+      }
+    }
+
+    if (!parsed.length) {
+      Utils.showAlert('Không thể phân tích', 'Không tìm thấy dòng dữ liệu hợp lệ. Vui lòng kiểm tra lại định dạng dữ liệu copy từ Google Sheets.', 'warning');
+      return;
+    }
+
+    this._tempParsedData = parsed;
+
+    // Render Preview
+    const previewContainer = document.getElementById('previewScheduleContainer');
+    const previewCount = document.getElementById('previewScheduleCount');
+    const previewTbody = document.getElementById('previewScheduleTableBody');
+    const saveBtn = document.getElementById('btnSaveScheduleToSystem');
+
+    if (previewContainer) previewContainer.classList.remove('hidden');
+    if (previewCount) previewCount.textContent = `${parsed.length} nhân sự`;
+    if (saveBtn) saveBtn.disabled = false;
+
+    if (previewTbody) {
+      previewTbody.innerHTML = parsed.slice(0, 100).map((emp) => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+          <td class="p-2 text-center text-slate-400 font-mono">${emp.stt}</td>
+          <td class="p-2 font-bold text-slate-900">${emp.id}</td>
+          <td class="p-2 text-slate-800 font-sans font-medium">${emp.name}</td>
+          <td class="p-2 text-slate-500">${emp.identity}</td>
+          <td class="p-2 text-slate-700">${emp.positions['18H-20H']}</td>
+          <td class="p-2 text-slate-700">${emp.positions['20H-22H']}</td>
+        </tr>
+      `).join('');
+    }
+
+    Utils.toast(`Đã phân tích thành công ${parsed.length} nhân sự`, 'success');
+  },
+
+  async savePastedSchedule() {
+    if (!this._tempParsedData || !this._tempParsedData.length) {
+      Utils.toast('Chưa có dữ liệu nào được phân tích để lưu', 'warning');
+      return;
+    }
+
+    const shiftSelect = document.getElementById('importScheduleShift');
+    const datePicker = document.getElementById('importScheduleDate');
+    const targetShift = shiftSelect ? shiftSelect.value : DataManager.state.currentShift;
+    const targetDate = datePicker && datePicker.value ? datePicker.value : Utils.formatDateISO();
+
+    Utils.showLoading('Đang lưu lịch ca vào Google Sheets & Firebase...');
+
+    try {
+      const res = await DataManager.callApi('save', {
+        shift: targetShift,
+        date: targetDate,
+        roster: this._tempParsedData
+      });
+
+      Utils.hideLoading();
+
+      // Cập nhật State và Cache cục bộ
+      DataManager.state.roster = this._tempParsedData;
+      DataManager.saveCachedRoster(targetShift, this._tempParsedData);
+      DataManager.recalculateStats();
+
+      // Đồng bộ sang Admin UI
+      const adminShiftSelect = document.getElementById('adminShiftSelect');
+      const adminDateSelect = document.getElementById('adminShiftDate');
+      if (adminShiftSelect) adminShiftSelect.value = targetShift;
+      if (adminDateSelect) adminDateSelect.value = targetDate;
+
+      AdminUI.updateStatsCards();
+      AdminUI.renderRosterTable();
+      AdminUI.renderActivityFeed();
+
+      Utils.showAlert(
+        'Cập Nhật Lịch Thành Công!',
+        `Đã cập nhật thành công <strong>${this._tempParsedData.length}</strong> nhân sự vào ca <strong>${targetShift}</strong> ngày <strong>${targetDate}</strong>.`,
+        'success'
+      );
+
+      window.App?.closeModal('modalCapNhatLich');
+      this.clearPasteArea();
+    } catch (err) {
+      Utils.hideLoading();
+      Utils.showAlert('Lỗi', err.message, 'error');
+    }
+  },
+
+  async clearShiftSchedule() {
+    const shiftSelect = document.getElementById('importScheduleShift');
+    const targetShift = shiftSelect ? shiftSelect.value : DataManager.state.currentShift;
+
+    const confirm = await Utils.confirm(
+      'Xác nhận xóa lịch ca',
+      `Bạn có chắc chắn muốn xóa toàn bộ lịch của ca <strong>${targetShift}</strong> để làm mới từ đầu không?`
+    );
+
+    if (!confirm.isConfirmed) return;
+
+    Utils.showLoading('Đang xóa lịch ca...');
+
+    try {
+      await DataManager.callApi('save', {
+        shift: targetShift,
+        date: DataManager.state.currentDate,
+        roster: []
+      });
+
+      Utils.hideLoading();
+      DataManager.state.roster = [];
+      DataManager.saveCachedRoster(targetShift, []);
+      DataManager.recalculateStats();
+
+      AdminUI.updateStatsCards();
+      AdminUI.renderRosterTable();
+      AdminUI.renderActivityFeed();
+
+      Utils.toast('Đã làm trống lịch ca trực thành công!', 'info');
+      window.App?.closeModal('modalCapNhatLich');
+      this.clearPasteArea();
+    } catch (err) {
+      Utils.hideLoading();
+      Utils.showAlert('Lỗi', err.message, 'error');
+    }
   }
 };
 
