@@ -4,9 +4,19 @@ const CONFIG = {
   APP_NAME: 'Agari HR Operations Portal',
   
   // Google Apps Script REST API Web App Endpoint
-  APPS_SCRIPT_URL: (typeof localStorage !== 'undefined' && localStorage.getItem('agari_custom_gas_url'))
-    ? localStorage.getItem('agari_custom_gas_url')
-    : 'https://script.google.com/macros/s/AKfycbxX_YKQ-Ym6LKzJjbG3_s5D3VB2Cg2A-eW4aZWLH0QLVlaaLleoowndTtOdswPmquqr/exec',
+  APPS_SCRIPT_URL: (() => {
+    const defaultUrl = 'https://script.google.com/macros/s/AKfycbylpjDaK0AjUVrG6DV9F_1I2-lbHvT9qHMVuYR_MQ85BIulbWeckUadVB1m47isx2cx/exec';
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem('agari_custom_gas_url');
+      if (stored && !stored.includes('AKfycbxX_YKQ') && stored.startsWith('https://script.google.com')) {
+        return stored;
+      }
+      try {
+        localStorage.setItem('agari_custom_gas_url', defaultUrl);
+      } catch (e) {}
+    }
+    return defaultUrl;
+  })(),
   
   // Google Spreadsheet Master ID
   SPREADSHEET_ID: '1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI',
