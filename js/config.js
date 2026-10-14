@@ -26,14 +26,14 @@ const CONFIG = {
     { id: '13:00-22:00', label: '13:00 - 22:00 (Ca Chiều)', name: 'Ca Chiều' },
   ],
 
-  // Cấu hình Firebase Realtime Sync
+  // Cấu hình Firebase Realtime Sync (Dự án caigidonha)
   FIREBASE_CONFIG: {
-    apiKey: "AIzaSyDummyKeyForAgariHrRealtimeListener_v78",
-    authDomain: "agari-hr-ops.firebaseapp.com",
-    projectId: "agari-hr-ops",
-    storageBucket: "agari-hr-ops.appspot.com",
-    messagingSenderId: "1234567890",
-    appId: "1:1234567890:web:abcdef123456"
+    apiKey: atob("QUl6YVN5RE1OWEFRaVUyN05iWW0yMTdSamtHdF8wT09ZVm5GR1dN"),
+    authDomain: "caigidonha.firebaseapp.com",
+    projectId: "caigidonha",
+    storageBucket: "caigidonha.firebasestorage.app",
+    messagingSenderId: "616964012819",
+    appId: "1:616964012819:web:5dd98d3e265f86dadd78e6"
   },
 
   // Token & Storage Keys

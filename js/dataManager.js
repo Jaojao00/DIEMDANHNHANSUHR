@@ -113,22 +113,30 @@ const DataManager = {
     this.state.currentShift = shiftId;
     this.state.currentDate = date;
 
-    // Tầng 3: Tải ngay dữ liệu cache để hiển thị tức thì (0ms)
-    const cached = this.getCachedRoster(shiftId);
-    if (cached && cached.length) {
-      this.state.roster = cached;
-      this.recalculateStats();
+    // Tầng 1: Đọc từ Firebase Firestore trước (tránh phụ thuộc LocalStorage gây lỗi dữ liệu cũ)
+    try {
+      if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+        const firestoreRoster = await FirebaseService.loadRoster(shiftId);
+        if (firestoreRoster && firestoreRoster.length) {
+          this.state.roster = firestoreRoster;
+          this.recalculateStats();
+        }
+      }
+    } catch (e) {
+      console.warn('[DataManager] Firestore loadRoster fallback:', e);
     }
 
-    // Tầng 2: Fetch từ Google Sheets qua GAS Web App
+    // Tầng 2: Đồng bộ trực tiếp từ Google Sheets qua GAS Web App
     try {
       const res = await this.callApi('get_roster', { shift: shiftId, date: date });
       if (res && res.success && Array.isArray(res.data)) {
         this.state.roster = res.data;
-        this.saveCachedRoster(shiftId, res.data);
         this.recalculateStats();
-      } else if (!cached || !cached.length) {
-        // Tạo dữ liệu ban đầu nếu chưa có dữ liệu mẫu
+        // Cập nhật lên Firebase Firestore để các máy khác nhận được ngay lập tức
+        if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+          FirebaseService.saveRoster(shiftId, res.data);
+        }
+      } else if (!this.state.roster || !this.state.roster.length) {
         this.initDemoRoster(shiftId);
       }
     } catch (err) {

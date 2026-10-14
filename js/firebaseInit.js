@@ -89,6 +89,73 @@ const FirebaseService = {
   },
 
   /**
+   * Cập nhật trạng thái điểm danh thủ công từ Admin lên Firestore
+   */
+  async logCheckin(shiftId, empId, empName, isConfirmed) {
+    if (!this.isInitialized || !this.db) return false;
+    try {
+      const today = Utils.formatDateISO();
+      const docRef = this.db.doc(`shifts/${today}_${shiftId}`);
+      await docRef.set({
+        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+        employees: firebase.firestore.FieldValue.arrayUnion({
+          id: empId,
+          name: empName,
+          timestamp: Utils.getCurrentVNTime(),
+          status: isConfirmed ? 'confirmed' : 'pending'
+        })
+      }, { merge: true });
+      return true;
+    } catch (e) {
+      console.warn('[Firebase] logCheckin error:', e);
+      return false;
+    }
+  },
+
+  /**
+   * Lưu toàn bộ Roster lên Firestore để đồng bộ giữa các máy Admin và Nhân viên
+   */
+  async saveRoster(shiftId, rosterData) {
+    if (!this.isInitialized || !this.db) return false;
+    try {
+      const today = Utils.formatDateISO();
+      const rosterRef = this.db.doc(`rosters/${today}_${shiftId}`);
+      await rosterRef.set({
+        date: today,
+        shiftId: shiftId,
+        employees: rosterData || [],
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      return true;
+    } catch (e) {
+      console.warn('[Firebase] saveRoster error:', e);
+      return false;
+    }
+  },
+
+  /**
+   * Đọc Roster trực tiếp từ Firestore nếu có
+   */
+  async loadRoster(shiftId) {
+    if (!this.isInitialized || !this.db) return null;
+    try {
+      const today = Utils.formatDateISO();
+      const rosterRef = this.db.doc(`rosters/${today}_${shiftId}`);
+      const snap = await rosterRef.get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (Array.isArray(data.employees) && data.employees.length > 0) {
+          return data.employees;
+        }
+      }
+      return null;
+    } catch (e) {
+      console.warn('[Firebase] loadRoster error:', e);
+      return null;
+    }
+  },
+
+  /**
    * Hủy tất cả listeners khi chuyển ca
    */
   clearListeners() {
