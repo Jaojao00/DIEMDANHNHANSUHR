@@ -383,52 +383,52 @@ const EmployeeModule = {
     let positionsHtml = '';
     if (posKeys.length > 0) {
       positionsHtml = posKeys.map((k) => `
-        <div class="bg-[#1e2030] rounded-xl p-3 border border-slate-700/80 text-center shadow-sm">
-          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">${k}</div>
-          <div class="text-base font-extrabold text-emerald-400 mt-1">${positions[k] || 'Chưa xếp'}</div>
+        <div class="bg-white rounded-xl p-3 border border-emerald-200/80 text-center shadow-sm">
+          <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">${k}</div>
+          <div class="text-base font-extrabold text-emerald-700 mt-1">${positions[k] || 'Chưa xếp'}</div>
         </div>
       `).join('');
     } else {
       positionsHtml = `
-        <div class="col-span-full bg-amber-500/10 rounded-xl p-3.5 border border-amber-500/30 text-amber-300 text-sm font-medium text-center">
+        <div class="col-span-full bg-amber-50 rounded-xl p-3.5 border border-amber-200 text-amber-800 text-sm font-medium text-center">
           ⏳ Đang chờ Quản lý phân bổ vị trí trực tiếp tại kho ca trực.
         </div>
       `;
     }
 
     const warningHtml = hasEmptyPosition ? `
-      <div class="mt-4 p-3.5 bg-amber-500/10 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-3">
-        <span class="text-amber-400 text-xl font-bold npw-icon">⚠️</span>
-        <div class="text-xs text-amber-200/90 leading-relaxed">
-          <strong class="font-semibold block text-sm text-amber-300">Cảnh báo vị trí làm việc:</strong>
+      <div class="mt-4 p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-3">
+        <span class="text-amber-500 text-xl font-bold npw-icon">⚠️</span>
+        <div class="text-xs text-amber-900 leading-relaxed">
+          <strong class="font-semibold block text-sm text-amber-800">Cảnh báo vị trí làm việc:</strong>
           Bạn chưa được phân bổ đầy đủ vị trí hoặc đang ở trạng thái <em>"Chưa xếp"</em>. Vui lòng liên hệ ngay <strong>Admin / Zalo ca trực</strong> tại chốt kiểm soát để nhận nhiệm vụ!
         </div>
       </div>
     ` : '';
 
     resultContainer.innerHTML = `
-      <div class="bg-[#181a29] border-2 border-emerald-500/80 rounded-2xl p-5 shadow-2xl relative overflow-hidden animate-fade-in">
-        <div class="flex items-center justify-between pb-3.5 border-b border-slate-800">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xl font-bold">
+      <div class="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/80 rounded-2xl p-5 sm:p-6 shadow-lg shadow-emerald-500/10 relative overflow-hidden animate-fade-in">
+        <div class="flex items-center justify-between pb-3.5 border-b border-emerald-200">
+          <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl font-bold shadow-md">
               ✓
             </div>
             <div>
-              <h3 class="text-base sm:text-lg font-bold text-white">${emp.name || 'Nhân Viên'}</h3>
-              <div class="text-xs text-slate-400 font-mono mt-0.5">${emp.id || emp.empId || ''} ${emp.cccd ? '| CCCD: ' + emp.cccd : ''}</div>
+              <h3 class="text-base sm:text-lg font-extrabold text-slate-900">${emp.name || 'Nhân Viên'}</h3>
+              <div class="text-xs text-slate-600 font-mono mt-0.5">${emp.id || emp.empId || ''} ${emp.cccd ? '| CCCD: ' + emp.cccd : ''}</div>
             </div>
           </div>
           <div class="text-right">
-            <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 inline-flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5 shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               ĐÃ ĐIỂM DANH
             </span>
-            <div class="text-xs text-slate-400 font-mono mt-1">${emp.checkinTime || Utils.getCurrentVNTime()}</div>
+            <div class="text-xs text-slate-500 font-mono mt-1 font-semibold">${emp.checkinTime || Utils.getCurrentVNTime()}</div>
           </div>
         </div>
 
         <div class="mt-4">
-          <div class="text-xs font-bold uppercase text-slate-400 mb-2.5 tracking-wider flex items-center gap-1.5">
+          <div class="text-xs font-bold uppercase text-slate-600 mb-2.5 tracking-wider flex items-center gap-1.5">
             <span>📍 Vị Trí Làm Việc Phân Bổ</span>
           </div>
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">

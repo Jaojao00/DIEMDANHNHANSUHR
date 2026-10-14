@@ -117,157 +117,128 @@
       <!-- 2.1 ĐIỂM DANH THEO CA (2 GIAI ĐOẠN: CHỌN CA -> NHẬP THÔNG TIN ĐIỂM DANH) -->
       <div class="max-w-xl mx-auto">
         <!-- GIAI ĐOẠN 1: CHỌN CA LÀM VIỆC (PHASE SHIFT) -->
-        <div id="phaseShiftSelection" class="bg-[#12131c]/95 backdrop-blur-md rounded-3xl p-5 sm:p-7 border border-slate-800 shadow-2xl">
-          <div class="text-center mb-5">
-            <h2 class="text-xs sm:text-sm font-semibold text-slate-400 tracking-wide">
-              Chọn ca làm việc của bạn để bắt đầu điểm danh
+        <!-- GIAI ĐOẠN 1: CHỌN CA LÀM VIỆC (PHASE SHIFT) -->
+        <div id="phaseShiftSelection" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xl shadow-slate-200/40">
+          <div class="text-center mb-6">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-agari-red text-xs font-bold uppercase tracking-wider mb-2 border border-red-100">
+              <span>⏰</span>
+              <span>Chọn Ca Làm Việc</span>
+            </span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight">
+              Bắt Đầu Phiên Điểm Danh
             </h2>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              Vui lòng chọn ca trực của bạn bên dưới để tiếp tục
+            </p>
           </div>
 
-          <div class="space-y-3" id="shiftCardsList">
-            <!-- Ca Sáng -->
-            <div data-shift="06:00-11:00" class="shift-card-item flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1e2030]/90 hover:bg-[#25283d] active:scale-[0.99] border border-slate-700/40 border-l-4 border-l-[#3B82F6] cursor-pointer transition shadow-md group">
-              <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-blue-500/15 flex items-center justify-center text-2xl group-hover:scale-110 transition">
-                  🌅
-                </div>
-                <div>
-                  <div class="text-white font-bold text-sm sm:text-base group-hover:text-blue-400 transition">Ca Sáng</div>
-                  <div class="font-mono text-xs text-blue-400/90 font-medium tracking-wider">06:00-11:00</div>
-                </div>
-              </div>
-              <div class="text-slate-500 group-hover:text-blue-400 group-hover:translate-x-1 transition text-lg font-bold pr-2">
-                →
-              </div>
-            </div>
+          <div class="space-y-3.5" id="shiftCardsList">
+            <!-- Ca Sáng, Ca OS Sáng, Ca Chiều: ẨN ĐI THEO ẢNH 2 -->
+            <div data-shift="06:00-11:00" class="shift-card-item hidden"></div>
+            <div data-shift="06:00-15:00" class="shift-card-item hidden"></div>
+            <div data-shift="13:00-22:00" class="shift-card-item hidden"></div>
 
-            <!-- Ca OS Sáng -->
-            <div data-shift="06:00-15:00" class="shift-card-item flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1e2030]/90 hover:bg-[#25283d] active:scale-[0.99] border border-slate-700/40 border-l-4 border-l-[#10B981] cursor-pointer transition shadow-md group">
-              <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-emerald-500/15 flex items-center justify-center text-2xl group-hover:scale-110 transition">
-                  🚀
-                </div>
-                <div>
-                  <div class="text-white font-bold text-sm sm:text-base group-hover:text-emerald-400 transition">Ca OS Sáng</div>
-                  <div class="font-mono text-xs text-emerald-400/90 font-medium tracking-wider">06:00-15:00</div>
-                </div>
-              </div>
-              <div class="text-slate-500 group-hover:text-emerald-400 group-hover:translate-x-1 transition text-lg font-bold pr-2">
-                →
-              </div>
-            </div>
-
-            <!-- Ca Chiều -->
-            <div data-shift="13:00-22:00" class="shift-card-item flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1e2030]/90 hover:bg-[#25283d] active:scale-[0.99] border border-amber-500/50 border-l-4 border-l-[#F59E0B] cursor-pointer transition shadow-md group">
-              <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-amber-500/15 flex items-center justify-center text-2xl group-hover:scale-110 transition">
-                  🌇
-                </div>
-                <div>
-                  <div class="text-white font-bold text-sm sm:text-base group-hover:text-amber-400 transition">Ca Chiều</div>
-                  <div class="font-mono text-xs text-amber-400/90 font-medium tracking-wider">13:00-22:00</div>
-                </div>
-              </div>
-              <div class="text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition text-lg font-bold pr-2">
-                →
-              </div>
-            </div>
-
-            <!-- Ca Tối -->
-            <div data-shift="18:00-22:00" class="shift-card-item flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1e2030]/90 hover:bg-[#25283d] active:scale-[0.99] border border-slate-700/40 border-l-4 border-l-[#F97316] cursor-pointer transition shadow-md group">
-              <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-orange-500/15 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+            <!-- Ca Tối (Hiển thị) -->
+            <div data-shift="18:00-22:00" class="shift-card-item flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-slate-50/70 hover:bg-white active:scale-[0.99] border border-slate-200/90 hover:border-orange-300 border-l-4 border-l-[#F97316] cursor-pointer transition shadow-sm hover:shadow-md group">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-orange-100/80 text-orange-600 flex items-center justify-center text-2xl group-hover:scale-110 transition shadow-inner">
                   🌃
                 </div>
                 <div>
-                  <div class="text-white font-bold text-sm sm:text-base group-hover:text-orange-400 transition">Ca Tối</div>
-                  <div class="font-mono text-xs text-orange-400/90 font-medium tracking-wider">18:00-22:00</div>
+                  <div class="text-slate-800 font-extrabold text-base sm:text-lg group-hover:text-orange-600 transition">Ca Tối</div>
+                  <div class="font-mono text-xs sm:text-sm text-orange-600 font-semibold tracking-wider mt-0.5">18:00 - 22:00</div>
                 </div>
               </div>
-              <div class="text-slate-500 group-hover:text-orange-400 group-hover:translate-x-1 transition text-lg font-bold pr-2">
-                →
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-400 group-hover:text-orange-600 transition hidden sm:inline">Vào điểm danh</span>
+                <div class="w-9 h-9 rounded-xl bg-white group-hover:bg-orange-50 border border-slate-200/80 group-hover:border-orange-200 flex items-center justify-center text-slate-400 group-hover:text-orange-600 group-hover:translate-x-0.5 transition shadow-sm font-bold">
+                  →
+                </div>
               </div>
             </div>
 
-            <!-- Ca Đêm -->
-            <div data-shift="22:00-06:00" class="shift-card-item flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-[#1e2030]/90 hover:bg-[#25283d] active:scale-[0.99] border border-slate-700/40 border-l-4 border-l-[#8B5CF6] cursor-pointer transition shadow-md group">
-              <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-purple-500/15 flex items-center justify-center text-2xl group-hover:scale-110 transition">
+            <!-- Ca Đêm (Hiển thị) -->
+            <div data-shift="22:00-06:00" class="shift-card-item flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-slate-50/70 hover:bg-white active:scale-[0.99] border border-slate-200/90 hover:border-purple-300 border-l-4 border-l-[#8B5CF6] cursor-pointer transition shadow-sm hover:shadow-md group">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-purple-100/80 text-purple-600 flex items-center justify-center text-2xl group-hover:scale-110 transition shadow-inner">
                   🌙
                 </div>
                 <div>
-                  <div class="text-white font-bold text-sm sm:text-base group-hover:text-purple-400 transition">Ca Đêm</div>
-                  <div class="font-mono text-xs text-purple-400/90 font-medium tracking-wider">22:00-06:00</div>
+                  <div class="text-slate-800 font-extrabold text-base sm:text-lg group-hover:text-purple-600 transition">Ca Đêm</div>
+                  <div class="font-mono text-xs sm:text-sm text-purple-600 font-semibold tracking-wider mt-0.5">22:00 - 06:00</div>
                 </div>
               </div>
-              <div class="text-slate-500 group-hover:text-purple-400 group-hover:translate-x-1 transition text-lg font-bold pr-2">
-                →
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-400 group-hover:text-purple-600 transition hidden sm:inline">Vào điểm danh</span>
+                <div class="w-9 h-9 rounded-xl bg-white group-hover:bg-purple-50 border border-slate-200/80 group-hover:border-purple-200 flex items-center justify-center text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition shadow-sm font-bold">
+                  →
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <!-- GIAI ĐOẠN 2: FORM ĐIỂM DANH (PHASE ATTENDANCE) -->
-        <div id="phaseAttendanceForm" class="hidden bg-[#12131c]/95 backdrop-blur-md rounded-3xl p-5 sm:p-7 border border-slate-800 shadow-2xl">
+        <div id="phaseAttendanceForm" class="hidden bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xl shadow-slate-200/40">
           <!-- Topbar -->
-          <div class="flex items-center justify-between pb-4 border-b border-slate-800/80 mb-5">
-            <button type="button" id="btnBackToShifts" class="w-10 h-10 rounded-xl bg-[#24273a] hover:bg-[#2d3148] text-white flex items-center justify-center transition shadow-sm font-bold text-lg" title="Quay lại chọn ca">
+          <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+            <button type="button" id="btnBackToShifts" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 flex items-center justify-center transition shadow-sm font-bold text-lg" title="Quay lại chọn ca">
               ←
             </button>
-            <div id="attShiftPill" class="px-4 py-2 rounded-xl bg-[#24273a] border border-slate-700/60 flex items-center gap-2 shadow-inner">
-              <span id="attShiftIcon" class="text-base">🌙</span>
-              <span id="attShiftLabel" class="font-bold text-white text-sm">Ca Đêm</span>
-              <span id="attShiftTime" class="font-mono text-xs text-slate-400 font-semibold">22:00-06:00</span>
+            <div id="attShiftPill" class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-2 shadow-inner">
+              <span id="attShiftIcon" class="text-lg">🌙</span>
+              <span id="attShiftLabel" class="font-extrabold text-slate-800 text-sm">Ca Đêm</span>
+              <span id="attShiftTime" class="font-mono text-xs text-slate-500 font-semibold bg-white px-2 py-0.5 rounded-lg border border-slate-200">22:00 - 06:00</span>
             </div>
-            <div id="attClockSm" class="font-mono font-bold text-white text-sm sm:text-base tracking-wider">
+            <div id="attClockSm" class="font-mono font-bold text-slate-800 text-sm sm:text-base tracking-wider bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
               --:--:--
             </div>
           </div>
 
           <!-- Hidden select for compatibility -->
           <select id="empShiftSelect" class="hidden">
+            <option value="18:00-22:00" selected>Ca Tối (18:00-22:00)</option>
+            <option value="22:00-06:00">Ca Đêm (22:00-06:00)</option>
             <option value="06:00-11:00">Ca Sáng (06:00-11:00)</option>
             <option value="06:00-15:00">Ca OS Sáng (06:00-15:00)</option>
             <option value="13:00-22:00">Ca Chiều (13:00-22:00)</option>
-            <option value="18:00-22:00" selected>Ca Tối (18:00-22:00)</option>
-            <option value="22:00-06:00">Ca Đêm (22:00-06:00)</option>
           </select>
 
           <!-- Attendance Form -->
           <form id="attendanceForm" autocomplete="off" class="space-y-4">
             <!-- Mã Nhân Viên -->
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5" for="empIdentifierInput">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" for="empIdentifierInput">
                 MÃ NHÂN VIÊN <span class="text-agari-red">*</span>
               </label>
               <div class="relative">
                 <input type="text" id="empIdentifierInput" name="empId" required placeholder="VD: Ops224190"
-                       class="w-full bg-[#1e2030] border border-slate-700/90 text-white text-base font-mono rounded-xl p-3.5 pl-4 pr-11 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition uppercase placeholder:normal-case placeholder:text-slate-500 font-medium" />
-                <button type="button" id="btnAutoLookup" class="absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400 hover:text-white transition" title="Tra cứu mã">
+                       class="w-full bg-slate-50 hover:bg-slate-50/80 focus:bg-white border border-slate-200 text-slate-900 text-base font-mono rounded-xl p-3.5 pl-4 pr-11 focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:outline-none transition uppercase placeholder:normal-case placeholder:text-slate-400 font-semibold shadow-sm" />
+                <button type="button" id="btnAutoLookup" class="absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400 hover:text-agari-red transition" title="Tra cứu mã">
                   🔍
                 </button>
               </div>
               <div class="text-[11px] text-slate-500 mt-1.5">
-                Dạng: Ops + 5-6 chữ số
+                Dạng: Ops + 5-6 chữ số (Tự động nhận diện họ tên & số điện thoại)
               </div>
             </div>
 
             <!-- Họ và Tên -->
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5" for="employeeName">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" for="employeeName">
                 HỌ VÀ TÊN <span class="text-agari-red">*</span>
               </label>
               <input type="text" id="employeeName" name="empName" required placeholder="Nhập họ và tên đầy đủ"
-                     class="w-full bg-[#1e2030] border border-slate-700/90 text-white text-base rounded-xl p-3.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition uppercase placeholder:normal-case placeholder:text-slate-500 font-medium" />
+                     class="w-full bg-slate-50 hover:bg-slate-50/80 focus:bg-white border border-slate-200 text-slate-900 text-base rounded-xl p-3.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:outline-none transition uppercase placeholder:normal-case placeholder:text-slate-400 font-semibold shadow-sm" />
             </div>
 
             <!-- Số Điện Thoại Zalo -->
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5" for="employeePhone">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" for="employeePhone">
                 SỐ ĐIỆN THOẠI ZALO <span class="text-agari-red">*</span>
               </label>
               <input type="tel" id="employeePhone" name="phone" required placeholder="VD: 0901234567" maxlength="11"
-                     class="w-full bg-[#1e2030] border border-slate-700/90 text-white font-mono text-base rounded-xl p-3.5 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition placeholder:text-slate-500 font-medium" />
+                     class="w-full bg-slate-50 hover:bg-slate-50/80 focus:bg-white border border-slate-200 text-slate-900 font-mono text-base rounded-xl p-3.5 focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:outline-none transition placeholder:text-slate-400 font-semibold shadow-sm" />
               <div class="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1.5">
                 <span>🛡️</span>
                 <span>Chỉ dùng để xác minh khi cần, không hiển thị công khai</span>
@@ -275,7 +246,7 @@
             </div>
 
             <!-- Nút Xác Nhận Điểm Danh -->
-            <button type="submit" id="btnQuickCheckin" class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-[#E8590C] to-[#D90012] hover:from-[#D9480F] hover:to-[#B3000E] active:scale-[0.99] text-white font-extrabold text-base tracking-wide shadow-lg shadow-orange-900/30 transition flex items-center justify-center gap-2 mt-2">
+            <button type="submit" id="btnQuickCheckin" class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-[#D90012] to-[#FF2A3A] hover:from-[#B3000E] hover:to-[#E62030] active:scale-[0.99] text-white font-extrabold text-base tracking-wide shadow-lg shadow-red-500/25 transition flex items-center justify-center gap-2 mt-2">
               <span>📝</span>
               <span>Xác Nhận Điểm Danh</span>
             </button>
