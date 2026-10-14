@@ -104,7 +104,13 @@ const AdminManager = {
         const inputs = row.querySelectorAll('.pos-input');
         inputs.forEach((inp) => {
           const key = inp.dataset.posKey;
-          targetEmp.positions[key] = inp.value.trim();
+          const val = inp.value.trim();
+          if (key === 'NOTE') {
+            targetEmp.note = val;
+            targetEmp.positions['NOTE'] = val;
+          } else {
+            targetEmp.positions[key] = val;
+          }
         });
       }
     });
@@ -112,7 +118,8 @@ const AdminManager = {
     Utils.showLoading('Đang lưu lịch và đồng bộ lên Google Sheets & Firebase...');
 
     try {
-      const res = await DataManager.saveSchedule(shiftId, DataManager.state.roster, ['18H-20H', '20H-22H']);
+      const colHeaders = ['Vị trí cố định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'];
+      const res = await DataManager.saveSchedule(shiftId, DataManager.state.roster, colHeaders);
       Utils.hideLoading();
 
       if (res && res.success) {
@@ -421,13 +428,22 @@ const AdminManager = {
       }
 
       if (cols.length >= 2) {
-        // Dự đoán cấu trúc: [0] STT, [1] Mã NV/CTV, [2] Họ Tên, [3] Định danh, [4] Vị trí 1, [5] Vị trí 2, [6] Ghi chú
+        // Cấu trúc chuẩn theo Google Sheets:
+        // [0] STT, [1] Mã CTV, [2] Họ tên, [3] Định danh, [4] Vị trí cố định, [5] SAU GIỜ NGHỈ, [6] 4h-6h, [7] Xuất Tải, [8] NOTE
         const rawId = cols[1] !== undefined ? cols[1].trim() : '';
         const rawName = cols[2] !== undefined ? cols[2].trim() : (cols[1] || '');
-        const identity = cols[3] !== undefined ? cols[3].trim() : 'CTV';
+        const identity = cols[3] !== undefined ? cols[3].trim() : 'A-OS';
         const pos1 = cols[4] !== undefined ? cols[4].trim() : '';
         const pos2 = cols[5] !== undefined ? cols[5].trim() : '';
-        const note = cols[6] !== undefined ? cols[6].trim() : '';
+        const pos3 = cols[6] !== undefined ? cols[6].trim() : '';
+        const pos4 = cols[7] !== undefined ? cols[7].trim() : '';
+        const note = cols[8] !== undefined ? cols[8].trim() : '';
+
+        // Bỏ qua dòng tiêu đề nếu copy cả header
+        const lowerId = rawId.toLowerCase();
+        if (lowerId === 'mã ctv' || lowerId === 'mã ops' || lowerId === 'mã nv' || rawName.toLowerCase() === 'họ tên') {
+          continue;
+        }
 
         if (rawId || rawName) {
           const empId = Utils.sanitizeId(rawId) || `OPS_${parsed.length + 1}`;
@@ -448,13 +464,16 @@ const AdminManager = {
             stt: parsed.length + 1,
             id: empId,
             name: rawName || empId,
-            identity: identity || 'CTV',
+            identity: identity || 'A-OS',
             status: empStatus,
             checkinTime: checkinTime,
             note: note,
             positions: {
-              '18H-20H': pos1 || 'Chưa xếp',
-              '20H-22H': pos2 || 'Chưa xếp'
+              'Vị trí cố định': pos1 || 'Chưa xếp',
+              'SAU GIỜ NGHỈ': pos2 || 'Chưa xếp',
+              '4h-6h': pos3 || '',
+              'Xuất Tải': pos4 || '',
+              'NOTE': note || ''
             }
           });
         }
@@ -483,10 +502,13 @@ const AdminManager = {
         <tr class="hover:bg-slate-50 transition border-b border-slate-100">
           <td class="p-2 text-center text-slate-400 font-mono">${emp.stt}</td>
           <td class="p-2 font-bold text-slate-900">${emp.id}</td>
-          <td class="p-2 text-slate-800 font-sans font-medium">${emp.name}</td>
-          <td class="p-2 text-slate-500">${emp.identity}</td>
-          <td class="p-2 text-slate-700">${emp.positions['18H-20H']}</td>
-          <td class="p-2 text-slate-700">${emp.positions['20H-22H']}</td>
+          <td class="p-2 text-slate-800 font-sans font-medium whitespace-nowrap">${emp.name}</td>
+          <td class="p-2 text-slate-500 font-mono">${emp.identity}</td>
+          <td class="p-2 text-slate-700">${emp.positions['Vị trí cố định']}</td>
+          <td class="p-2 text-slate-700">${emp.positions['SAU GIỜ NGHỈ']}</td>
+          <td class="p-2 text-slate-700">${emp.positions['4h-6h']}</td>
+          <td class="p-2 text-slate-700">${emp.positions['Xuất Tải']}</td>
+          <td class="p-2 text-slate-500">${emp.note || ''}</td>
         </tr>
       `).join('');
     }

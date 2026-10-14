@@ -364,7 +364,7 @@ const EmployeeModule = {
 
     // Kiểm tra các vị trí xoay ca
     const positions = emp.positions || {};
-    const posKeys = Object.keys(positions);
+    const posKeys = Object.keys(positions).filter((k) => k !== 'NOTE' && k !== 'Ghi Chú');
     
     // Kiểm tra xem có bị cảnh báo "Chưa có vị trí" (npw-icon)
     let hasEmptyPosition = false;
@@ -383,9 +383,9 @@ const EmployeeModule = {
     let positionsHtml = '';
     if (posKeys.length > 0) {
       positionsHtml = posKeys.map((k) => `
-        <div class="bg-white rounded-xl p-3 border border-emerald-200/80 text-center shadow-sm">
+        <div class="bg-slate-50 hover:bg-white rounded-xl p-3 border border-slate-200 text-center shadow-sm transition">
           <div class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">${k}</div>
-          <div class="text-base font-extrabold text-emerald-700 mt-1">${positions[k] || 'Chưa xếp'}</div>
+          <div class="text-base font-extrabold text-emerald-600 mt-1">${positions[k] || 'Chưa xếp'}</div>
         </div>
       `).join('');
     } else {
@@ -396,8 +396,16 @@ const EmployeeModule = {
       `;
     }
 
+    const noteText = (emp.note || positions['NOTE'] || positions['Ghi Chú'] || '').trim();
+    const noteHtml = noteText ? `
+      <div class="mt-3 p-3 bg-blue-50 border border-blue-200/80 rounded-xl flex items-center gap-2 text-xs text-blue-900 font-medium">
+        <span class="text-base">📝</span>
+        <span><strong>Ghi chú:</strong> ${noteText}</span>
+      </div>
+    ` : '';
+
     const warningHtml = hasEmptyPosition ? `
-      <div class="mt-4 p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-3">
+      <div class="mt-3.5 p-3.5 bg-amber-50 border-l-4 border-amber-500 rounded-r-xl flex items-start gap-3">
         <span class="text-amber-500 text-xl font-bold npw-icon">⚠️</span>
         <div class="text-xs text-amber-900 leading-relaxed">
           <strong class="font-semibold block text-sm text-amber-800">Cảnh báo vị trí làm việc:</strong>
@@ -407,19 +415,19 @@ const EmployeeModule = {
     ` : '';
 
     resultContainer.innerHTML = `
-      <div class="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-2 border-emerald-500/80 rounded-2xl p-5 sm:p-6 shadow-lg shadow-emerald-500/10 relative overflow-hidden animate-fade-in">
-        <div class="flex items-center justify-between pb-3.5 border-b border-emerald-200">
+      <div class="bg-white border-2 border-emerald-500 rounded-2xl p-5 sm:p-6 shadow-xl shadow-emerald-500/10 relative overflow-hidden animate-fade-in">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100">
           <div class="flex items-center gap-3.5">
-            <div class="w-11 h-11 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-xl font-bold shadow-md">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center text-2xl font-bold shadow-md shadow-emerald-500/30">
               ✓
             </div>
             <div>
-              <h3 class="text-base sm:text-lg font-extrabold text-slate-900">${emp.name || 'Nhân Viên'}</h3>
-              <div class="text-xs text-slate-600 font-mono mt-0.5">${emp.id || emp.empId || ''} ${emp.cccd ? '| CCCD: ' + emp.cccd : ''}</div>
+              <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">${emp.name || 'Nhân Viên'}</h3>
+              <div class="text-xs text-slate-500 font-mono font-semibold mt-0.5">${emp.id || emp.empId || ''} ${emp.cccd ? '| CCCD: ' + emp.cccd : ''} ${emp.identity || emp.dinhDanh ? ' • ' + (emp.identity || emp.dinhDanh) : ''}</div>
             </div>
           </div>
           <div class="text-right">
-            <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5 shadow-sm">
+            <span class="px-3.5 py-1 text-xs font-black rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5 shadow-sm">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               ĐÃ ĐIỂM DANH
             </span>
@@ -431,11 +439,12 @@ const EmployeeModule = {
           <div class="text-xs font-bold uppercase text-slate-600 mb-2.5 tracking-wider flex items-center gap-1.5">
             <span>📍 Vị Trí Làm Việc Phân Bổ</span>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             ${positionsHtml}
           </div>
         </div>
 
+        ${noteHtml}
         ${warningHtml}
       </div>
     `;

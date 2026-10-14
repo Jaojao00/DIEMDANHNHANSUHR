@@ -38,7 +38,7 @@ function handleSave(data, shiftId, sheet) {
     if (scheduleList[0].positions && typeof scheduleList[0].positions === "object" && !Array.isArray(scheduleList[0].positions)) {
       colHeaders = Object.keys(scheduleList[0].positions);
     } else {
-      colHeaders = ["18H-20H", "20H-22H"];
+      colHeaders = ["Vị trí cố định", "SAU GIỜ NGHỈ", "4h-6h", "Xuất Tải"];
     }
   }
 
@@ -108,8 +108,15 @@ function handleLoadRoster(shiftId, returnPlainArray) {
     return returnPlainArray ? ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON) : sendSuccessResponse([]);
   }
   var headers = values[0] || [];
-  var noteIndex = headers.indexOf("Ghi Chú");
-  var N = noteIndex !== -1 ? noteIndex - 4 : headers.length - 8;
+  var noteIndex = -1;
+  for (var h = 0; h < headers.length; h++) {
+    var hStr = String(headers[h] || "").trim().toLowerCase();
+    if (hStr === "ghi chú" || hStr === "note") {
+      noteIndex = h;
+      break;
+    }
+  }
+  var N = noteIndex !== -1 ? noteIndex - 4 : (headers.length > 4 ? headers.length - 4 : 0);
   if (N < 0) N = 0;
   var colHeaders = [];
   for (var c = 0; c < N; c++) {

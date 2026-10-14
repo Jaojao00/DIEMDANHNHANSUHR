@@ -128,7 +128,7 @@ const DataManager = {
 
     // 3. Đồng bộ lên Google Sheets qua GAS (Tầng 2)
     try {
-      const colHeaders = headers && headers.length ? headers : ['18H-20H', '20H-22H'];
+      const colHeaders = headers && headers.length ? headers : ['Vị trí cố định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'];
       const res = await this.callApi('save', {
         shiftId: shiftId,
         headers: colHeaders,
@@ -255,68 +255,56 @@ const DataManager = {
     } catch (e) {}
   },
 
-  // Tạo dữ liệu demo phong phú ban đầu nếu chưa kết nối tới Sheets
+  // Tạo dữ liệu demo ban đầu nếu chưa kết nối tới Sheets
   initDemoRoster(shiftId) {
     const demoRoster = [
       {
         stt: 1,
-        id: 'OPS10291',
-        name: 'Nguyễn Văn An',
+        id: 'OPS185911',
+        name: 'ĐOÀN QUANG HUY',
         cccd: '089201004123',
         phone: '0912345678',
-        identity: 'Fulltime',
-        status: 'confirmed',
-        checkinTime: '17:55:12',
+        identity: 'A-OS',
+        status: 'pending',
+        checkinTime: '',
         note: '',
-        positions: { '18H-20H': 'Xả xe 5', '20H-22H': 'B1-B4' }
+        positions: { 'Vị trí cố định': 'RT 4', 'SAU GIỜ NGHỈ': 'RT 4', '4h-6h': 'OB4', 'Xuất Tải': '' }
       },
       {
         stt: 2,
-        id: 'OPS10452',
-        name: 'Trần Thị Mai',
+        id: 'OPS146048',
+        name: 'Lê Phúc Hậu',
         cccd: '079302008899',
         phone: '0987654321',
-        identity: 'CTV',
-        status: 'confirmed',
-        checkinTime: '18:02:45',
+        identity: 'A-OS',
+        status: 'pending',
+        checkinTime: '',
         note: '',
-        positions: { '18H-20H': 'B1-B4', '20H-22H': 'A9-A12' }
+        positions: { 'Vị trí cố định': 'RT 5', 'SAU GIỜ NGHỈ': 'RT 5', '4h-6h': 'OB5', 'Xuất Tải': '' }
       },
       {
         stt: 3,
-        id: 'OPS10788',
-        name: 'Lê Hoàng Nam',
+        id: 'OPS262398',
+        name: 'Lê Chí Lĩnh',
         cccd: '092200001234',
         phone: '0901239876',
-        identity: 'CTV',
+        identity: 'A-OS',
         status: 'pending',
         checkinTime: '',
         note: '',
-        positions: { '18H-20H': 'Chưa xếp', '20H-22H': 'Chưa xếp' }
+        positions: { 'Vị trí cố định': 'RT 6', 'SAU GIỜ NGHỈ': 'RT 6', '4h-6h': 'OB6', 'Xuất Tải': '' }
       },
       {
         stt: 4,
-        id: 'OPS10901',
-        name: 'Phạm Đức Trọng',
+        id: 'OPS248899',
+        name: 'NGUYỄN THANH TÀI',
         cccd: '083204005678',
         phone: '0933445566',
         identity: 'A-OS',
-        status: 'off',
-        checkinTime: '',
-        note: 'Xin nghỉ phép',
-        positions: { '18H-20H': '', '20H-22H': '' }
-      },
-      {
-        stt: 5,
-        id: 'OPS11023',
-        name: 'Võ Minh Thắng',
-        cccd: '094301009988',
-        phone: '0945678901',
-        identity: 'CTV',
-        status: 'pending',
-        checkinTime: '',
+        status: 'confirmed',
+        checkinTime: '02:08:22',
         note: '',
-        positions: { '18H-20H': 'Phân loại D', '20H-22H': 'Xả xe 2' }
+        positions: { 'Vị trí cố định': 'Xả xe 1', 'SAU GIỜ NGHỈ': 'Xả xe 1', '4h-6h': 'OB21', 'Xuất Tải': '' }
       }
     ];
 

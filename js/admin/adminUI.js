@@ -61,7 +61,7 @@ const AdminUI = {
     if (tbody) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="p-8 text-center text-slate-400">
+          <td colspan="11" class="p-8 text-center text-slate-400">
             <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-agari-red mb-2"></div>
             <div>Đang tải dữ liệu ca làm việc...</div>
           </td>
@@ -142,7 +142,7 @@ const AdminUI = {
     if (items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="p-8 text-center text-slate-400">
+          <td colspan="11" class="p-8 text-center text-slate-400">
             Không tìm thấy nhân viên phù hợp với bộ lọc hiện tại.
           </td>
         </tr>
@@ -154,36 +154,55 @@ const AdminUI = {
       const status = (emp.status || 'pending').toLowerCase();
       let statusBadge = '';
       if (status === 'confirmed') {
-        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-500/20 transition">Đã điểm danh (${emp.checkinTime || 'OK'})</span>`;
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-500/20 transition whitespace-nowrap">Đã điểm danh (${emp.checkinTime || 'OK'})</span>`;
       } else if (status === 'off' || status === 'xin off') {
-        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-red-500/10 text-red-400 border border-red-500/30 cursor-pointer hover:bg-red-500/20 transition">Xin OFF</span>`;
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-red-500/10 text-red-400 border border-red-500/30 cursor-pointer hover:bg-red-500/20 transition whitespace-nowrap">Xin OFF</span>`;
       } else if (status === 'xin_len_ca' || status === 'xin lên ca') {
-        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 cursor-pointer hover:bg-cyan-500/20 transition">Xin Lên Ca</span>`;
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 cursor-pointer hover:bg-cyan-500/20 transition whitespace-nowrap">Xin Lên Ca</span>`;
       } else {
-        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 cursor-pointer hover:bg-amber-500/20 transition">Chưa điểm danh</span>`;
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 cursor-pointer hover:bg-amber-500/20 transition whitespace-nowrap">Chưa điểm danh</span>`;
       }
 
-      const pos1 = emp.positions ? (emp.positions['18H-20H'] || emp.positions['Pos1'] || '') : '';
-      const pos2 = emp.positions ? (emp.positions['20H-22H'] || emp.positions['Pos2'] || '') : '';
+      const pos1 = emp.positions ? (emp.positions['Vị trí cố định'] || emp.positions['Pos1'] || emp.positions['18H-20H'] || '') : '';
+      const pos2 = emp.positions ? (emp.positions['SAU GIỜ NGHỈ'] || emp.positions['Pos2'] || emp.positions['20H-22H'] || '') : '';
+      const pos3 = emp.positions ? (emp.positions['4h-6h'] || emp.positions['Pos3'] || '') : '';
+      const pos4 = emp.positions ? (emp.positions['Xuất Tải'] || emp.positions['Pos4'] || '') : '';
+      const noteVal = emp.note || (emp.positions ? (emp.positions['NOTE'] || emp.positions['Ghi Chú'] || '') : '');
 
       return `
         <tr class="hover:bg-slate-800/50 transition border-b border-slate-800/80 text-sm" data-id="${emp.id}">
           <td class="p-3 text-center text-slate-400 font-mono">${index + 1}</td>
-          <td class="p-3 font-mono font-bold text-agari-yellow">${emp.id}</td>
-          <td class="p-3 font-medium text-white">${emp.name}</td>
-          <td class="p-3 text-slate-400">
-            <span class="px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-300 font-mono">${emp.identity || 'CTV'}</span>
+          <td class="p-3 font-mono font-bold text-agari-yellow whitespace-nowrap">${emp.id}</td>
+          <td class="p-3 font-medium text-white whitespace-nowrap">${emp.name}</td>
+          <td class="p-3 text-slate-400 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-300 font-mono">${emp.identity || emp.dinhDanh || 'A-OS'}</span>
           </td>
-          <!-- Vị trí xoay ca có thể chỉnh sửa trực tiếp inline -->
-          <td class="p-2">
+          <!-- Vị trí cố định -->
+          <td class="p-2 min-w-[120px]">
             <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
-                   value="${pos1}" data-pos-key="18H-20H" placeholder="Vị trí đầu ca..." />
+                   value="${pos1}" data-pos-key="Vị trí cố định" placeholder="Vị trí cố định..." />
           </td>
-          <td class="p-2">
+          <!-- SAU GIỜ NGHỈ -->
+          <td class="p-2 min-w-[120px]">
             <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
-                   value="${pos2}" data-pos-key="20H-22H" placeholder="Vị trí xoay ca..." />
+                   value="${pos2}" data-pos-key="SAU GIỜ NGHỈ" placeholder="Sau giờ nghỉ..." />
           </td>
-          <td class="p-3 text-center" onclick="AdminManager.openStatusModal('${emp.id}')">
+          <!-- 4h-6h -->
+          <td class="p-2 min-w-[100px]">
+            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+                   value="${pos3}" data-pos-key="4h-6h" placeholder="4h-6h..." />
+          </td>
+          <!-- Xuất Tải -->
+          <td class="p-2 min-w-[100px]">
+            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+                   value="${pos4}" data-pos-key="Xuất Tải" placeholder="Xuất tải..." />
+          </td>
+          <!-- NOTE -->
+          <td class="p-2 min-w-[110px]">
+            <input type="text" class="pos-input note-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+                   value="${noteVal}" data-pos-key="NOTE" placeholder="Ghi chú..." />
+          </td>
+          <td class="p-3 text-center whitespace-nowrap" onclick="AdminManager.openStatusModal('${emp.id}')">
             ${statusBadge}
           </td>
           <td class="p-3 text-center">
