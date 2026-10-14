@@ -154,11 +154,13 @@ const AdminUI = {
       const status = (emp.status || 'pending').toLowerCase();
       let statusBadge = '';
       if (status === 'confirmed') {
-        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Đã điểm danh (${emp.checkinTime || 'OK'})</span>`;
-      } else if (status === 'off') {
-        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-red-500/10 text-red-400 border border-red-500/30">Xin OFF</span>`;
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 cursor-pointer hover:bg-emerald-500/20 transition">Đã điểm danh (${emp.checkinTime || 'OK'})</span>`;
+      } else if (status === 'off' || status === 'xin off') {
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-red-500/10 text-red-400 border border-red-500/30 cursor-pointer hover:bg-red-500/20 transition">Xin OFF</span>`;
+      } else if (status === 'xin_len_ca' || status === 'xin lên ca') {
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 cursor-pointer hover:bg-cyan-500/20 transition">Xin Lên Ca</span>`;
       } else {
-        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">Chưa điểm danh</span>`;
+        statusBadge = `<span class="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 cursor-pointer hover:bg-amber-500/20 transition">Chưa điểm danh</span>`;
       }
 
       const pos1 = emp.positions ? (emp.positions['18H-20H'] || emp.positions['Pos1'] || '') : '';
@@ -181,11 +183,11 @@ const AdminUI = {
             <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
                    value="${pos2}" data-pos-key="20H-22H" placeholder="Vị trí xoay ca..." />
           </td>
-          <td class="p-3 text-center">
+          <td class="p-3 text-center" onclick="AdminManager.openStatusModal('${emp.id}')">
             ${statusBadge}
           </td>
           <td class="p-3 text-center">
-            <button class="btn-toggle-status p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs" title="Đổi trạng thái" onclick="AdminManager.toggleEmployeeStatus('${emp.id}')">
+            <button class="btn-toggle-status p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs" title="Đổi trạng thái" onclick="AdminManager.openStatusModal('${emp.id}')">
               ⚙️
             </button>
           </td>

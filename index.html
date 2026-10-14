@@ -332,6 +332,11 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <!-- Cài Đặt Khung Giờ & Cấu Hình Đăng Ký (Ảnh 2) -->
+          <button id="btnOpenSettingsModal" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center gap-1.5 border border-slate-700" title="Cài Đặt Khung Giờ & Cấu Hình Đăng Ký">
+            <span>⚙️</span>
+            <span class="hidden sm:inline">Cài Đặt</span>
+          </button>
           <!-- Về Cổng Nhân Viên -->
           <button id="btnSwitchToEmployee" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition flex items-center gap-1.5 border border-slate-700">
             <span>←</span>
@@ -1188,6 +1193,86 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CẬP NHẬT TRẠNG THÁI (Ảnh 1) -->
+  <div id="modalCapNhatTrangThai" class="custom-modal-backdrop">
+    <div class="custom-modal-content !bg-[#0f172a] !border !border-slate-800 text-white !max-w-sm p-6 rounded-2xl shadow-2xl relative">
+      <button data-close-modal="modalCapNhatTrangThai" class="absolute top-4 right-4 w-7 h-7 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm transition">✕</button>
+      
+      <h3 class="text-xl font-bold text-white text-center mb-6 tracking-tight">Cập Nhật Trạng Thái</h3>
+      
+      <div class="relative mb-2">
+        <select id="modalStatusSelect" class="w-full bg-[#1e293b] text-white border-2 border-cyan-400 rounded-xl px-4 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400/50 appearance-none cursor-pointer">
+          <option value="" disabled selected>Chọn trạng thái...</option>
+          <option value="pending">Chưa Điểm Danh</option>
+          <option value="confirmed">Đã Điểm Danh</option>
+          <option value="off">Xin Off</option>
+          <option value="xin_len_ca">Xin Lên Ca</option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-cyan-400">
+          <svg class="h-4 w-4 fill-current" viewBox="0 0 20 20">
+            <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+          </svg>
+        </div>
+      </div>
+      
+      <input type="hidden" id="modalStatusTargetEmpId" value="" />
+    </div>
+  </div>
+
+  <!-- MODAL CÀI ĐẶT KHUNG GIỜ ĐIỂM DANH / CẤU HÌNH ĐĂNG KÝ LỊCH (Ảnh 2) -->
+  <div id="settingsModal" class="custom-modal-backdrop">
+    <div class="custom-modal-content !bg-[#0f172a] !border !border-slate-800 text-white !max-w-md p-6 rounded-2xl shadow-2xl relative">
+      <!-- Header Modal -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>⚙️</span>
+          <span>Cài Đặt Khung Giờ Điểm Danh</span>
+        </h3>
+        <button data-close-modal="settingsModal" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm transition">✕</button>
+      </div>
+
+      <div class="mt-4 space-y-4">
+        <!-- Input Link Google Apps Script API -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Liên Kết Hệ Thống (Google Apps Script API)</label>
+          <input type="text" id="settingsApiLinkInput" class="w-full bg-[#1e293b] border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-400 transition" />
+          <p class="text-[11px] text-slate-400 mt-1">Hệ thống sẽ đồng bộ Realtime nếu có link này. (Để trống để dùng thử Offline).</p>
+        </div>
+
+        <!-- Khung Cấu hình ngày lịch làm việc -->
+        <div class="bg-[#1e293b]/70 border border-slate-700/80 rounded-xl p-3.5 space-y-3">
+          <div class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <span>🗓️</span>
+            <span>Cấu Hình Ngày Lịch Làm Việc</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="date" id="settingsRegDateFrom" class="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-xs text-white flex-1 focus:outline-none focus:border-cyan-400" value="2026-10-16" />
+            <span class="text-xs text-slate-400 font-medium">đến</span>
+            <input type="date" id="settingsRegDateTo" class="bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-xs text-white flex-1 focus:outline-none focus:border-cyan-400" value="2026-10-31" />
+          </div>
+
+          <p class="text-[11px] text-slate-400">Nhân sự chỉ được lịch làm việc trong khoảng ngày này.</p>
+
+          <button type="button" id="btnSettingsResetRegistrations" class="w-full py-2.5 px-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-sm">
+            <span>🗑️</span>
+            <span>Xóa toàn bộ lịch làm việc cũ</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="flex items-center justify-end gap-2.5 mt-5 pt-3 border-t border-slate-800">
+        <button type="button" data-close-modal="settingsModal" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition">
+          Hủy
+        </button>
+        <button type="button" id="btnSaveSettingsModal" class="px-5 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold shadow-md transition">
+          Lưu Cài Đặt
+        </button>
       </div>
     </div>
   </div>

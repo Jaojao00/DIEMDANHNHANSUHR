@@ -8,20 +8,40 @@ const RegApp = {
   },
 
   generateCycleDays() {
-    // Tạo danh sách 15 ngày kế tiếp cho chu kỳ đăng ký
+    // Lấy chu kỳ ngày được cấu hình từ Admin hoặc mặc định 16/10/2026 - 31/10/2026
+    const savedFrom = localStorage.getItem('agari_reg_date_from') || '2026-10-16';
+    const savedTo = localStorage.getItem('agari_reg_date_to') || '2026-10-31';
+
     const days = [];
-    const today = new Date();
-    for (let i = 1; i <= 15; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      const dateStr = Utils.formatDateISO(d);
-      const dayOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][d.getDay()];
-      days.push({
-        date: dateStr,
-        display: `${dayOfWeek}, ${d.getDate()}/${d.getMonth() + 1}`,
-        dayNum: d.getDate()
-      });
+    let curr = new Date(savedFrom + 'T00:00:00');
+    const end = new Date(savedTo + 'T00:00:00');
+
+    if (isNaN(curr.getTime()) || isNaN(end.getTime()) || curr > end) {
+      const today = new Date();
+      for (let i = 1; i <= 15; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        const dateStr = Utils.formatDateISO(d);
+        const dayOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][d.getDay()];
+        days.push({
+          date: dateStr,
+          display: `${dayOfWeek}, ${d.getDate()}/${d.getMonth() + 1}`,
+          dayNum: d.getDate()
+        });
+      }
+    } else {
+      while (curr <= end) {
+        const dateStr = Utils.formatDateISO(curr);
+        const dayOfWeek = ['Chủ Nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][curr.getDay()];
+        days.push({
+          date: dateStr,
+          display: `${dayOfWeek}, ${curr.getDate()}/${curr.getMonth() + 1}`,
+          dayNum: curr.getDate()
+        });
+        curr.setDate(curr.getDate() + 1);
+      }
     }
+
     this.currentCycleDays = days;
     this.renderRegistrationCalendar();
   },

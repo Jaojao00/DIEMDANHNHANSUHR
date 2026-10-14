@@ -11,10 +11,8 @@ const AdminRegistration = {
     const fromInput = document.getElementById('regConfigDateFrom');
     const toInput = document.getElementById('regConfigDateTo');
     if (fromInput && toInput) {
-      fromInput.value = Utils.formatDateISO();
-      // Mặc định kỳ 15 ngày
-      const next15Days = new Date(Date.now() + 15 * 86400000);
-      toInput.value = Utils.formatDateISO(next15Days);
+      fromInput.value = localStorage.getItem('agari_reg_date_from') || '2026-10-16';
+      toInput.value = localStorage.getItem('agari_reg_date_to') || '2026-10-31';
     }
   },
 
@@ -127,6 +125,12 @@ const AdminRegistration = {
     if (!from || !to) {
       Utils.toast('Vui lòng chọn ngày mở và đóng cổng', 'warning');
       return;
+    }
+
+    localStorage.setItem('agari_reg_date_from', from);
+    localStorage.setItem('agari_reg_date_to', to);
+    if (window.RegApp && typeof window.RegApp.generateCycleDays === 'function') {
+      window.RegApp.generateCycleDays();
     }
 
     Utils.showLoading('Đang lưu cài đặt chu kỳ mở cổng đăng ký...');

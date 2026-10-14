@@ -52,6 +52,34 @@ const AdminManager = {
     if (btnClearShift) {
       btnClearShift.addEventListener('click', () => this.clearShiftSchedule());
     }
+
+    // Nút Mở Cài Đặt Khung Giờ & Cấu Hình Đăng Ký (Ảnh 2)
+    const btnOpenSettings = document.getElementById('btnOpenSettingsModal');
+    if (btnOpenSettings) {
+      btnOpenSettings.addEventListener('click', () => this.openSettingsModal());
+    }
+
+    // Nút Lưu Cài Đặt (Ảnh 2)
+    const btnSaveSettings = document.getElementById('btnSaveSettingsModal');
+    if (btnSaveSettings) {
+      btnSaveSettings.addEventListener('click', () => this.saveSettingsModal());
+    }
+
+    // Nút Xóa Toàn Bộ Lịch Cũ trong Cài Đặt (Ảnh 2)
+    const btnResetOldReg = document.getElementById('btnSettingsResetRegistrations');
+    if (btnResetOldReg) {
+      btnResetOldReg.addEventListener('click', () => {
+        if (window.AdminRegistration && typeof window.AdminRegistration.handleResetRegistrations === 'function') {
+          window.AdminRegistration.handleResetRegistrations();
+        }
+      });
+    }
+
+    // Dropdown Cập Nhật Trạng Thái (Ảnh 1)
+    const modalStatusSelect = document.getElementById('modalStatusSelect');
+    if (modalStatusSelect) {
+      modalStatusSelect.addEventListener('change', (e) => this.handleApplyStatus(e.target.value));
+    }
   },
 
   /**
@@ -197,29 +225,134 @@ const AdminManager = {
     Utils.toast(`Đã chuyển ${count} nhân sự sang trạng thái OFF!`, 'info');
   },
 
-  /**
-   * Chuyển đổi trạng thái điểm danh thủ công
-   */
-  toggleEmployeeStatus(empId) {
-    const emp = DataManager.state.roster.find((e) => e.id === empId);
-    if (!emp) return;
+  // ==================== CẬP NHẬT TRẠNG THÁI (Ảnh 1) ====================
+  _targetStatusEmpId: null,
 
-    const currentStatus = (emp.status || 'pending').toLowerCase();
-    if (currentStatus === 'confirmed') {
-      emp.status = 'pending';
-      emp.checkinTime = '';
-    } else if (currentStatus === 'pending') {
+  /**
+   * Mở modal chọn trạng thái nhân viên (Ảnh 1)
+   */
+  openStatusModal(empId) {
+    this._targetStatusEmpId = empId;
+    const targetInput = document.getElementById('modalStatusTargetEmpId');
+    if (targetInput) targetInput.value = empId;
+
+    const select = document.getElementById('modalStatusSelect');
+    if (select) {
+      select.value = '';
+    }
+
+    window.App?.openModal('modalCapNhatTrangThai');
+  },
+
+  /**
+   * Áp dụng trạng thái được chọn từ dropdown
+   */
+  handleApplyStatus(selectedStatus) {
+    const empId = this._targetStatusEmpId || document.getElementById('modalStatusTargetEmpId')?.value;
+    const emp = DataManager.state.roster.find((e) => e.id === empId);
+    if (!emp || !selectedStatus) return;
+
+    let statusLabel = '';
+    if (selectedStatus === 'confirmed') {
       emp.status = 'confirmed';
       emp.checkinTime = Utils.getCurrentVNTime();
-    } else {
+      statusLabel = 'Đã Điểm Danh';
+    } else if (selectedStatus === 'pending') {
       emp.status = 'pending';
+      emp.checkinTime = '';
+      statusLabel = 'Chưa Điểm Danh';
+    } else if (selectedStatus === 'off') {
+      emp.status = 'off';
+      emp.checkinTime = '';
+      statusLabel = 'Xin Off';
+    } else if (selectedStatus === 'xin_len_ca') {
+      emp.status = 'pending';
+      emp.identity = 'A-OS';
+      emp.checkinTime = Utils.getCurrentVNTime();
+      statusLabel = 'Xin Lên Ca';
+    }
+
+    const shiftSelect = document.getElementById('adminShiftSelect');
+    const shiftId = shiftSelect ? shiftSelect.value : DataManager.state.currentShift;
+    DataManager.saveCachedRoster(shiftId, DataManager.state.roster);
+
+    // Đồng bộ nhanh sang Firebase nếu có kết nối
+    if (typeof FirebaseService !== 'undefined' && FirebaseService.logCheckin) {
+      FirebaseService.logCheckin(shiftId, emp.id, emp.name, emp.status === 'confirmed');
     }
 
     DataManager.recalculateStats();
     AdminUI.updateStatsCards();
     AdminUI.renderRosterTable();
     AdminUI.renderActivityFeed();
-    Utils.toast(`Đã cập nhật: ${emp.name} (${emp.status})`, 'success');
+
+    window.App?.closeModal('modalCapNhatTrangThai');
+    Utils.toast(`Đã cập nhật: ${emp.name} → ${statusLabel}`, 'success');
+  },
+
+  toggleEmployeeStatus(empId) {
+    this.openStatusModal(empId);
+  },
+
+  // ==================== CÀI ĐẶT KHUNG GIỜ & CẤU HÌNH ĐĂNG KÝ (Ảnh 2) ====================
+  openSettingsModal() {
+    const apiInput = document.getElementById('settingsApiLinkInput');
+    const fromInput = document.getElementById('settingsRegDateFrom');
+    const toInput = document.getElementById('settingsRegDateTo');
+
+    if (apiInput) {
+      apiInput.value = localStorage.getItem('agari_custom_gas_url') || CONFIG.APPS_SCRIPT_URL;
+    }
+    if (fromInput) {
+      fromInput.value = localStorage.getItem('agari_reg_date_from') || '2026-10-16';
+    }
+    if (toInput) {
+      toInput.value = localStorage.getItem('agari_reg_date_to') || '2026-10-31';
+    }
+
+    window.App?.openModal('settingsModal');
+  },
+
+  async saveSettingsModal() {
+    const apiInput = document.getElementById('settingsApiLinkInput');
+    const fromInput = document.getElementById('settingsRegDateFrom');
+    const toInput = document.getElementById('settingsRegDateTo');
+
+    const newUrl = apiInput ? apiInput.value.trim() : '';
+    const dateFrom = fromInput ? fromInput.value : '2026-10-16';
+    const dateTo = toInput ? toInput.value : '2026-10-31';
+
+    if (newUrl) {
+      CONFIG.APPS_SCRIPT_URL = newUrl;
+      localStorage.setItem('agari_custom_gas_url', newUrl);
+    }
+
+    if (dateFrom && dateTo) {
+      localStorage.setItem('agari_reg_date_from', dateFrom);
+      localStorage.setItem('agari_reg_date_to', dateTo);
+
+      // Cập nhật tab 2 nếu input tồn tại
+      const regFrom = document.getElementById('regConfigDateFrom');
+      const regTo = document.getElementById('regConfigDateTo');
+      if (regFrom) regFrom.value = dateFrom;
+      if (regTo) regTo.value = dateTo;
+
+      // Làm mới lịch của cổng nhân viên
+      if (window.RegApp && typeof window.RegApp.generateCycleDays === 'function') {
+        window.RegApp.generateCycleDays();
+      }
+
+      Utils.showLoading('Đang lưu cài đặt chu kỳ lên Google Sheets...');
+      try {
+        await DataManager.callApi('save_reg_config', { dateFrom, dateTo });
+      } catch (err) {
+        console.warn('Lỗi gọi save_reg_config:', err);
+      }
+      Utils.hideLoading();
+    }
+
+    window.App?.closeModal('settingsModal');
+    Utils.toast('Đã lưu cấu hình cài đặt thành công!', 'success');
   },
 
   // ==================== CẬP NHẬT LỊCH LÀM VIỆC TỪ GOOGLE SHEETS ====================
