@@ -239,9 +239,25 @@ const EmployeeModule = {
       return;
     }
 
-    // 0. Kiểm tra khung giờ điểm danh: Ca 22h-6h chỉ mở cổng từ 14h - 18h
+    // 0. Kiểm tra khung giờ điểm danh theo quy định ca làm
+    const currentMinutes = Utils.getVNMinutesInDay();
+
+    // Ca Tối (18:00 - 22:00): Điểm danh từ 10h00 - 14h00
+    if (shiftId === '18:00-22:00') {
+      const startMinutes = 10 * 60; // 10:00 (600 phút)
+      const endMinutes = 14 * 60;   // 14:00 (840 phút)
+      if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+        Utils.showAlert(
+          'Ngoài Khung Giờ Điểm Danh',
+          'Ca Tối (18:00 - 22:00) chỉ mở cổng điểm danh từ 10:00 đến 14:00 hàng ngày. Hiện tại ngoài khung giờ quy định, vui lòng quay lại trong khoảng 10h00 - 14h00 hoặc liên hệ Trực ca / Admin!',
+          'warning'
+        );
+        return;
+      }
+    }
+
+    // Ca Đêm (22:00 - 06:00): Điểm danh từ 14h00 - 18h00
     if (shiftId === '22:00-06:00') {
-      const currentMinutes = Utils.getVNMinutesInDay();
       const startMinutes = 14 * 60; // 14:00 (840 phút)
       const endMinutes = 18 * 60;   // 18:00 (1080 phút)
       if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
@@ -891,17 +907,22 @@ const EmployeeModule = {
 
     try {
       const res = await DataManager.callApi('lookup_salary', {
-        identifier: identifier
+        identifier: identifier,
+        empId: identifier
       });
 
       Utils.hideLoading();
 
-      if (res && res.success && res.data && res.data.length > 0) {
-        this.renderSalaryDetails(res.data, identifier);
+      const records = (res && Array.isArray(res.records)) 
+        ? res.records 
+        : (res && Array.isArray(res.data) ? res.data : (res && res.data && Array.isArray(res.data.records) ? res.data.records : []));
+
+      if (res && res.success && records.length > 0) {
+        this.renderSalaryDetails(records, identifier);
       } else {
         Utils.showAlert(
           'Không tìm thấy dữ liệu',
-          res.message || 'Không tìm thấy dữ liệu lương cho số CCCD/Mã này trong kỳ lương hiện tại.',
+          res?.message || 'Không tìm thấy dữ liệu lương cho số CCCD/Mã này trong kỳ lương hiện tại. Vui lòng kiểm tra lại số CCCD hoặc liên hệ Quản lý!',
           'info'
         );
       }
@@ -925,30 +946,68 @@ const EmployeeModule = {
     const hoursData = [];
 
     records.forEach((r) => {
-      const hrs = parseFloat(r.totalHours || r.hours || 0);
-      const sal = parseFloat(r.salary || r.daySalary || 0);
+      const rawHrs = r.totalHours != null ? r.totalHours : (r["Tổng giờ"] || r["Số giờ"] || r.hours || 0);
+      const hrs = parseFloat(rawHrs) || 0;
+      
+      let sal = 0;
+      if (typeof r.salary === 'number' && !isNaN(r.salary) && r.salary > 0) {
+        sal = r.salary;
+      } else {
+        const rawSal = r.salary || r["Lương theo ngày công"] || r["Thành tiền"] || r.daySalary || 0;
+        const cleanSal = String(rawSal).replace(/\./g, '').replace(/,/g, '.').replace(/[^\d.-]/g, '');
+        sal = parseFloat(cleanSal) || 0;
+      }
+
       totalHours += hrs;
       totalSalary += sal;
-      labels.push(r.date || r.workDate || 'Ca');
+      const dateLabel = r.date || r["Ngày chấm công"] || r["Ngày"] || r.workDate || 'Ca';
+      labels.push(dateLabel);
       hoursData.push(hrs);
     });
 
-    const first = records[0];
+    const first = records[0] || {};
+    const empName = first.name || first["Họ Tên"] || first["Họ và Tên"] || 'Cộng Tác Viên';
+    const empCccd = first.cccd || first["CCCD"] || identifier;
+    const empCtv = first.empId || first["Mã CTV \n(nếu có)"] || first["Mã CTV"] || first["Mã NV"] || '';
+    const empDept = first.department || first["Địa điểm"] || first["Khu vực"] || 'Kho Vận SOC';
 
-    const rowsHtml = records.map((r, idx) => `
-      <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-sm">
-        <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-        <td class="p-3 font-medium text-slate-800">${r.date || r.workDate || '-'}</td>
-        <td class="p-3 font-mono text-slate-600">${r.timeInOut || r.time || '-'}</td>
-        <td class="p-3 text-center font-bold text-slate-700">${r.totalHours || r.hours || 0}h</td>
-        <td class="p-3 text-center">
-          <span class="px-2 py-0.5 text-xs rounded ${r.shiftType === 'Đêm' ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}">
-            ${r.shiftType || 'Ngày'}
-          </span>
-        </td>
-        <td class="p-3 text-right font-mono font-bold text-emerald-600">${Utils.formatCurrency(r.salary || r.daySalary || 0)}</td>
-      </tr>
-    `).join('');
+    const rowsHtml = records.map((r, idx) => {
+      const dateVal = r.date || r["Ngày chấm công"] || r["Ngày"] || r.workDate || '-';
+      const timeVal = r.timeInOut || ((r["Giờ check-in"] || r["Giờ vào"] || '') + (r["Giờ check-out"] ? ' - ' + r["Giờ check-out"] : '')) || r.time || '-';
+      const rawHrs = r.totalHours != null ? r.totalHours : (r["Tổng giờ"] || r["Số giờ"] || r.hours || 0);
+      const hrsVal = parseFloat(rawHrs) || 0;
+      
+      let isNight = false;
+      if (r.shiftType === 'Đêm' || r.shiftType === 'Ca Đêm') {
+        isNight = true;
+      } else if (r["Night Shift"] && r["Night Shift"] !== '-' && parseFloat(r["Night Shift"]) > 0) {
+        isNight = true;
+      }
+      
+      let sal = 0;
+      if (typeof r.salary === 'number' && !isNaN(r.salary) && r.salary > 0) {
+        sal = r.salary;
+      } else {
+        const rawSal = r.salary || r["Lương theo ngày công"] || r["Thành tiền"] || r.daySalary || 0;
+        const cleanSal = String(rawSal).replace(/\./g, '').replace(/,/g, '.').replace(/[^\d.-]/g, '');
+        sal = parseFloat(cleanSal) || 0;
+      }
+
+      return `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-sm">
+          <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+          <td class="p-3 font-medium text-slate-800">${dateVal}</td>
+          <td class="p-3 font-mono text-slate-600">${timeVal}</td>
+          <td class="p-3 text-center font-bold text-slate-700">${hrsVal}h</td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 text-xs rounded font-medium ${isNight ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}">
+              ${isNight ? 'Ca Đêm' : 'Ca Ngày'}
+            </span>
+          </td>
+          <td class="p-3 text-right font-mono font-bold text-emerald-600">${Utils.formatCurrency(sal)}</td>
+        </tr>
+      `;
+    }).join('');
 
     container.innerHTML = `
       <div class="mt-6 border-t border-slate-200 pt-6">
@@ -956,8 +1015,8 @@ const EmployeeModule = {
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
             <div>
               <span class="text-xs uppercase font-semibold text-agari-yellow tracking-wider">Thông Tin Nhân Sự</span>
-              <h3 class="text-2xl font-bold text-white mt-1">${first.name || 'Cộng Tác Viên'}</h3>
-              <div class="text-sm text-slate-400 font-mono mt-0.5">CCCD: ${first.cccd || identifier} | Bộ phận: ${first.department || 'Kho Vận SOC'}</div>
+              <h3 class="text-2xl font-bold text-white mt-1">${empName}</h3>
+              <div class="text-sm text-slate-400 font-mono mt-0.5">CCCD: ${empCccd} ${empCtv ? ' | Mã CTV: ' + empCtv : ''} | Bộ phận: ${empDept}</div>
             </div>
             <div class="bg-slate-800/80 px-4 py-3 rounded-xl border border-slate-700 text-right">
               <div class="text-xs text-slate-400">Tổng thu nhập tạm tính</div>

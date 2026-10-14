@@ -1052,58 +1052,97 @@ function handleLookupSalary(data) {
     var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     var sheet = ss.getSheetByName("BangLuong");
     if (!sheet) {
+      var allSheets = ss.getSheets();
+      for (var s = 0; s < allSheets.length; s++) {
+        var sName = allSheets[s].getName().toLowerCase();
+        if (sName.indexOf("bangluong") !== -1 || sName.indexOf("luong") !== -1 || sName.indexOf("lương") !== -1) {
+          sheet = allSheets[s];
+          break;
+        }
+      }
+    }
+    if (!sheet) {
       return sendErrorResponse("Chưa cấu hình trang tính BangLuong");
     }
     
-    var searchId = (data.empId || "").toString().trim().toUpperCase();
-    if (!searchId) return sendErrorResponse("Vui lòng nhập mã");
+    var rawSearch = (data.empId || data.identifier || "").toString().trim().toUpperCase();
+    if (!rawSearch) return sendErrorResponse("Vui lòng nhập số CCCD hoặc Mã CTV");
+    
+    var cleanSearch = rawSearch.replace(/[^A-Z0-9]/g, "");
+    var normSearchNoZero = cleanSearch.replace(/^0+/, "");
     
     var dataRange = sheet.getDataRange().getDisplayValues();
     if (dataRange.length < 2) {
-      return sendSuccessResponse({ records: [] });
+      return sendSuccessResponse({ records: [], data: [] });
     }
     
     var headers = dataRange[0];
     var records = [];
     
-    // Find index of CCCD and Mã CTV
+    // Find index of CCCD, Mã CTV, Họ Tên
     var cccdIdx = -1;
     var ctvIdx = -1;
+    var nameIdx = -1;
     for (var i = 0; i < headers.length; i++) {
       var h = headers[i].toString().trim().toUpperCase();
-      if (h === "CCCD") cccdIdx = i;
-      if (h.indexOf("MÃ CTV") !== -1) ctvIdx = i;
+      if (h === "CCCD" || h.indexOf("CCCD") !== -1) cccdIdx = i;
+      if (h.indexOf("MÃ CTV") !== -1 || h.indexOf("MA CTV") !== -1 || h.indexOf("MÃ NV") !== -1 || h.indexOf("MA NV") !== -1) ctvIdx = i;
+      if (h.indexOf("HỌ TÊN") !== -1 || h.indexOf("HO TEN") !== -1) nameIdx = i;
     }
+    
+    var checkMatch = function(cellVal) {
+      if (cellVal == null) return false;
+      var cStr = cellVal.toString().trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (!cStr) return false;
+      if (cStr === cleanSearch) return true;
+      var normCellNoZero = cStr.replace(/^0+/, "");
+      if (normSearchNoZero && normCellNoZero && normSearchNoZero === normCellNoZero) return true;
+      return false;
+    };
     
     for (var i = 1; i < dataRange.length; i++) {
       var row = dataRange[i];
       var match = false;
-      var checkMatch = function(cellVal, search) {
-        if (cellVal == null) return false;
-        var val = cellVal.toString().trim().toUpperCase();
-        if (val === search) return true;
-        // Nếu người dùng nhập 11 số (bỏ số 0 đầu) mà trong sheet có số 0 đầu
-        if (search.length === 11 && val === "0" + search) return true;
-        // Nếu người dùng nhập 12 số (có số 0) mà trong sheet mất số 0 đầu
-        if (search.length === 12 && search.startsWith("0") && val === search.substring(1)) return true;
-        return false;
-      };
       
-      if (cccdIdx !== -1 && checkMatch(row[cccdIdx], searchId)) match = true;
-      if (ctvIdx !== -1 && checkMatch(row[ctvIdx], searchId)) match = true;
+      if (cccdIdx !== -1 && checkMatch(row[cccdIdx])) match = true;
+      if (!match && ctvIdx !== -1 && checkMatch(row[ctvIdx])) match = true;
+      if (!match) {
+        for (var c = 0; c < Math.min(row.length, 5); c++) {
+          if (checkMatch(row[c])) {
+            match = true;
+            break;
+          }
+        }
+      }
       
       if (match) {
         var record = {};
         for (var j = 0; j < headers.length; j++) {
-          var val = row[j];
-
-          record[headers[j] ? headers[j].toString().trim() : ''] = val;
+          var hName = headers[j] ? headers[j].toString().trim() : ("Cột " + (j + 1));
+          record[hName] = row[j];
         }
+        
+        record.empId = (ctvIdx !== -1 ? row[ctvIdx] : "") || record["Mã CTV \n(nếu có)"] || record["Mã CTV"] || record["Mã NV"] || "";
+        record.cccd = (cccdIdx !== -1 ? row[cccdIdx] : "") || record["CCCD"] || "";
+        record.name = (nameIdx !== -1 ? row[nameIdx] : "") || record["Họ Tên"] || record["Họ và Tên"] || "";
+        record.date = record["Ngày chấm công"] || record["Ngày"] || "";
+        record.timeIn = record["Giờ check-in"] || "";
+        record.timeOut = record["Giờ check-out"] || "";
+        record.timeInOut = (record.timeIn || record.timeOut) ? (record.timeIn + " - " + record.timeOut) : "";
+        record.totalHours = parseFloat(record["Tổng giờ"] || record["Số giờ"] || 0) || 0;
+        record.shiftType = (record["Night Shift"] && record["Night Shift"] !== "-" && parseFloat(record["Night Shift"]) > 0) ? "Đêm" : "Ngày";
+        
+        var rawSal = record["Lương theo ngày công"] || record["Thành tiền"] || record["Lương"] || "0";
+        var cleanSalStr = String(rawSal).replace(/\./g, "").replace(/,/g, ".").replace(/[^\d.-]/g, "");
+        record.salary = parseFloat(cleanSalStr) || 0;
+        record.daySalary = record.salary;
+        record.department = record["Địa điểm"] || record["Khu vực"] || "Kho Vận SOC";
+        
         records.push(record);
       }
     }
     
-    return sendSuccessResponse({ records: records });
+    return sendSuccessResponse({ records: records, data: records });
   } catch (e) {
     return sendErrorResponse("Lỗi: " + e.toString());
   }
