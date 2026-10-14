@@ -17,7 +17,7 @@ function doPost(e) {
       }
     }
     
-    if (!shiftId && action !== "request" && action !== "request_item" && action !== "lookup_salary" && action !== "submit_complaint" && action !== "submit_registration" && action !== "submit_change_request" && adminActions.indexOf(action) === -1 && action !== "admin_login") {
+    if (!shiftId && action !== "request" && action !== "load_requests" && action !== "request_item" && action !== "lookup_salary" && action !== "submit_complaint" && action !== "submit_registration" && action !== "submit_change_request" && adminActions.indexOf(action) === -1 && action !== "admin_login") {
       return sendErrorResponse("Missing shiftId");
     }
     
