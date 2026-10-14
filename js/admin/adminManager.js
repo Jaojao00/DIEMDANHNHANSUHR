@@ -156,58 +156,105 @@ const AdminManager = {
       html: `
         <div class="text-left space-y-3 p-2">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Mã NV / CTV:</label>
-            <input id="swal_emp_id" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: OPS11999" />
+            <label class="block text-xs font-bold text-slate-700 mb-1">Mã NV / CTV: <span class="text-red-500">*</span></label>
+            <input id="swal_emp_id" class="swal2-input !m-0 !w-full !text-sm font-mono" placeholder="VD: OPS11999" />
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
-            <input id="swal_emp_name" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Lê Quốc Bảo" />
+            <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên: <span class="text-red-500">*</span></label>
+            <input id="swal_emp_name" class="swal2-input !m-0 !w-full !text-sm uppercase" placeholder="VD: LÊ QUỐC BẢO" />
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại / Zalo:</label>
-            <input id="swal_emp_phone" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: 0912345678" />
+            <input id="swal_emp_phone" class="swal2-input !m-0 !w-full !text-sm font-mono" placeholder="VD: 0912345678" />
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Định danh:</label>
+              <select id="swal_emp_identity" class="swal2-select !m-0 !w-full !text-sm !h-10">
+                <option value="A-OS" selected>A-OS</option>
+                <option value="OPS">OPS</option>
+                <option value="CTV">CTV</option>
+                <option value="FULL">FULL</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Vị trí cố định:</label>
+              <input id="swal_emp_pos" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Xả xe 1" />
+            </div>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Vị trí đầu ca:</label>
-            <input id="swal_emp_pos" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Xả xe 1" />
+            <label class="block text-xs font-bold text-slate-700 mb-1">Ghi chú (NOTE):</label>
+            <input id="swal_emp_note" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Nhân sự tăng cường..." />
           </div>
         </div>
       `,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonColor: '#D90012',
-      confirmButtonText: 'Thêm vào ca',
-      cancelButtonText: 'Đóng',
+      confirmButtonText: 'Thêm & Lưu Ngay',
+      cancelButtonText: 'Hủy',
       preConfirm: () => {
         const id = document.getElementById('swal_emp_id').value.trim();
         const name = document.getElementById('swal_emp_name').value.trim();
         const phone = document.getElementById('swal_emp_phone').value.trim();
+        const identity = document.getElementById('swal_emp_identity').value.trim();
         const pos = document.getElementById('swal_emp_pos').value.trim();
+        const note = document.getElementById('swal_emp_note').value.trim();
         if (!id || !name) {
           Swal.showValidationMessage('Vui lòng nhập Mã và Họ tên nhân viên!');
           return false;
         }
-        return { id, name, phone, pos };
+        return { id, name, phone, identity, pos, note };
       }
     });
 
     if (formValues) {
+      const currentHeaders = AdminUI.tableHeaders && AdminUI.tableHeaders.length > 0
+        ? AdminUI.tableHeaders
+        : ['Vị trí cố định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'];
+
+      const positions = {};
+      currentHeaders.forEach((h, idx) => {
+        if (idx === 0) {
+          positions[h] = formValues.pos || 'Chưa xếp';
+        } else {
+          positions[h] = 'Chưa xếp';
+        }
+      });
+      positions['NOTE'] = formValues.note || '';
+
       const newEmp = {
         stt: DataManager.state.roster.length + 1,
         id: Utils.sanitizeId(formValues.id),
-        name: formValues.name,
+        name: formValues.name.toUpperCase(),
         phone: formValues.phone,
-        identity: 'A-OS',
+        identity: formValues.identity || 'A-OS',
         status: 'pending',
         checkinTime: '',
-        positions: { '18H-20H': formValues.pos, '20H-22H': 'Chưa xếp' }
+        positions: positions,
+        note: formValues.note || ''
       };
 
       DataManager.state.roster.push(newEmp);
       DataManager.recalculateStats();
       AdminUI.updateStatsCards();
       AdminUI.renderRosterTable();
-      Utils.toast(`Đã thêm nhân sự: ${newEmp.name}`, 'success');
+
+      // Lưu tức thời: LocalStorage -> Firestore -> Google Sheets
+      const currentShift = DataManager.state.currentShift;
+      DataManager.saveCachedRoster(currentShift, DataManager.state.roster);
+
+      if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+        FirebaseService.saveRoster(currentShift, DataManager.state.roster).catch((err) => {
+          console.warn('[AdminManager] Firebase save error when adding emp:', err);
+        });
+      }
+
+      DataManager.saveSchedule(currentShift, DataManager.state.roster, currentHeaders).catch((err) => {
+        console.warn('[AdminManager] Google Sheets save error when adding emp:', err);
+      });
+
+      Utils.toast(`Đã thêm & lưu nhân sự: ${newEmp.name}`, 'success');
     }
   },
 

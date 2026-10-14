@@ -37,6 +37,7 @@ function doPost(e) {
       case "load":
       case "get_roster": return handleLoadRoster(shiftId, false);
       case "request": return handleRequest(data, shiftId, sheet);
+      case "load_requests": return handleLoadRequests(data);
       case "get_change_requests": return handleGetChangeRequests(data, shiftId, sheet);
       case "approve_change_request": return handleApproveChangeRequest(data, shiftId, sheet);
       case "reject_change_request": return handleRejectChangeRequest(data, shiftId, sheet);

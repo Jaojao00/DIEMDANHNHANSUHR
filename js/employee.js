@@ -520,21 +520,40 @@ const EmployeeModule = {
         type: 'XIN_OFF',
         empId: empId,
         empName: empName,
+        name: empName,
         phone: phone,
         date: offDate,
         reason: reason,
         shift: DataManager.state.currentShift,
+        targetShift: DataManager.state.currentShift,
         timestamp: Utils.getCurrentVNTime()
       });
 
       Utils.hideLoading();
 
       if (res && res.success) {
+        // Cập nhật tức thời trạng thái 'off' trong Firestore & Cache nếu xin nghỉ hôm nay
+        const todayStr = Utils.formatDateISO();
+        if (offDate === todayStr) {
+          const shiftId = DataManager.state.currentShift;
+          const roster = DataManager.getCachedRoster(shiftId) || DataManager.state.roster;
+          const target = roster.find((emp) => Utils.isIdMatch(emp.id, empId) || Utils.isIdMatch(emp.cccd, empId) || emp.phone === phone);
+          if (target) {
+            target.status = 'off';
+            if (!target.positions) target.positions = {};
+            target.positions['NOTE'] = reason;
+            DataManager.saveCachedRoster(shiftId, roster);
+            if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+              FirebaseService.saveRoster(shiftId, roster).catch((e) => console.warn(e));
+            }
+          }
+        }
+
         Utils.showAlert('Gửi đơn thành công', 'Đơn xin nghỉ đã được ghi vào hệ thống và đồng bộ.', 'success');
         form.reset();
         window.App?.closeModal('modalXinOff');
       } else {
-        Utils.showAlert('Lỗi', res.message || 'Không thể lưu đơn xin nghỉ.', 'error');
+        Utils.showAlert('Lỗi', res.message || res.error || 'Không thể lưu đơn xin nghỉ.', 'error');
       }
     } catch (err) {
       Utils.hideLoading();
@@ -567,9 +586,11 @@ const EmployeeModule = {
         type: 'XIN_LEN_CA',
         empId: empId,
         empName: empName,
+        name: empName,
         phone: phone,
         date: targetDate,
         targetShift: targetShift,
+        shift: targetShift,
         note: note,
         identity: 'A-OS',
         status: 'pending',
@@ -579,6 +600,37 @@ const EmployeeModule = {
       Utils.hideLoading();
 
       if (res && res.success) {
+        // Đồng bộ tức thời nhân sự vào Firestore & LocalStorage của ca đích
+        const todayStr = Utils.formatDateISO();
+        if (targetDate === todayStr) {
+          const shiftRoster = DataManager.getCachedRoster(targetShift) || [];
+          const existing = shiftRoster.find((emp) => Utils.isIdMatch(emp.id, empId) || Utils.isIdMatch(emp.cccd, empId));
+          if (!existing) {
+            const newEmp = {
+              stt: shiftRoster.length + 1,
+              id: Utils.sanitizeId(empId),
+              name: empName.toUpperCase(),
+              phone: phone,
+              identity: 'A-OS',
+              status: 'pending',
+              checkinTime: '',
+              positions: {
+                'Vị trí cố định': 'Chưa xếp',
+                'SAU GIỜ NGHỈ': 'Chưa xếp',
+                '4h-6h': 'Chưa xếp',
+                'Xuất Tải': 'Chưa xếp',
+                'NOTE': note ? `Xin lên ca: ${note}` : 'Xin lên ca (A-OS)'
+              },
+              note: note ? `Xin lên ca: ${note}` : 'Xin lên ca (A-OS)'
+            };
+            shiftRoster.push(newEmp);
+            DataManager.saveCachedRoster(targetShift, shiftRoster);
+            if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+              FirebaseService.saveRoster(targetShift, shiftRoster).catch((e) => console.warn(e));
+            }
+          }
+        }
+
         Utils.showAlert(
           'Đã tiếp nhận yêu cầu lên ca',
           'Bạn đã được xếp vào danh sách chờ (A-OS, pending). Quản trị viên sẽ xác nhận vị trí khi vào ca!',
@@ -587,7 +639,7 @@ const EmployeeModule = {
         form.reset();
         window.App?.closeModal('modalXinLenCa');
       } else {
-        Utils.showAlert('Lỗi', res.message || 'Không thể gửi yêu cầu', 'error');
+        Utils.showAlert('Lỗi', res.message || res.error || 'Không thể gửi yêu cầu', 'error');
       }
     } catch (err) {
       Utils.hideLoading();

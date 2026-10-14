@@ -154,197 +154,240 @@ function handleLoadRoster(shiftId, returnPlainArray) {
 }
 
 function handleRequest(data, shiftId, sheet) {
-
-      try {
-        var reqSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var reqSheet = reqSs.getSheetByName("XIN_OFF");
-        
-        // Tạo sheet nếu chưa có
-        if (!reqSheet) {
-          reqSheet = reqSs.insertSheet("XIN_OFF");
-        }
-        
-        // Tạo header nếu sheet trống
-        if (reqSheet.getLastRow() === 0) {
-          reqSheet.appendRow(["Dấu thời gian", "MÃ OPS", "HỌ VÀ TÊN ( viết in hoa )", "Số Điện Thoại", "XIN OFF/THẾ CA", "LÝ DO XIN OFF", "NGÀY XIN LÊN CA/XIN OFF", "GHI CHÚ"]);
-        }
-        
-        var reqType = data.type || "XIN OFF";
-        var reqDate = data.date || ""; // VD: "24/06/2026"
-        var reqEmpId = (data.empId || "").toString().toLowerCase().trim();
-        var reqTargetShift = data.targetShift || "";
-        
-        if (reqSheet.getLastRow() > 1) {
-          var reqData = reqSheet.getDataRange().getValues();
-          for (var i = 1; i < reqData.length; i++) {
-             var rowId = (reqData[i][1] || "").toString().toLowerCase().trim();
-             var rowType = (reqData[i][4] || "").toString().trim();
-             
-             // Xử lý Date object từ Google Sheets
-             var rawDate = reqData[i][6];
-             var rowDate = "";
-             if (rawDate instanceof Date) {
-               rowDate = Utilities.formatDate(rawDate, CONFIG.TIMEZONE, "dd/MM/yyyy");
-             } else {
-               rowDate = (rawDate || "").toString().trim();
-             }
-             
-             var rowTargetShift = (reqData[i][8] || "").toString().trim();
-             
-             if (rowId === reqEmpId && rowType === reqType && rowDate === reqDate) {
-               if (reqType === "XIN LÊN CA") {
-                 // Nếu xin lên ca thì phải check trùng ca đích
-                 if (rowTargetShift === reqTargetShift) {
-                   return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã đăng ký " + reqType + " cho ca này vào ngày " + reqDate + " thành công rồi, vui lòng không điền lại!" })).setMimeType(ContentService.MimeType.JSON);
-                 }
-               } else {
-                 // Xin off thì chỉ check ngày
-                 return ContentService.createTextOutput(JSON.stringify({ error: "Bạn đã gửi yêu cầu " + reqType + " cho ngày " + reqDate + " thành công rồi, vui lòng không điền lại!" })).setMimeType(ContentService.MimeType.JSON);
-               }
-             }
-          }
-        }
-        
-        reqSheet.appendRow([
-          data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss"),
-          data.empId || "",
-          data.name || "",
-          data.phone || "",
-          data.type || "XIN OFF",
-          data.reason || "",
-          data.date || "",
-          data.note || "",
-          data.targetShift || "" // Lưu ca đích để autoGenerateRoster biết
-        ]);
-        
-        // AUTO-UPDATE "XIN OFF" IN SHIFT SHEETS
-        if (data.type === "XIN OFF") {
-          var allSheets = reqSs.getSheets();
-          var searchId = (data.empId || "").toString().toLowerCase().trim();
-          var reqTime = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
-          
-          for (var s = 0; s < allSheets.length; s++) {
-            var sName = allSheets[s].getName();
-            var isTargetMatch = true;
-            if (data.targetShift && data.targetShift !== "ALL") {
-               var expectedSheetName = "Ca_" + data.targetShift.replace(":", "").replace("-", "_");
-               if (sName !== expectedSheetName) {
-                  isTargetMatch = false;
-               }
-            }
-            if (sName.indexOf("Ca_") === 0 && isTargetMatch) {
-              var dataRange = allSheets[s].getDataRange();
-              var values = dataRange.getValues();
-              if (values.length > 1) {
-                var headers = values[0];
-                var statusCol = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") + 1 : headers.length - 2;
-                var timeCol = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") + 1 : headers.length - 1;
-                var phoneCol = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") + 1 : headers.length;
-                var noteCol = headers.indexOf("Ghi Chú") !== -1 ? headers.indexOf("Ghi Chú") + 1 : headers.length - 3;
-                
-                var hasUpdate = false;
-                for (var i = 1; i < values.length; i++) {
-                  var empIdInSheet = (values[i][1] || "").toString().toLowerCase().trim();
-                  var empStt = (values[i][0] || "").toString().toLowerCase().trim();
-                  var empName = (values[i][2] || "").toString().toLowerCase().trim();
-                  
-                  if (empIdInSheet === searchId || empStt === searchId || empName === searchId) {
-                    var currentStatus = values[i][statusCol - 1]; // 0-based index
-                    if (currentStatus !== "confirmed") {
-                      values[i][statusCol - 1] = "XIN OFF";
-                      values[i][timeCol - 1] = reqTime;
-                      if (data.reason) {
-                        values[i][noteCol - 1] = data.reason;
-                      }
-                      if (data.phone) {
-                        values[i][phoneCol - 1] = data.phone;
-                      }
-                      hasUpdate = true;
-                    }
-                  }
-                }
-                if (hasUpdate) {
-                  dataRange.setValues(values);
-                }
-              }
-            }
-          }
-        }
-        
-        // AUTO-APPEND "XIN LÊN CA" TO TARGET SHIFT SHEET
-        if (data.type === "XIN LÊN CA" && data.targetShift) {
-          var targetSheetName = "Ca_" + data.targetShift.replace(":", "").replace("-", "_");
-          var targetSheet = reqSs.getSheetByName(targetSheetName);
-          if (targetSheet) {
-            var dataRange = targetSheet.getDataRange();
-            var values = dataRange.getValues();
-            if (values.length > 0) {
-              var headers = values[0];
-              var searchId = (data.empId || "").toString().toLowerCase().trim();
-              var foundIndex = -1;
-              
-              for (var r = 1; r < values.length; r++) {
-                var rId = (values[r][1] || "").toString().toLowerCase().trim();
-                var rStt = (values[r][0] || "").toString().toLowerCase().trim();
-                var rName = (values[r][2] || "").toString().toLowerCase().trim();
-                if (rId === searchId || rStt === searchId || rName === searchId) {
-                  foundIndex = r;
-                  break;
-                }
-              }
-              
-              var noteIndex = headers.indexOf("Ghi Chú") !== -1 ? headers.indexOf("Ghi Chú") : headers.length - 4;
-              var statusIndex = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") : headers.length - 3;
-              var timeIndex = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") : headers.length - 2;
-              var phoneIndex = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") : headers.length - 1;
-              var reqTime = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
-              
-              if (foundIndex > -1) {
-                // Update existing row
-                if (statusIndex >= 0) {
-                  var currentStatus = values[foundIndex][statusIndex];
-                  if (currentStatus !== "confirmed") {
-                    targetSheet.getRange(foundIndex + 1, statusIndex + 1).setValue("pending");
-                    targetSheet.getRange(foundIndex + 1, timeIndex + 1).setValue(reqTime);
-                    if (data.note || data.reason) {
-                      targetSheet.getRange(foundIndex + 1, noteIndex + 1).setValue(data.note || data.reason);
-                    }
-                    if (data.phone) {
-                      targetSheet.getRange(foundIndex + 1, phoneIndex + 1).setValue(data.phone);
-                    }
-                  }
-                }
-              } else {
-                // Append new row
-                var newRow = new Array(headers.length);
-                for (var k = 0; k < newRow.length; k++) newRow[k] = "";
-                
-                newRow[0] = values.length; // STT
-                newRow[1] = data.empId || "";
-                newRow[2] = data.name || "";
-                newRow[3] = "A-OS"; // Định danh mặc định
-                
-                for (var p = 4; p < noteIndex; p++) {
-                  newRow[p] = "Chưa sắp lịch";
-                }
-                
-                if (noteIndex >= 4) {
-                  newRow[noteIndex] = data.note || data.reason || "";
-                  newRow[statusIndex] = "pending";
-                  newRow[timeIndex] = reqTime;
-                  newRow[phoneIndex] = data.phone || "";
-                }
-                targetSheet.appendRow(newRow);
-              }
-            }
-          }
-        }
-        
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Gửi yêu cầu thành công" })).setMimeType(ContentService.MimeType.JSON);
-      } catch(reqErr) {
-        return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi ghi trang tính yêu cầu: " + reqErr.toString() })).setMimeType(ContentService.MimeType.JSON);
-      }
+  try {
+    var reqSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var reqSheet = reqSs.getSheetByName("XIN_OFF");
     
+    // Tạo sheet nếu chưa có
+    if (!reqSheet) {
+      reqSheet = reqSs.insertSheet("XIN_OFF");
+    }
+    
+    // Tạo header nếu sheet trống
+    if (reqSheet.getLastRow() === 0) {
+      reqSheet.appendRow(["Dấu thời gian", "MÃ OPS", "HỌ VÀ TÊN ( viết in hoa )", "Số Điện Thoại", "XIN OFF/THẾ CA", "LÝ DO XIN OFF", "NGÀY XIN LÊN CA/XIN OFF", "GHI CHÚ", "CA ĐÍCH"]);
+    }
+    
+    var rawType = (data.type || "").toString().toUpperCase().replace(/_/g, " ").trim();
+    var reqType = "XIN OFF";
+    if (rawType.indexOf("LEN") !== -1 || rawType.indexOf("LÊN") !== -1) {
+      reqType = "XIN LÊN CA";
+    }
+    
+    var reqEmpId = (data.empId || "").toString().toUpperCase().trim();
+    var reqEmpName = (data.empName || data.name || "").toString().trim().toUpperCase();
+    var reqPhone = (data.phone || "").toString().trim();
+    var reqReason = (data.reason || "").toString().trim();
+    var reqNote = (data.note || "").toString().trim();
+    var reqTargetShift = (data.targetShift || data.shift || shiftId || "").toString().trim();
+    var reqDate = (data.date || "").toString().trim();
+    var reqTimestamp = data.timestamp || Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
+
+    // Chuẩn hóa ngày để so sánh trùng: "2026-10-15" vs "15/10/2026"
+    function normDate(d) {
+      if (!d) return "";
+      if (d instanceof Date) {
+        return Utilities.formatDate(d, CONFIG.TIMEZONE, "yyyy-MM-dd");
+      }
+      var s = d.toString().trim();
+      var m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m) {
+        return m[3] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[1]).slice(-2);
+      }
+      return s;
+    }
+    var compReqDate = normDate(reqDate);
+
+    // Kiểm tra trùng đơn
+    if (reqSheet.getLastRow() > 1) {
+      var reqData = reqSheet.getDataRange().getValues();
+      for (var i = 1; i < reqData.length; i++) {
+        var rowId = (reqData[i][1] || "").toString().toUpperCase().trim();
+        var rowRawType = (reqData[i][4] || "").toString().toUpperCase().replace(/_/g, " ").trim();
+        var rowType = (rowRawType.indexOf("LEN") !== -1 || rowRawType.indexOf("LÊN") !== -1) ? "XIN LÊN CA" : "XIN OFF";
+        var rowDate = normDate(reqData[i][6]);
+        var rowTargetShift = (reqData[i][8] || "").toString().trim();
+
+        if (rowId === reqEmpId && rowType === reqType && rowDate === compReqDate) {
+          if (reqType === "XIN LÊN CA") {
+            if (rowTargetShift === reqTargetShift) {
+              return sendErrorResponse("Bạn đã đăng ký " + reqType + " cho ca này vào ngày " + reqDate + " thành công rồi, vui lòng không gửi lại!");
+            }
+          } else {
+            return sendErrorResponse("Bạn đã gửi đơn " + reqType + " cho ngày " + reqDate + " rồi, vui lòng không gửi lại!");
+          }
+        }
+      }
+    }
+
+    // Thêm bản ghi vào sheet XIN_OFF
+    reqSheet.appendRow([
+      reqTimestamp,
+      reqEmpId,
+      reqEmpName,
+      reqPhone,
+      reqType,
+      reqReason,
+      reqDate,
+      reqNote,
+      reqTargetShift
+    ]);
+
+    // 1. TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI "OFF" TRONG SHEET CA LÀM VIỆC (NẾU XIN OFF)
+    if (reqType === "XIN OFF") {
+      var allSheets = reqSs.getSheets();
+      var searchId = reqEmpId.toLowerCase();
+
+      for (var s = 0; s < allSheets.length; s++) {
+        var sName = allSheets[s].getName();
+        var isTargetMatch = true;
+        if (reqTargetShift && reqTargetShift !== "ALL") {
+          var expectedSheetName = "Ca_" + reqTargetShift.replace(":", "").replace("-", "_");
+          if (sName !== expectedSheetName) {
+            isTargetMatch = false;
+          }
+        }
+        if (sName.indexOf("Ca_") === 0 && isTargetMatch) {
+          var dataRange = allSheets[s].getDataRange();
+          var values = dataRange.getValues();
+          if (values.length > 1) {
+            var headers = values[0];
+            var statusCol = headers.indexOf("Trạng Thái") !== -1 ? headers.indexOf("Trạng Thái") + 1 : headers.length - 2;
+            var timeCol = headers.indexOf("Thời Gian") !== -1 ? headers.indexOf("Thời Gian") + 1 : headers.length - 1;
+            var phoneCol = headers.indexOf("SĐT") !== -1 ? headers.indexOf("SĐT") + 1 : headers.length;
+            var noteCol = headers.indexOf("Ghi Chú") !== -1 ? headers.indexOf("Ghi Chú") + 1 : headers.length - 3;
+
+            var hasUpdate = false;
+            for (var r = 1; r < values.length; r++) {
+              var empIdInSheet = (values[r][1] || "").toString().toLowerCase().trim();
+              var empNameInSheet = (values[r][2] || "").toString().toLowerCase().trim();
+
+              if (empIdInSheet === searchId || (empNameInSheet && empNameInSheet === reqEmpName.toLowerCase())) {
+                var currentStatus = (values[r][statusCol - 1] || "").toString().toLowerCase();
+                if (currentStatus !== "confirmed") {
+                  values[r][statusCol - 1] = "off";
+                  values[r][timeCol - 1] = reqTimestamp;
+                  if (reqReason) values[r][noteCol - 1] = reqReason;
+                  if (reqPhone) values[r][phoneCol - 1] = reqPhone;
+                  hasUpdate = true;
+                }
+              }
+            }
+            if (hasUpdate) {
+              dataRange.setValues(values);
+            }
+          }
+        }
+      }
+    }
+
+    // 2. TỰ ĐỘNG THÊM VÀO SHEET CA ĐÍCH (NẾU XIN LÊN CA)
+    if (reqType === "XIN LÊN CA" && reqTargetShift) {
+      var targetSheetName = "Ca_" + reqTargetShift.replace(":", "").replace("-", "_");
+      var targetSheet = reqSs.getSheetByName(targetSheetName);
+      if (targetSheet) {
+        var tDataRange = targetSheet.getDataRange();
+        var tValues = tDataRange.getValues();
+        if (tValues.length > 0) {
+          var tHeaders = tValues[0];
+          var searchTId = reqEmpId.toLowerCase();
+          var foundIndex = -1;
+
+          for (var tr = 1; tr < tValues.length; tr++) {
+            var trId = (tValues[tr][1] || "").toString().toLowerCase().trim();
+            var trName = (tValues[tr][2] || "").toString().toLowerCase().trim();
+            if (trId === searchTId || (trName && trName === reqEmpName.toLowerCase())) {
+              foundIndex = tr;
+              break;
+            }
+          }
+
+          var tNoteIndex = tHeaders.indexOf("Ghi Chú") !== -1 ? tHeaders.indexOf("Ghi Chú") : tHeaders.length - 4;
+          var tStatusIndex = tHeaders.indexOf("Trạng Thái") !== -1 ? tHeaders.indexOf("Trạng Thái") : tHeaders.length - 3;
+          var tTimeIndex = tHeaders.indexOf("Thời Gian") !== -1 ? tHeaders.indexOf("Thời Gian") : tHeaders.length - 2;
+          var tPhoneIndex = tHeaders.indexOf("SĐT") !== -1 ? tHeaders.indexOf("SĐT") : tHeaders.length - 1;
+
+          if (foundIndex > -1) {
+            if (tStatusIndex >= 0) {
+              var curStatus = (tValues[foundIndex][tStatusIndex] || "").toString().toLowerCase();
+              if (curStatus !== "confirmed") {
+                targetSheet.getRange(foundIndex + 1, tStatusIndex + 1).setValue("pending");
+                targetSheet.getRange(foundIndex + 1, tTimeIndex + 1).setValue(reqTimestamp);
+                if (reqNote || reqReason) {
+                  targetSheet.getRange(foundIndex + 1, tNoteIndex + 1).setValue(reqNote || reqReason);
+                }
+                if (reqPhone) {
+                  targetSheet.getRange(foundIndex + 1, tPhoneIndex + 1).setValue(reqPhone);
+                }
+              }
+            }
+          } else {
+            var newRow = new Array(tHeaders.length);
+            for (var k = 0; k < newRow.length; k++) newRow[k] = "";
+
+            newRow[0] = tValues.length; // STT
+            newRow[1] = reqEmpId;
+            newRow[2] = reqEmpName;
+            newRow[3] = data.identity || "A-OS";
+
+            for (var p = 4; p < tNoteIndex; p++) {
+              newRow[p] = "Chưa xếp";
+            }
+
+            if (tNoteIndex >= 4) {
+              newRow[tNoteIndex] = reqNote || reqReason || "Xin lên ca (A-OS)";
+              newRow[tStatusIndex] = "pending";
+              newRow[tTimeIndex] = reqTimestamp;
+              newRow[tPhoneIndex] = reqPhone;
+            }
+            targetSheet.appendRow(newRow);
+          }
+        }
+      }
+    }
+
+    return sendJsonResponse({ success: true, message: "Gửi yêu cầu " + reqType + " thành công" });
+  } catch (reqErr) {
+    return sendErrorResponse("Lỗi xử lý yêu cầu: " + reqErr.toString());
+  }
+}
+
+function handleLoadRequests(data) {
+  try {
+    var reqSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var reqSheet = reqSs.getSheetByName("XIN_OFF");
+    if (!reqSheet || reqSheet.getLastRow() <= 1) {
+      return sendJsonResponse({ success: true, data: [] });
+    }
+    var values = reqSheet.getDataRange().getValues();
+    var result = [];
+    for (var i = 1; i < values.length; i++) {
+      var r = values[i];
+      var rawDate = r[6];
+      var dateStr = "";
+      if (rawDate instanceof Date) {
+        dateStr = Utilities.formatDate(rawDate, CONFIG.TIMEZONE, "dd/MM/yyyy");
+      } else {
+        dateStr = (rawDate || "").toString().trim();
+      }
+      result.push({
+        id: "REQ_" + i,
+        ts: r[0] || "",
+        empId: (r[1] || "").toString().toUpperCase().trim(),
+        empName: r[2] || "",
+        phone: r[3] || "",
+        type: r[4] || "XIN OFF",
+        reason: r[5] || "",
+        date: dateStr,
+        note: r[7] || "",
+        shiftId: r[8] || "",
+        status: "pending"
+      });
+    }
+    return sendJsonResponse({ success: true, data: result.reverse() });
+  } catch (err) {
+    return sendErrorResponse("Lỗi tải danh sách yêu cầu: " + err.toString());
+  }
 }
 
 function handleGetChangeRequests(data, shiftId, sheet) {
