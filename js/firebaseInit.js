@@ -33,6 +33,15 @@ const FirebaseService = {
   },
 
   /**
+   * Chuẩn hóa ShiftId an toàn cho Document Reference của Firestore (Tránh lỗi 1 segment)
+   */
+  cleanShift(shiftId) {
+    if (!shiftId) return 'shift_default';
+    const cleaned = String(shiftId).trim().replace(/:/g, '').replace(/-/g, '_');
+    return cleaned || 'shift_default';
+  },
+
+  /**
    * Lắng nghe cập nhật điểm danh thời gian thực theo Ca làm việc
    */
   listenToShiftCheckins(shiftId, callback) {
@@ -42,7 +51,8 @@ const FirebaseService = {
 
     try {
       const today = Utils.formatDateISO();
-      const docPath = `shifts/${today}_${shiftId}`;
+      const cleanId = this.cleanShift(shiftId);
+      const docPath = `shifts/${today}_${cleanId}`;
       
       const unsubscribe = this.db.doc(docPath).onSnapshot((doc) => {
         if (doc.exists) {
@@ -65,17 +75,18 @@ const FirebaseService = {
    * Ghi nhận điểm danh tức thì lên Firestore (< 100ms)
    */
   async recordCheckinRealtime(shiftId, employee) {
-    if (!this.isInitialized || !this.db) return false;
+    if (!this.isInitialized || !this.db || !employee) return false;
 
     try {
       const today = Utils.formatDateISO();
-      const docRef = this.db.doc(`shifts/${today}_${shiftId}`);
+      const cleanId = this.cleanShift(shiftId);
+      const docRef = this.db.doc(`shifts/${today}_${cleanId}`);
       
       await docRef.set({
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
         employees: firebase.firestore.FieldValue.arrayUnion({
-          id: employee.id,
-          name: employee.name,
+          id: employee.id || employee.empId || '',
+          name: employee.name || '',
           timestamp: Utils.getCurrentVNTime(),
           status: 'confirmed'
         })
@@ -95,7 +106,8 @@ const FirebaseService = {
     if (!this.isInitialized || !this.db) return false;
     try {
       const today = Utils.formatDateISO();
-      const docRef = this.db.doc(`shifts/${today}_${shiftId}`);
+      const cleanId = this.cleanShift(shiftId);
+      const docRef = this.db.doc(`shifts/${today}_${cleanId}`);
       await docRef.set({
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
         employees: firebase.firestore.FieldValue.arrayUnion({
@@ -119,16 +131,16 @@ const FirebaseService = {
     if (!this.isInitialized || !this.db) return false;
     try {
       const today = Utils.formatDateISO();
-      const cleanShiftId = shiftId.replace(/:/g, '').replace(/-/g, '_');
+      const cleanId = this.cleanShift(shiftId);
       const payload = {
         date: today,
-        shiftId: shiftId,
+        shiftId: shiftId || 'shift_default',
         employees: rosterData || [],
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       await Promise.all([
-        this.db.doc(`rosters/${today}_${cleanShiftId}`).set(payload, { merge: true }),
-        this.db.doc(`rosters/${cleanShiftId}`).set(payload, { merge: true })
+        this.db.doc(`rosters/${today}_${cleanId}`).set(payload, { merge: true }),
+        this.db.doc(`rosters/${cleanId}`).set(payload, { merge: true })
       ]);
       return true;
     } catch (e) {
@@ -144,9 +156,9 @@ const FirebaseService = {
     if (!this.isInitialized || !this.db) return null;
     try {
       const today = Utils.formatDateISO();
-      const cleanShiftId = shiftId.replace(/:/g, '').replace(/-/g, '_');
+      const cleanId = this.cleanShift(shiftId);
       
-      let snap = await this.db.doc(`rosters/${today}_${cleanShiftId}`).get();
+      let snap = await this.db.doc(`rosters/${today}_${cleanId}`).get();
       if (snap.exists) {
         const data = snap.data();
         if (Array.isArray(data.employees) && data.employees.length > 0) {
@@ -154,7 +166,7 @@ const FirebaseService = {
         }
       }
 
-      snap = await this.db.doc(`rosters/${cleanShiftId}`).get();
+      snap = await this.db.doc(`rosters/${cleanId}`).get();
       if (snap.exists) {
         const data = snap.data();
         if (Array.isArray(data.employees) && data.employees.length > 0) {

@@ -1,5 +1,5 @@
 // Service Worker Agari HR (Offline-First & Smart Caching)
-const CACHE_NAME = 'hr-app-v78';
+const CACHE_NAME = 'hr-app-v79';
 
 const STATIC_ASSETS = [
   './',
@@ -53,9 +53,24 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Xử lý fetch: Network First cho API, Cache First với Network Fallback cho Static
+// Xử lý fetch: Chỉ xử lý HTTP/HTTPS GET request (Tránh lỗi chrome-extension)
 self.addEventListener('fetch', (event) => {
-  const requestUrl = new URL(event.request.url);
+  // Bỏ qua các scheme không phải HTTP/HTTPS (như chrome-extension://, moz-extension://)
+  if (!event.request.url.startsWith('http://') && !event.request.url.startsWith('https://')) {
+    return;
+  }
+
+  // Bỏ qua nếu không phải phương thức GET (Cache API chỉ hỗ trợ GET)
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  let requestUrl;
+  try {
+    requestUrl = new URL(event.request.url);
+  } catch (e) {
+    return;
+  }
 
   // Không cache request đến Google Apps Script API hoặc Firebase
   if (
@@ -72,8 +87,14 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              if (event.request.url.startsWith('http')) {
+                cache.put(event.request, clone).catch(() => {});
+              }
+            });
+          }
           return response;
         })
         .catch(() => caches.match(event.request) || caches.match('./index.html'))
@@ -88,7 +109,11 @@ self.addEventListener('fetch', (event) => {
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+            caches.open(CACHE_NAME).then((cache) => {
+              if (event.request.url.startsWith('http')) {
+                cache.put(event.request, clone).catch(() => {});
+              }
+            });
           }
           return networkResponse;
         })
