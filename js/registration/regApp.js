@@ -162,45 +162,12 @@ const RegApp = {
   },
 
   async handleSubmitChangeRequest(e) {
-    e.preventDefault();
-    const form = e.target;
-    const empId = form.empId.value.trim();
-    const empName = form.empName.value.trim();
-    const shift = form.shift.value;
-    const details = form.details.value.trim();
-
-    if (!empId || !empName || !details) {
-      Utils.toast('Vui lòng điền thông tin và chi tiết cần đổi lịch', 'warning');
-      return;
-    }
-
-    const requestId = 'CR_' + Utils.sanitizeId(empId) + '_' + Date.now().toString().slice(-4);
-
-    Utils.showLoading('Đang tạo mã yêu cầu đổi lịch...');
-
-    try {
-      const res = await RegAPI.submitChangeRequest({
-        requestId: requestId,
-        empId: empId,
-        empName: empName,
-        shiftId: shift,
-        selections: details,
-        status: 'pending'
-      });
-
-      Utils.hideLoading();
-
-      Utils.showAlert(
-        'Đã gửi yêu cầu đổi lịch!',
-        `Mã yêu cầu của bạn là: <strong>${requestId}</strong>. Vui lòng theo dõi trạng thái hoặc liên hệ Admin Zalo ca trực.`,
-        'success'
-      );
-      form.reset();
-      window.App?.closeModal('modalChangeRequest');
-    } catch (err) {
-      Utils.hideLoading();
-      Utils.showAlert('Lỗi', err.message, 'error');
-    }
+    if (e && e.preventDefault) e.preventDefault();
+    Utils.showAlert(
+      'Tạm Đóng Bảo Trì',
+      'Tính năng sửa lịch đã đăng ký (Change Request) hiện đang tạm đóng để bảo trì & nâng cấp dữ liệu. Quý anh/chị vui lòng liên hệ trực tiếp Quản lý ca hoặc Admin Zalo hỗ trợ để được hướng dẫn!',
+      'warning'
+    );
   }
 };
 

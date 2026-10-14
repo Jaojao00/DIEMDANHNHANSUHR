@@ -242,13 +242,16 @@
           </button>
 
           <!-- Xin Sửa Lịch (Change Request) -->
-          <button data-open-modal="modalChangeRequest" class="bg-white hover:bg-teal-50/50 border border-slate-200 hover:border-teal-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32">
-            <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
-              🔄
+          <button data-open-modal="modalChangeRequest" class="bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-amber-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
+            <div class="flex items-center justify-between w-full">
+              <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                🔄
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Bảo trì</span>
             </div>
             <div>
-              <div class="font-bold text-slate-800 text-sm group-hover:text-teal-600 transition">Sửa Lịch Đăng Ký</div>
-              <div class="text-[11px] text-slate-500">Tạo mã CR_ chờ duyệt</div>
+              <div class="font-bold text-slate-700 text-sm group-hover:text-amber-700 transition">Sửa Lịch Đăng Ký</div>
+              <div class="text-[11px] text-amber-600 font-medium">Tạm đóng bảo trì</div>
             </div>
           </button>
 
@@ -1068,42 +1071,35 @@
     </div>
   </div>
 
-  <!-- MODAL 7: XIN SỬA LỊCH ĐÃ ĐĂNG KÝ (CHANGE REQUEST - CR_) -->
+  <!-- MODAL 7: XIN SỬA LỊCH ĐÃ ĐĂNG KÝ (CHANGE REQUEST - CR_) [TẠM ĐÓNG BẢO TRÌ] -->
   <div id="modalChangeRequest" class="custom-modal-backdrop">
-    <div class="custom-modal-content p-6">
+    <div class="custom-modal-content p-6 max-w-md w-full text-center">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>🔄</span> Yêu Cầu Sửa Lịch Đã Đăng Ký (Change Request)
+          <span>🔄</span> Sửa Lịch Đã Đăng Ký
         </h3>
-        <button data-close-modal="modalChangeRequest" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+        <button type="button" data-close-modal="modalChangeRequest" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
 
-      <form id="formSubmitChangeRequest" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS / CTV:</label>
-          <input type="text" name="empId" required placeholder="VD: OPS10291" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
+      <div class="py-4 flex flex-col items-center">
+        <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mb-4 shadow-sm">
+          🛠️
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
-          <input type="text" name="empName" required placeholder="VD: Nguyễn Văn An" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none" />
+        <h4 class="text-base font-bold text-slate-800 mb-2">Tính Năng Tạm Đóng Bảo Trì</h4>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 max-w-xs">
+          Hệ thống tiếp nhận yêu cầu sửa lịch (Change Request) hiện đang được tạm dừng để phục vụ công tác bảo trì & nâng cấp dữ liệu.
+        </p>
+        <div class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-medium leading-relaxed text-left w-full mb-4">
+          <div class="font-bold mb-1 flex items-center gap-1.5 text-amber-800">
+            <span>📌</span> Hướng dẫn điều chỉnh lịch:
+          </div>
+          Quý anh/chị có nhu cầu thay đổi ca làm việc hoặc sửa lịch đăng ký vui lòng liên hệ trực tiếp <strong>Quản lý ca</strong> hoặc <strong>Admin Zalo hỗ trợ</strong> để được xử lý trực tiếp!
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Ca đăng ký ban đầu:</label>
-          <select name="shift" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-semibold">
-            <option value="18:00-22:00">18:00 - 22:00</option>
-            <option value="22:00-06:00">22:00 - 06:00</option>
-            <option value="06:00-15:00">06:00 - 15:00</option>
-            <option value="13:00-22:00">13:00 - 22:00</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Chi tiết ngày muốn thay đổi (WORK ↔ OFF):</label>
-          <textarea name="details" rows="3" required placeholder="VD: Xin đổi ngày 18/10 từ WORK sang OFF, bù vào ngày 21/10..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none"></textarea>
-        </div>
-        <button type="submit" class="w-full py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm shadow transition">
-          Tạo Yêu Cầu Đổi Lịch (Mã CR_)
-        </button>
-      </form>
+      </div>
+
+      <button type="button" data-close-modal="modalChangeRequest" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow transition">
+        Đã Hiểu
+      </button>
     </div>
   </div>
 
