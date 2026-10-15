@@ -10,19 +10,19 @@ function doPost(e) {
     var shiftId = data.shiftId || data.shift;
     
     // Auth Check for Admin Actions
-    var adminActions = ["save_reg_config", "reset_registrations", "reset_all_shifts", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs", "get_salary_list"];
+    var adminActions = ["save_reg_config", "reset_registrations", "reset_all_shifts", "sync_roster", "get_change_requests", "approve_change_request", "reject_change_request", "get_booking", "get_admin_logs", "get_salary_list", "get_registrations"];
     if (adminActions.indexOf(action) !== -1) {
       if (!verifyAdminToken(data.adminToken)) {
         return sendErrorResponse("Unauthorized. Vui lòng đăng nhập lại.", 401);
       }
     }
     
-    if (!shiftId && action !== "request" && action !== "load_requests" && action !== "request_item" && action !== "lookup_salary" && action !== "submit_complaint" && action !== "submit_registration" && action !== "submit_change_request" && adminActions.indexOf(action) === -1 && action !== "admin_login") {
+    if (!shiftId && action !== "request" && action !== "load_requests" && action !== "get_registration" && action !== "get_registrations" && action !== "request_item" && action !== "lookup_salary" && action !== "submit_complaint" && action !== "submit_registration" && action !== "submit_change_request" && adminActions.indexOf(action) === -1 && action !== "admin_login") {
       return sendErrorResponse("Missing shiftId");
     }
     
     var sheetName, sheet;
-    if (shiftId && action !== "submit_registration") {
+    if (shiftId && action !== "submit_registration" && action !== "get_registration" && action !== "get_registrations") {
       sheetName = "Ca_" + shiftId.replace(":", "").replace("-", "_");
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       sheet = ss.getSheetByName(sheetName);
@@ -50,6 +50,8 @@ function doPost(e) {
       case "checkin": return handleCheckin(data, shiftId, sheet);
       case "submit_registration": return handleSubmitRegistration(data, shiftId, sheet);
       case "submit_change_request": return handleSubmitChangeRequest(data, shiftId, sheet);
+      case "get_registration": return handleGetRegistration(data);
+      case "get_registrations": return handleGetAllRegistrations(data);
       case "save_reg_config": return handleSaveRegConfig(data, shiftId, sheet);
       case "reset_registrations": return handleResetRegistrations(data, shiftId, sheet);
       case "reset_all_shifts": return handleResetAllShifts(data);

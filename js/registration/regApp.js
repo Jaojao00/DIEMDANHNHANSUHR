@@ -5,6 +5,7 @@ const RegApp = {
   init() {
     this.generateCycleDays();
     this.bindEvents();
+    this.initLookupSchedule();
   },
 
   generateCycleDays() {
@@ -168,6 +169,242 @@ const RegApp = {
       'Tính năng sửa lịch đã đăng ký (Change Request) hiện đang tạm đóng để bảo trì & nâng cấp dữ liệu. Quý anh/chị vui lòng liên hệ trực tiếp Quản lý ca hoặc Admin Zalo hỗ trợ để được hướng dẫn!',
       'warning'
     );
+  },
+
+  initLookupSchedule() {
+    const form = document.getElementById('formLookupSchedule');
+    const input = document.getElementById('lookupScheduleEmpId');
+
+    // Auto-fill từ mã nhân viên đã nhập gần nhất
+    const autoFillEmpId = () => {
+      if (input && !input.value) {
+        const savedId = localStorage.getItem(CONFIG.STORAGE_KEYS.EMP_ID) || 
+                        localStorage.getItem('agari_emp_id') || 
+                        document.getElementById('inputEmpId')?.value || '';
+        if (savedId) {
+          input.value = savedId.trim().toUpperCase();
+        }
+      }
+    };
+
+    autoFillEmpId();
+
+    // Lắng nghe khi mở modalLookupSchedule để auto fill
+    document.querySelectorAll('[data-open-modal="modalLookupSchedule"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        autoFillEmpId();
+        // Nếu đã có sẵn mã và kết quả đang trống, tự động tra cứu luôn
+        const curVal = input?.value?.trim();
+        const resArea = document.getElementById('scheduleLookupResultArea');
+        if (curVal && resArea && resArea.querySelector('.border-dashed')) {
+          this.handleLookupSchedule(curVal);
+        }
+      });
+    });
+
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const empId = (input ? input.value : '').trim().toUpperCase();
+        if (!empId) {
+          Utils.toast('Vui lòng nhập Mã OPS / CTV', 'warning');
+          return;
+        }
+        this.handleLookupSchedule(empId);
+      });
+    }
+
+    if (input) {
+      input.addEventListener('input', () => {
+        input.value = input.value.toUpperCase();
+      });
+    }
+  },
+
+  async handleLookupSchedule(empId) {
+    const resultArea = document.getElementById('scheduleLookupResultArea');
+    const btn = document.getElementById('btnDoLookupSchedule');
+    if (!resultArea) return;
+
+    resultArea.innerHTML = `
+      <div class="text-center py-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-sky-500 border-t-transparent mb-3"></div>
+        <div class="text-sm font-bold text-slate-800">Đang tra cứu lịch làm việc của ${empId}...</div>
+        <div class="text-xs text-slate-400 mt-1">Đang đọc trực tiếp bảng đăng ký Google Sheets...</div>
+      </div>
+    `;
+
+    if (btn) btn.disabled = true;
+
+    try {
+      const data = await RegAPI.getRegistration(empId);
+      this.renderScheduleLookupResult(data, empId);
+    } catch (err) {
+      console.error('[handleLookupSchedule] Lỗi:', err);
+      resultArea.innerHTML = `
+        <div class="p-6 bg-red-50 rounded-2xl border border-red-200 text-center">
+          <div class="text-2xl mb-2">❌</div>
+          <div class="text-sm font-bold text-red-800 mb-1">Không thể tải dữ liệu lịch đăng ký</div>
+          <div class="text-xs text-red-600 mb-4">${err.message || 'Lỗi kết nối máy chủ.'}</div>
+          <button type="button" onclick="RegApp.handleLookupSchedule('${empId}')" class="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-xl shadow hover:bg-red-700 transition">
+            Thử Lại
+          </button>
+        </div>
+      `;
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  },
+
+  renderScheduleLookupResult(data, empId) {
+    const resultArea = document.getElementById('scheduleLookupResultArea');
+    if (!resultArea) return;
+
+    if (!Array.isArray(data) || data.length === 0) {
+      resultArea.innerHTML = `
+        <div class="text-center py-10 bg-amber-50/60 rounded-2xl border border-dashed border-amber-300 p-6">
+          <div class="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-3xl mx-auto mb-3 shadow-sm">
+            🔍
+          </div>
+          <h4 class="text-base font-bold text-slate-800 mb-1">
+            Không tìm thấy lịch đăng ký cho: <span class="font-mono text-agari-red font-black">${empId.toUpperCase()}</span>
+          </h4>
+          <p class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed mt-2 mb-4">
+            Quý anh/chị có thể <strong>chưa gửi đăng ký lịch</strong> hoặc <strong>nhập sai Mã OPS</strong>. Vui lòng kiểm tra lại mã hoặc bấm nút bên dưới để gửi đăng ký lịch định kỳ!
+          </p>
+          <div class="flex flex-wrap items-center justify-center gap-3">
+            <button type="button" data-open-modal="modalDangKyLich" data-close-modal="modalLookupSchedule" class="px-5 py-2.5 rounded-xl bg-agari-red hover:bg-agari-red-dark text-white font-bold text-xs shadow transition flex items-center gap-1.5">
+              <span>📋</span> Đăng Ký Lịch Mới Ngay
+            </button>
+          </div>
+        </div>
+      `;
+      resultArea.querySelectorAll('[data-open-modal]').forEach(b => {
+        b.addEventListener('click', (e) => {
+          const targetModal = e.currentTarget.dataset.openModal;
+          const closeTarget = e.currentTarget.dataset.closeModal;
+          if (closeTarget) window.App?.closeModal(closeTarget);
+          if (targetModal) window.App?.openModal(targetModal);
+        });
+      });
+      return;
+    }
+
+    let html = `
+      <div class="space-y-5">
+        <div class="flex items-center justify-between px-1">
+          <div class="text-xs font-bold text-slate-600 uppercase">
+            Tìm thấy <strong>${data.length}</strong> đợt đăng ký của: <span class="text-sky-700 font-mono font-bold">${empId.toUpperCase()}</span>
+          </div>
+          <button type="button" onclick="RegApp.handleLookupSchedule('${empId}')" class="text-xs text-sky-600 hover:text-sky-800 font-bold flex items-center gap-1 transition">
+            <span>🔄</span> Tải lại
+          </button>
+        </div>
+    `;
+
+    data.forEach((reg, index) => {
+      const selections = reg.selections || [];
+      const workCount = selections.filter(s => s.choice && s.choice !== 'OFF').length;
+      const offCount = selections.filter(s => !s.choice || s.choice === 'OFF').length;
+      
+      let formattedTime = 'Gần đây';
+      if (reg.timestamp) {
+        try {
+          const d = new Date(reg.timestamp);
+          if (!isNaN(d.getTime())) {
+            formattedTime = d.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+          }
+        } catch (e) {}
+      }
+
+      let cycleTitle = `Đợt đăng ký #${index + 1}`;
+      if (selections.length > 0) {
+        const firstLabel = selections[0].label || '';
+        const lastLabel = selections[selections.length - 1].label || '';
+        const m1 = firstLabel.match(/(\d{1,2}\/\d{1,2})/);
+        const m2 = lastLabel.match(/(\d{1,2}\/\d{1,2})/);
+        if (m1 && m2) {
+          cycleTitle = `Chu kỳ ${m1[1]} - ${m2[1]}`;
+        }
+      }
+
+      html += `
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm hover:shadow transition">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3.5 border-b border-slate-100 gap-2 mb-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-1">
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
+                  ${reg.shiftLabel || 'Ca Làm Việc'} (${reg.shiftId || ''})
+                </span>
+                <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                  ${cycleTitle}
+                </span>
+              </div>
+              <h4 class="text-base sm:text-lg font-black text-slate-900 uppercase">
+                ${reg.empName || empId}
+              </h4>
+            </div>
+            <div class="text-left sm:text-right">
+              <span class="text-[11px] text-slate-400 block">Thời gian nộp đơn:</span>
+              <span class="text-xs font-mono font-bold text-slate-700">${formattedTime}</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
+              <div>
+                <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wide">Đi Làm (WORK)</div>
+                <div class="text-xs text-emerald-600">Đã đăng ký lên ca</div>
+              </div>
+              <div class="text-2xl font-black text-emerald-600">
+                ${workCount} <span class="text-xs font-bold text-emerald-700">ngày</span>
+              </div>
+            </div>
+
+            <div class="bg-rose-50/80 border border-rose-200 rounded-xl p-3 flex items-center justify-between">
+              <div>
+                <div class="text-[11px] font-bold text-rose-800 uppercase tracking-wide">Nghỉ (OFF)</div>
+                <div class="text-xs text-rose-600">Không đăng ký làm</div>
+              </div>
+              <div class="text-2xl font-black text-rose-600">
+                ${offCount} <span class="text-xs font-bold text-rose-700">ngày</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-xs font-bold uppercase text-slate-600 mb-2.5 flex items-center justify-between">
+            <span>Chi tiết từng ngày (${selections.length} ngày):</span>
+            <span class="text-[11px] text-slate-400 font-normal">Màu xanh: Đi Làm | Màu xám: Nghỉ</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+            ${selections.map((sel) => {
+              const isWork = sel.choice && sel.choice !== 'OFF';
+              const choiceText = isWork ? (sel.choice === 'WORK' ? (reg.shiftLabel || 'ĐI LÀM') : sel.choice) : 'NGHỈ (OFF)';
+              return `
+                <div class="flex items-center justify-between p-2.5 rounded-xl border transition ${isWork ? 'bg-emerald-50/50 border-emerald-300/80' : 'bg-slate-50 border-slate-200'}">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg ${isWork ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-500'} flex items-center justify-center text-xs font-black flex-shrink-0">
+                      ${isWork ? '✓' : '✕'}
+                    </span>
+                    <span class="text-xs font-semibold text-slate-800">${sel.label}</span>
+                  </div>
+                  <div>
+                    ${isWork 
+                      ? `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-extrabold bg-emerald-600 text-white shadow-sm">${choiceText}</span>`
+                      : `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-200 text-slate-600">OFF</span>`
+                    }
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+    resultArea.innerHTML = html;
   }
 };
 

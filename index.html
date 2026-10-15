@@ -58,7 +58,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="./css/style.css?v=v85" />
+  <link rel="stylesheet" href="./css/style.css?v=v86" />
 </head>
 <body class="bg-[#FAFAFA] text-slate-900 font-sans antialiased selection:bg-red-500 selection:text-white">
 
@@ -346,6 +346,20 @@
             <div>
               <div class="font-bold text-slate-800 text-sm group-hover:text-purple-600 transition">Đăng Ký Lịch</div>
               <div class="text-[11px] text-slate-500">Chu kỳ 1-15 & 16-31</div>
+            </div>
+          </button>
+
+          <!-- Tra Cứu Lịch Làm Việc Đã Đăng Ký -->
+          <button data-open-modal="modalLookupSchedule" class="bg-white hover:bg-sky-50/50 border border-sky-200 hover:border-sky-400 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
+            <div class="flex items-center justify-between w-full">
+              <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                🔍
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-700 border border-sky-200">Tra cứu</span>
+            </div>
+            <div>
+              <div class="font-bold text-slate-800 text-sm group-hover:text-sky-600 transition">Lịch Đã Đăng Ký</div>
+              <div class="text-[11px] text-slate-500">Xem ngày đi làm & nghỉ</div>
             </div>
           </button>
 
@@ -1141,6 +1155,16 @@
         <button data-close-modal="modalDangKyLich" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
 
+      <!-- Quick Switcher Tabs -->
+      <div class="flex items-center gap-2 mb-4 bg-slate-100 p-1 rounded-xl">
+        <button type="button" class="flex-1 py-2 rounded-lg text-xs font-bold bg-white text-agari-red shadow-sm transition">
+          📝 Điền Đăng Ký Mới
+        </button>
+        <button type="button" data-open-modal="modalLookupSchedule" data-close-modal="modalDangKyLich" class="flex-1 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5">
+          <span>🔍</span> Tra Cứu Lịch Đã Có
+        </button>
+      </div>
+
       <form id="formSubmitRegistration" class="space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div>
@@ -1188,6 +1212,72 @@
     </div>
   </div>
 
+  <!-- MODAL 6B: TRA CỨU LỊCH LÀM VIỆC ĐÃ ĐĂNG KÝ (LOOKUP SCHEDULE) -->
+  <div id="modalLookupSchedule" class="custom-modal-backdrop">
+    <div class="custom-modal-content !max-w-3xl p-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+          <span>🔍</span> Tra Cứu Lịch Làm Việc Đã Đăng Ký
+        </h3>
+        <button type="button" data-close-modal="modalLookupSchedule" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+      </div>
+
+      <!-- Quick Switcher Tabs -->
+      <div class="flex items-center gap-2 mb-4 bg-slate-100 p-1 rounded-xl">
+        <button type="button" data-open-modal="modalDangKyLich" data-close-modal="modalLookupSchedule" class="flex-1 py-2 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1.5">
+          <span>📝</span> Điền Đăng Ký Mới
+        </button>
+        <button type="button" class="flex-1 py-2 rounded-lg text-xs font-bold bg-white text-sky-600 shadow-sm transition">
+          🔍 Tra Cứu Lịch Đã Có
+        </button>
+      </div>
+
+      <!-- Form Tra Cứu -->
+      <form id="formLookupSchedule" class="space-y-4 mb-5">
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+            Nhập Mã OPS / Mã CTV của bạn:
+          </label>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="lookupScheduleEmpId" 
+              name="empId" 
+              required 
+              placeholder="VD: OPS185911" 
+              class="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono uppercase font-bold focus:border-agari-red focus:outline-none shadow-inner" 
+            />
+            <button 
+              type="submit" 
+              id="btnDoLookupSchedule" 
+              class="px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-sm shadow transition flex items-center gap-2 flex-shrink-0"
+            >
+              <span>🔍</span>
+              <span>Tra Cứu</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-2">
+            Hệ thống sẽ tra cứu trực tiếp bảng đăng ký trên Google Sheets và hiển thị chi tiết các ngày bạn đã chọn <strong>ĐI LÀM (WORK)</strong> hoặc <strong>NGHỈ (OFF)</strong>.
+          </p>
+        </div>
+      </form>
+
+      <!-- Khung hiển thị kết quả tra cứu -->
+      <div id="scheduleLookupResultArea" class="max-h-[60vh] overflow-y-auto pr-1">
+        <!-- Trạng thái mặc định -->
+        <div class="text-center py-10 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+          <div class="w-14 h-14 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center text-2xl mx-auto mb-3">
+            📅
+          </div>
+          <div class="text-sm font-bold text-slate-700 mb-1">Chưa có dữ liệu tra cứu</div>
+          <div class="text-xs text-slate-400 max-w-sm mx-auto">
+            Vui lòng nhập Mã OPS/CTV của bạn vào ô trên rồi bấm nút <strong>Tra Cứu</strong> để xem lịch đã đăng ký.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL 7: XIN SỬA LỊCH ĐÃ ĐĂNG KÝ (CHANGE REQUEST - CR_) [TẠM ĐÓNG BẢO TRÌ] -->
   <div id="modalChangeRequest" class="custom-modal-backdrop">
     <div class="custom-modal-content p-6 max-w-md w-full text-center">
@@ -1211,6 +1301,11 @@
             <span>📌</span> Hướng dẫn điều chỉnh lịch:
           </div>
           Quý anh/chị có nhu cầu thay đổi ca làm việc hoặc sửa lịch đăng ký vui lòng liên hệ trực tiếp <strong>Quản lý ca</strong> hoặc <strong>Admin Zalo hỗ trợ</strong> để được xử lý trực tiếp!
+        </div>
+        <div class="w-full mb-1">
+          <button type="button" data-open-modal="modalLookupSchedule" data-close-modal="modalChangeRequest" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow flex items-center justify-center gap-1.5 transition">
+            <span>🔍</span> Bấm Vào Đây Để Xem / Tra Cứu Lịch Đã Đăng Ký
+          </button>
         </div>
       </div>
 
@@ -1446,21 +1541,21 @@
     </div>
   </div>
 
-  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v85) -->
-  <script src="./js/config.js?v=v85"></script>
-  <script src="./js/utils.js?v=v85"></script>
-  <script src="./js/firebaseInit.js?v=v85"></script>
-  <script src="./js/dataManager.js?v=v85"></script>
-  <script src="./js/employee.js?v=v85"></script>
-  <script src="./js/admin/adminCore.js?v=v85"></script>
-  <script src="./js/admin/adminUI.js?v=v85"></script>
-  <script src="./js/admin/adminSalary.js?v=v85"></script>
-  <script src="./js/admin/adminBooking.js?v=v85"></script>
-  <script src="./js/admin/adminRequests.js?v=v85"></script>
-  <script src="./js/admin/adminRegistration.js?v=v85"></script>
-  <script src="./js/admin/adminManager.js?v=v85"></script>
-  <script src="./js/registration/regAPI.js?v=v85"></script>
-  <script src="./js/registration/regApp.js?v=v85"></script>
-  <script src="./js/app.js?v=v85"></script>
+  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v86) -->
+  <script src="./js/config.js?v=v86"></script>
+  <script src="./js/utils.js?v=v86"></script>
+  <script src="./js/firebaseInit.js?v=v86"></script>
+  <script src="./js/dataManager.js?v=v86"></script>
+  <script src="./js/employee.js?v=v86"></script>
+  <script src="./js/admin/adminCore.js?v=v86"></script>
+  <script src="./js/admin/adminUI.js?v=v86"></script>
+  <script src="./js/admin/adminSalary.js?v=v86"></script>
+  <script src="./js/admin/adminBooking.js?v=v86"></script>
+  <script src="./js/admin/adminRequests.js?v=v86"></script>
+  <script src="./js/admin/adminRegistration.js?v=v86"></script>
+  <script src="./js/admin/adminManager.js?v=v86"></script>
+  <script src="./js/registration/regAPI.js?v=v86"></script>
+  <script src="./js/registration/regApp.js?v=v86"></script>
+  <script src="./js/app.js?v=v86"></script>
 </body>
 </html>

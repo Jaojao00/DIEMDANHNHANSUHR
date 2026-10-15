@@ -1305,3 +1305,90 @@ function handleSubmitComplaint(data) {
       return sendErrorResponse("Loi lay bang luong: " + e.toString());
     }
   }
+
+function handleGetRegistration(data) {
+  try {
+    var empIdSearch = (data.empId || "").toLowerCase().trim();
+    var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var allSheets = regSs.getSheets();
+    var result = [];
+    
+    for (var s = 0; s < allSheets.length; s++) {
+      var sheet = allSheets[s];
+      var sName = sheet.getName();
+      
+      if (sName.match(/^T\d+_/) || sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
+        if (sheet.getLastRow() <= 1) continue;
+        var vals = sheet.getDataRange().getValues();
+        var headers = vals[0];
+        
+        for (var ri = 1; ri < vals.length; ri++) {
+          var rowId = (vals[ri][1] || "").toString().toLowerCase().trim();
+          if (rowId !== empIdSearch) continue;
+          
+          var selections = [];
+          for (var ci = 7; ci < headers.length; ci++) {
+            selections.push({ label: headers[ci], choice: vals[ri][ci] || "OFF" });
+          }
+          
+          result.push({
+            sheetName: sName,
+            empId: vals[ri][1],
+            empName: vals[ri][2],
+            shiftId: vals[ri][5],
+            shiftLabel: vals[ri][6],
+            selections: selections,
+            timestamp: vals[ri][0]
+          });
+        }
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return sendErrorResponse("Lỗi tra cứu lịch: " + err.toString());
+  }
+}
+
+function handleGetAllRegistrations(data) {
+  try {
+    var regSs = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var allSheets = regSs.getSheets();
+    var result = [];
+    
+    for (var s = 0; s < allSheets.length; s++) {
+      var sheet = allSheets[s];
+      var sName = sheet.getName();
+      
+      if (sName.match(/^T\d+_/) || sName.indexOf("LỊCHT") === 0 || sName === "DangKyLich") {
+        if (sheet.getLastRow() <= 1) continue;
+        var vals = sheet.getDataRange().getValues();
+        var headers = vals[0];
+        
+        for (var ri = 1; ri < vals.length; ri++) {
+          var row = vals[ri];
+          var workCount = 0;
+          var totalDays = 0;
+          for (var ci = 7; ci < headers.length; ci++) {
+            totalDays++;
+            if (row[ci] && row[ci] !== "OFF") workCount++;
+          }
+          result.push({
+            timestamp: row[0],
+            empId: row[1],
+            name: row[2],
+            phone: row[3],
+            osGender: row[4],
+            shiftId: row[5],
+            shiftLabel: row[6],
+            workDays: workCount,
+            totalDays: totalDays,
+            sheetName: sName
+          });
+        }
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({ success: true, data: result })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return sendErrorResponse("Lỗi lấy danh sách đăng ký: " + err.toString());
+  }
+}
