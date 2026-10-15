@@ -1,6 +1,6 @@
-// CẤU HÌNH HỆ THỐNG AGARI HR (DIEMDANHNHANSUHR - v80)
+// CẤU HÌNH HỆ THỐNG AGARI HR (DIEMDANHNHANSUHR - v81)
 const CONFIG = {
-  VERSION: 'v80',
+  VERSION: 'v81',
   APP_NAME: 'Agari HR Operations Portal',
   
   // Google Apps Script REST API Web App Endpoint

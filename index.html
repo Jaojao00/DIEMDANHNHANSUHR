@@ -310,25 +310,31 @@
             </div>
           </button>
 
-          <!-- Khiếu Nại Công Lương (Drive upload) -->
-          <button data-open-modal="modalKhieuNai" class="bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
-              📝
+          <!-- Khiếu Nại Công Lương (Tạm đóng bảo trì) -->
+          <button data-open-modal="modalKhieuNai" class="bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-amber-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
+            <div class="flex items-center justify-between w-full">
+              <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                📝
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Bảo trì</span>
             </div>
             <div>
-              <div class="font-bold text-slate-800 text-sm group-hover:text-amber-600 transition">Khiếu Nại Công</div>
-              <div class="text-[11px] text-slate-500">Đính kèm ảnh minh chứng</div>
+              <div class="font-bold text-slate-700 text-sm group-hover:text-amber-700 transition">Khiếu Nại Công</div>
+              <div class="text-[11px] text-amber-600 font-medium">Tạm đóng bảo trì</div>
             </div>
           </button>
 
-          <!-- Tra Cứu Bảng Lương Cá Nhân -->
-          <button data-open-modal="modalLookupSalary" class="bg-white hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32">
-            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
-              💰
+          <!-- Tra Cứu Bảng Lương Cá Nhân (Tạm đóng bảo trì) -->
+          <button data-open-modal="modalLookupSalary" class="bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-amber-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
+            <div class="flex items-center justify-between w-full">
+              <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                💰
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Bảo trì</span>
             </div>
             <div>
-              <div class="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition">Tra Cứu Lương</div>
-              <div class="text-[11px] text-slate-500">Xem công & biểu đồ KPI</div>
+              <div class="font-bold text-slate-700 text-sm group-hover:text-amber-700 transition">Tra Cứu Lương</div>
+              <div class="text-[11px] text-amber-600 font-medium">Tạm đóng bảo trì</div>
             </div>
           </button>
 
@@ -1052,78 +1058,67 @@
     </div>
   </div>
 
-  <!-- MODAL 4: KHIẾU NẠI CÔNG LƯƠNG (NÉN ẢNH CANVAS BASE64) -->
+  <!-- MODAL 4: KHIẾU NẠI CÔNG LƯƠNG [TẠM ĐÓNG BẢO TRÌ] -->
   <div id="modalKhieuNai" class="custom-modal-backdrop">
-    <div class="custom-modal-content p-6">
+    <div class="custom-modal-content p-6 max-w-md w-full text-center">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>📝</span> Gửi Phiếu Khiếu Nại Công Lương
+          <span>📝</span> Khiếu Nại Công Lương
         </h3>
-        <button data-close-modal="modalKhieuNai" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+        <button type="button" data-close-modal="modalKhieuNai" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
 
-      <form id="formKhieuNai" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS / Số CCCD:</label>
-          <input type="text" name="empId" required placeholder="VD: OPS10291" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
+      <div class="py-4 flex flex-col items-center">
+        <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mb-4 shadow-sm">
+          🛠️
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
-          <input type="text" name="empName" required placeholder="VD: Nguyễn Văn An" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none" />
+        <h4 class="text-base font-bold text-slate-800 mb-2">Tính Năng Tạm Đóng Bảo Trì</h4>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 max-w-xs">
+          Cổng tiếp nhận khiếu nại công lương trực tuyến hiện đang tạm dừng để phục vụ công tác đối soát & bảo trì dữ liệu.
+        </p>
+        <div class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-medium leading-relaxed text-left w-full mb-4">
+          <div class="font-bold mb-1 flex items-center gap-1.5 text-amber-800">
+            <span>📌</span> Hướng dẫn xử lý khiếu nại:
+          </div>
+          Quý anh/chị có thắc mắc hoặc cần khiếu nại công ca vui lòng liên hệ trực tiếp <strong>Quản lý ca</strong> hoặc bộ phận <strong>Nhân sự HR</strong> để được hỗ trợ kiểm tra và xử lý trực tiếp!
         </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại liên hệ:</label>
-          <input type="tel" name="phone" required placeholder="VD: 0912345678" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Loại khiếu nại:</label>
-          <select name="complaintType" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-semibold focus:border-agari-red focus:outline-none">
-            <option value="Chấm công sót ca">Chấm công sót ca (Có đi làm nhưng chưa có công)</option>
-            <option value="Sai số giờ làm">Sai số giờ làm / Sai loại ca (Ngày/Đêm)</option>
-            <option value="Tranh chấp ca trực">Tranh chấp vị trí / Trừ phạt không rõ lý do</option>
-            <option value="Khác">Khiếu nại khác</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Nội dung chi tiết khiếu nại:</label>
-          <textarea name="content" rows="3" required placeholder="Mô tả cụ thể ngày, giờ vào/ra, người giám sát ca..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none"></textarea>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Tải ảnh minh chứng (Ảnh chụp/giấy tờ):</label>
-          <input type="file" name="proofImage" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-agari-red file:text-white hover:file:bg-agari-red-dark cursor-pointer" />
-          <p class="text-[11px] text-slate-400 mt-1">Ảnh sẽ tự động nén dưới 500KB và tải lên Google Drive bảo mật.</p>
-        </div>
-        <button type="submit" class="w-full py-3 rounded-xl bg-agari-red hover:bg-agari-red-dark text-white font-bold text-sm shadow transition">
-          Gửi Khiếu Nại Đến HR
-        </button>
-      </form>
+      </div>
+
+      <button type="button" data-close-modal="modalKhieuNai" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow transition">
+        Đã Hiểu
+      </button>
     </div>
   </div>
 
-  <!-- MODAL 5: TRA CỨU BẢNG LƯƠNG -->
+  <!-- MODAL 5: TRA CỨU BẢNG LƯƠNG [TẠM ĐÓNG BẢO TRÌ] -->
   <div id="modalLookupSalary" class="custom-modal-backdrop">
-    <div class="custom-modal-content !max-w-3xl p-6">
+    <div class="custom-modal-content p-6 max-w-md w-full text-center">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
           <span>💰</span> Tra Cứu Công Lương
         </h3>
-        <button data-close-modal="modalLookupSalary" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+        <button type="button" data-close-modal="modalLookupSalary" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
 
-      <form id="formLookupSalary" class="flex flex-col sm:flex-row gap-3">
-        <div class="flex-1">
-          <input type="text" name="identifier" required placeholder="Nhập số CCCD (12 số) hoặc Mã CTV..."
-                 class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-mono focus:border-agari-red focus:outline-none uppercase placeholder:normal-case font-medium" />
+      <div class="py-4 flex flex-col items-center">
+        <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mb-4 shadow-sm">
+          🛠️
         </div>
-        <button type="submit" class="px-6 py-3 rounded-xl bg-agari-red hover:bg-agari-red-dark text-white font-bold text-sm shadow transition">
-          Tra Cứu Ngay
-        </button>
-      </form>
-
-      <!-- Kết quả hiển thị chi tiết và Biểu Đồ Chart.js -->
-      <div id="salaryResultContainer" class="hidden">
-        <!-- Injected via employee.js -->
+        <h4 class="text-base font-bold text-slate-800 mb-2">Tính Năng Tạm Đóng Bảo Trì</h4>
+        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 max-w-xs">
+          Hệ thống tra cứu công lương cá nhân hiện đang tạm đóng để phục vụ công tác đối soát & bảo trì hệ thống.
+        </p>
+        <div class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-medium leading-relaxed text-left w-full mb-4">
+          <div class="font-bold mb-1 flex items-center gap-1.5 text-amber-800">
+            <span>📌</span> Thông báo:
+          </div>
+          Hệ thống đang cập nhật và đối soát lại dữ liệu bảng lương. Quý anh/chị vui lòng quay lại sau hoặc liên hệ <strong>Bộ phận Nhân sự HR</strong> để được giải đáp!
+        </div>
       </div>
+
+      <button type="button" data-close-modal="modalLookupSalary" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow transition">
+        Đã Hiểu
+      </button>
     </div>
   </div>
 
@@ -1442,21 +1437,21 @@
     </div>
   </div>
 
-  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v80) -->
-  <script src="./js/config.js?v=v80"></script>
-  <script src="./js/utils.js?v=v80"></script>
-  <script src="./js/firebaseInit.js?v=v80"></script>
-  <script src="./js/dataManager.js?v=v80"></script>
-  <script src="./js/employee.js?v=v80"></script>
-  <script src="./js/admin/adminCore.js?v=v80"></script>
-  <script src="./js/admin/adminUI.js?v=v80"></script>
-  <script src="./js/admin/adminSalary.js?v=v80"></script>
-  <script src="./js/admin/adminBooking.js?v=v80"></script>
-  <script src="./js/admin/adminRequests.js?v=v80"></script>
-  <script src="./js/admin/adminRegistration.js?v=v80"></script>
-  <script src="./js/admin/adminManager.js?v=v80"></script>
-  <script src="./js/registration/regAPI.js?v=v80"></script>
-  <script src="./js/registration/regApp.js?v=v80"></script>
-  <script src="./js/app.js?v=v80"></script>
+  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v81) -->
+  <script src="./js/config.js?v=v81"></script>
+  <script src="./js/utils.js?v=v81"></script>
+  <script src="./js/firebaseInit.js?v=v81"></script>
+  <script src="./js/dataManager.js?v=v81"></script>
+  <script src="./js/employee.js?v=v81"></script>
+  <script src="./js/admin/adminCore.js?v=v81"></script>
+  <script src="./js/admin/adminUI.js?v=v81"></script>
+  <script src="./js/admin/adminSalary.js?v=v81"></script>
+  <script src="./js/admin/adminBooking.js?v=v81"></script>
+  <script src="./js/admin/adminRequests.js?v=v81"></script>
+  <script src="./js/admin/adminRegistration.js?v=v81"></script>
+  <script src="./js/admin/adminManager.js?v=v81"></script>
+  <script src="./js/registration/regAPI.js?v=v81"></script>
+  <script src="./js/registration/regApp.js?v=v81"></script>
+  <script src="./js/app.js?v=v81"></script>
 </body>
 </html>
