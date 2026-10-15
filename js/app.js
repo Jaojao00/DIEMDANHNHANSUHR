@@ -20,6 +20,9 @@ const App = {
     AdminManager.init();
     RegApp.init();
 
+    // Khởi tạo popup thông báo chào mừng & giới thiệu hệ thống mới
+    this.initWelcomeNotice();
+
     // Tải dữ liệu ban đầu cho ca mặc định
     DataManager.loadRoster(CONFIG.SHIFTS[0].id);
 
@@ -89,6 +92,51 @@ const App = {
       body.classList.add('theme-autumn-gold');
     } else if (currentMonth === 11) {
       body.classList.add('theme-late-autumn');
+    }
+  },
+
+  /**
+   * Khởi tạo thông báo popup chào mừng & giới thiệu tính năng mới
+   * Hỗ trợ nút 'Đóng' và 'Không hiện lại hôm nay' (lưu theo ngày)
+   */
+  initWelcomeNotice() {
+    const todayStr = Utils.formatDateISO(new Date());
+    const storageKey = 'agari_welcome_dismissed_' + todayStr;
+    const isDismissedToday = localStorage.getItem(storageKey) === 'true';
+
+    const modal = document.getElementById('modalWelcomeNotice');
+    if (!modal) return;
+
+    // Tự động bật modal sau 600ms nếu chưa chọn 'Không hiện lại hôm nay'
+    if (!isDismissedToday) {
+      setTimeout(() => {
+        const hasOpenModal = document.querySelector('.custom-modal-backdrop.active');
+        if (!hasOpenModal) {
+          this.openModal('modalWelcomeNotice');
+        }
+      }, 600);
+    }
+
+    // Nút 1: Đóng thông báo
+    const btnClose = document.getElementById('btnCloseWelcomeNotice');
+    if (btnClose) {
+      btnClose.addEventListener('click', () => {
+        this.closeModal('modalWelcomeNotice');
+      });
+    }
+
+    // Nút 2: Không hiện lại trong hôm nay
+    const btnDismissToday = document.getElementById('btnDismissWelcomeToday');
+    if (btnDismissToday) {
+      btnDismissToday.addEventListener('click', () => {
+        try {
+          localStorage.setItem(storageKey, 'true');
+        } catch (e) {}
+        this.closeModal('modalWelcomeNotice');
+        if (typeof Utils !== 'undefined' && Utils.toast) {
+          Utils.toast('Đã ghi nhớ: Không hiện lại thông báo trong hôm nay!', 'info');
+        }
+      });
     }
   },
 
