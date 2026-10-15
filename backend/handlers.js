@@ -1052,7 +1052,7 @@ function handleAdminLogin(data) {
 
 
 
-// Handle Item Request (Uniform/ID Card)
+// Handle Item Request (Uniform/ID Card / Dư Vé)
 function handleItemRequest(data) {
   try {
     var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
@@ -1063,14 +1063,15 @@ function handleItemRequest(data) {
     }
     var timeString = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm:ss");
     
-    var reqType = data.type || "";
-    var empId = (data.empId || "").toString().toUpperCase();
-    var name = (data.name || "").toString().toUpperCase();
-    var shift = data.shift || "";
+    var reqType = (data.type || "").toString().trim();
+    var isDuVe = reqType.toLowerCase().indexOf("dư vé") !== -1 || reqType.toLowerCase().indexOf("du ve") !== -1;
+    var empId = (data.empId || "").toString().trim().toUpperCase();
+    var name = (data.name || "").toString().trim().toUpperCase();
+    var shift = (data.shift || "").toString().trim();
     
     var role = data.role || "";
     var quantity = data.quantity || "";
-    var pickupDate = data.pickupDate || "";
+    var pickupDate = (data.pickupDate || "").toString().trim();
     var price = data.price || "";
     var reason = data.reason || "";
     
@@ -1078,6 +1079,44 @@ function handleItemRequest(data) {
     var lastRow = sheet.getLastRow();
     if (lastRow === 0) {
       sheet.appendRow(["Thời gian", "Loại yêu cầu", "Mã nhân viên", "Họ tên", "Ca làm việc", "Chức danh", "Số lượng", "Ngày lấy", "Giá tiền", "Lý do"]);
+      lastRow = 1;
+    }
+    
+    // NGĂN ĐIỀN TRÙNG NGÀY & TRÙNG CA ĐỐI VỚI DƯ VÉ
+    if (isDuVe && lastRow > 1) {
+      function normDateStr(d) {
+        if (!d) return "";
+        if (d instanceof Date) {
+          return Utilities.formatDate(d, CONFIG.TIMEZONE, "yyyy-MM-dd");
+        }
+        var s = d.toString().trim();
+        var m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (m) {
+          return m[3] + "-" + ("0" + m[2]).slice(-2) + "-" + ("0" + m[1]).slice(-2);
+        }
+        return s;
+      }
+      
+      function normShiftStr(s) {
+        return (s || "").toString().toLowerCase().replace(/[^a-z0-9]/g, "");
+      }
+      
+      var compDate = normDateStr(pickupDate);
+      var compShift = normShiftStr(shift);
+      var allValues = sheet.getDataRange().getValues();
+      
+      for (var r = 1; r < allValues.length; r++) {
+        var rowType = (allValues[r][1] || "").toString().toLowerCase();
+        var rowEmpId = (allValues[r][2] || "").toString().trim().toUpperCase();
+        var rowShift = normShiftStr(allValues[r][4]);
+        var rowDate = normDateStr(allValues[r][7]);
+        
+        var rowIsDuVe = rowType.indexOf("dư vé") !== -1 || rowType.indexOf("du ve") !== -1;
+        
+        if (rowIsDuVe && rowEmpId === empId && rowDate === compDate && rowShift === compShift) {
+          return sendErrorResponse("Mã nhân viên " + empId + " đã gửi yêu cầu Dư Vé cho ca " + shift + " vào ngày " + pickupDate + " rồi! Hệ thống không cho phép gửi lại cho ca này.");
+        }
+      }
     }
     
     sheet.appendRow([timeString, reqType, empId, name, shift, role, quantity, pickupDate, price, reason]);

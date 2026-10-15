@@ -1045,7 +1045,8 @@
             <input type="date" id="itemReqDate" name="pickupDate" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-purple-600 focus:outline-none" />
           </div>
 
-          <div id="itemReqPriceGroup" class="p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between">
+          <!-- Chi phí dự kiến ẩn trên giao diện nhưng vẫn gửi dữ liệu sang Google Sheets -->
+          <div id="itemReqPriceGroup" class="p-3 bg-purple-50 rounded-xl border border-purple-200 flex items-center justify-between" style="display: none !important;">
             <span class="text-xs font-bold text-purple-900">Chi phí dự kiến:</span>
             <input type="text" id="itemReqPrice" name="price" readonly class="bg-transparent text-right font-bold text-purple-700 text-sm focus:outline-none" value="0 đ" />
           </div>
@@ -1437,21 +1438,21 @@
     </div>
   </div>
 
-  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v81) -->
-  <script src="./js/config.js?v=v81"></script>
-  <script src="./js/utils.js?v=v81"></script>
-  <script src="./js/firebaseInit.js?v=v81"></script>
-  <script src="./js/dataManager.js?v=v81"></script>
-  <script src="./js/employee.js?v=v81"></script>
-  <script src="./js/admin/adminCore.js?v=v81"></script>
-  <script src="./js/admin/adminUI.js?v=v81"></script>
-  <script src="./js/admin/adminSalary.js?v=v81"></script>
-  <script src="./js/admin/adminBooking.js?v=v81"></script>
-  <script src="./js/admin/adminRequests.js?v=v81"></script>
-  <script src="./js/admin/adminRegistration.js?v=v81"></script>
-  <script src="./js/admin/adminManager.js?v=v81"></script>
-  <script src="./js/registration/regAPI.js?v=v81"></script>
-  <script src="./js/registration/regApp.js?v=v81"></script>
-  <script src="./js/app.js?v=v81"></script>
+  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v82) -->
+  <script src="./js/config.js?v=v82"></script>
+  <script src="./js/utils.js?v=v82"></script>
+  <script src="./js/firebaseInit.js?v=v82"></script>
+  <script src="./js/dataManager.js?v=v82"></script>
+  <script src="./js/employee.js?v=v82"></script>
+  <script src="./js/admin/adminCore.js?v=v82"></script>
+  <script src="./js/admin/adminUI.js?v=v82"></script>
+  <script src="./js/admin/adminSalary.js?v=v82"></script>
+  <script src="./js/admin/adminBooking.js?v=v82"></script>
+  <script src="./js/admin/adminRequests.js?v=v82"></script>
+  <script src="./js/admin/adminRegistration.js?v=v82"></script>
+  <script src="./js/admin/adminManager.js?v=v82"></script>
+  <script src="./js/registration/regAPI.js?v=v82"></script>
+  <script src="./js/registration/regApp.js?v=v82"></script>
+  <script src="./js/app.js?v=v82"></script>
 </body>
 </html>

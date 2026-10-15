@@ -727,7 +727,7 @@ const EmployeeModule = {
         if (dateGroup) dateGroup.style.display = 'block';
         if (dateInput) dateInput.required = true;
         if (dateLabel) dateLabel.innerHTML = 'NGÀY LẤY <span class="text-red-500">*</span>';
-        if (priceGroup) priceGroup.style.display = 'flex';
+        if (priceGroup) priceGroup.style.display = 'none'; // Ẩn chi phí dự kiến trên giao diện theo yêu cầu
       } else if (reqType === 'Dư vé') {
         shirtFields.style.display = 'block';
         if (roleGroup) roleGroup.style.display = 'none';
@@ -737,7 +737,7 @@ const EmployeeModule = {
         if (dateGroup) dateGroup.style.display = 'block';
         if (dateInput) dateInput.required = true;
         if (dateLabel) dateLabel.innerHTML = 'NGÀY DƯ VÉ <span class="text-red-500">*</span>';
-        if (priceGroup) priceGroup.style.display = 'flex';
+        if (priceGroup) priceGroup.style.display = 'none'; // Ẩn chi phí dự kiến trên giao diện theo yêu cầu
       } else {
         // Đổi Thẻ
         shirtFields.style.display = 'none';
@@ -814,16 +814,51 @@ const EmployeeModule = {
       role = document.getElementById('itemReqRole')?.value || '';
       quantity = document.getElementById('itemReqQuantity')?.value || '1';
       pickupDate = document.getElementById('itemReqDate')?.value || '';
-      price = document.getElementById('itemReqPrice')?.value || '';
+      const priceEl = document.getElementById('itemReqPrice');
+      price = priceEl ? priceEl.value : '';
+      if (!price || price === '0 đ') {
+        const qty = parseInt(quantity) || 1;
+        if (role === 'OS') price = (30000 * qty).toLocaleString('vi-VN') + ' đ';
+        else if (role === 'BPO') price = (40000 * qty).toLocaleString('vi-VN') + ' đ';
+        else if (role === 'S-BPO') price = 'C&B truy thu';
+      }
       if (!role || !quantity || !pickupDate) {
         Utils.toast('Vui lòng điền đầy đủ thông tin chức danh, số lượng và ngày lấy', 'warning');
         return;
       }
     } else if (reqType === 'Dư vé') {
       pickupDate = document.getElementById('itemReqDate')?.value || '';
-      price = document.getElementById('itemReqPrice')?.value || '30.000 đ';
+      price = '30.000 đ';
       if (!pickupDate) {
         Utils.toast('Vui lòng chọn ngày dư vé', 'warning');
+        return;
+      }
+
+      // NGĂN ĐIỀN TRÙNG NGÀY & TRÙNG CA ĐỐI VỚI DƯ VÉ (Frontend Local Check)
+      const historyKey = 'agari_du_ve_history';
+      let history = [];
+      try {
+        history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      } catch (e) {
+        history = [];
+      }
+
+      const normEmpId = empId.toUpperCase().trim();
+      const normDate = pickupDate.trim();
+      const normShift = shift.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      const exists = history.find((item) => 
+        item.empId === normEmpId && 
+        item.date === normDate && 
+        (item.shift || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '') === normShift
+      );
+
+      if (exists) {
+        Utils.showAlert(
+          'Đã Gửi Yêu Cầu Trước Đó',
+          `Mã nhân viên <strong>${normEmpId}</strong> đã gửi yêu cầu <strong>Dư Vé</strong> cho ca <strong>${shift}</strong> vào ngày <strong>${pickupDate}</strong> rồi!<br><br>Hệ thống không cho phép gửi trùng lặp cho cùng một ca trong ngày. Nếu bạn dư vé cho ca làm việc khác (VD: Ca Đêm), vui lòng chọn đúng ca tương ứng!`,
+          'warning'
+        );
         return;
       }
     } else if (reqType === 'Đổi Thẻ') {
@@ -847,7 +882,7 @@ const EmployeeModule = {
         role: role,
         quantity: quantity,
         pickupDate: pickupDate,
-        price: price,
+        price: price, // Vẫn gửi giá tiền đầy đủ sang Google Sheets
         reason: reason,
         timestamp: Utils.getCurrentVNTime()
       });
@@ -855,6 +890,26 @@ const EmployeeModule = {
       Utils.hideLoading();
 
       if (res && res.success) {
+        // Lưu lịch sử dư vé để ngăn trùng lặp
+        if (reqType === 'Dư vé') {
+          const historyKey = 'agari_du_ve_history';
+          let history = [];
+          try {
+            history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+          } catch (e) {
+            history = [];
+          }
+          history.push({
+            empId: empId.toUpperCase().trim(),
+            date: pickupDate.trim(),
+            shift: shift.trim(),
+            timestamp: Date.now()
+          });
+          try {
+            localStorage.setItem(historyKey, JSON.stringify(history));
+          } catch (e) {}
+        }
+
         Utils.showAlert(
           'Đã Ghi Nhận Thành Công!',
           `Yêu cầu <strong>${reqType}</strong> của bạn (${name} - ${empId.toUpperCase()}) đã được hệ thống ghi nhận tự động.<br><br><div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-800 text-xs font-bold leading-relaxed">✓ Hệ thống đã tự động lưu dữ liệu.<br>Bạn KHÔNG CẦN phải chụp màn hình hay trình báo lại cho Quản trị viên/Quản lý!</div>`,
@@ -864,7 +919,12 @@ const EmployeeModule = {
         this.toggleItemReqFields();
         window.App?.closeModal('modalCapDoiAoThe');
       } else {
-        Utils.showAlert('Lỗi', res.message || 'Lỗi gửi yêu cầu', 'error');
+        const errorMsg = res.message || res.error || 'Lỗi gửi yêu cầu';
+        if (errorMsg.includes('đã gửi') || errorMsg.includes('trùng')) {
+          Utils.showAlert('Đã Gửi Yêu Cầu Trước Đó', errorMsg, 'warning');
+        } else {
+          Utils.showAlert('Lỗi', errorMsg, 'error');
+        }
       }
     } catch (err) {
       Utils.hideLoading();
