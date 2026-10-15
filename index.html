@@ -58,7 +58,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="./css/style.css?v=v79" />
+  <link rel="stylesheet" href="./css/style.css?v=v83" />
 </head>
 <body class="bg-[#FAFAFA] text-slate-900 font-sans antialiased selection:bg-red-500 selection:text-white">
 
@@ -426,7 +426,7 @@
   <div id="viewAdminPortal" class="min-h-screen bg-[#0B1120] text-slate-100 flex flex-col hidden">
     <!-- Admin Header -->
     <header class="bg-[#080D1A] border-b border-[#1E293B] sticky top-0 z-30">
-      <div class="container-breakout py-3 flex items-center justify-between">
+      <div class="admin-container py-3 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-agari-red flex items-center justify-center font-bold text-white text-lg">
             🛡️
@@ -461,7 +461,7 @@
       </div>
 
       <!-- Navigation Tabs: [ Vị Trí Làm Việc ] [ Lịch Làm Việc ] [ Booking ] [ Bảng Lương ] -->
-      <div class="container-breakout pt-2 overflow-x-auto">
+      <div class="admin-container pt-2 overflow-x-auto">
         <nav class="flex items-center gap-2 border-t border-slate-800/80 pt-2 pb-2">
           <button data-tab="tabPositions" class="admin-nav-tab px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 bg-agari-red text-white shadow-md">
             <span>📍</span>
@@ -484,7 +484,7 @@
     </header>
 
     <!-- Admin Content Area -->
-    <main class="container-breakout flex-1 py-6">
+    <main class="admin-container flex-1 py-6">
       <!-- Admin Login View (Khi chưa có token) -->
       <div id="adminLoginView" class="max-w-md mx-auto my-12 bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 sm:p-8 shadow-2xl">
         <div class="text-center mb-6">
@@ -582,9 +582,9 @@
           </div>
 
           <!-- Main Layout: Bảng Roster và Live Activity Feed -->
-          <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Cột Bảng Roster (3/4) -->
-            <div class="lg:col-span-3 bg-[#0F172A] border border-[#1E293B] rounded-2xl overflow-hidden shadow-xl">
+          <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+            <!-- Cột Bảng Roster (xl:col-span-9 2xl:col-span-9) -->
+            <div class="xl:col-span-9 2xl:col-span-9 bg-[#0F172A] border border-[#1E293B] rounded-2xl overflow-hidden shadow-xl">
               <!-- Bộ lọc trạng thái -->
               <div class="p-3 bg-[#080D1A] border-b border-[#1E293B] flex items-center justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-1.5 bg-[#0F172A] p-1 rounded-xl border border-slate-800">
@@ -605,14 +605,14 @@
                     <tr class="bg-[#080D1A]/60 text-slate-400 text-xs uppercase font-semibold border-b border-[#1E293B]">
                       <th class="p-3 text-center w-12">STT</th>
                       <th class="p-3 w-28 whitespace-nowrap">Mã CTV</th>
-                      <th class="p-3 min-w-[150px] whitespace-nowrap">Họ tên</th>
+                      <th class="p-3 min-w-[160px] whitespace-nowrap">Họ tên</th>
                       <th class="p-3 w-24 whitespace-nowrap">Định danh</th>
-                      <th class="p-3 min-w-[120px] whitespace-nowrap">Vị trí cố định</th>
-                      <th class="p-3 min-w-[120px] whitespace-nowrap">SAU GIỜ NGHỈ</th>
-                      <th class="p-3 min-w-[100px] whitespace-nowrap">4h-6h</th>
-                      <th class="p-3 min-w-[100px] whitespace-nowrap">Xuất Tải</th>
-                      <th class="p-3 min-w-[110px] whitespace-nowrap">NOTE</th>
-                      <th class="p-3 text-center w-36 whitespace-nowrap">Trạng Thái</th>
+                      <th class="p-3 min-w-[140px] whitespace-nowrap">Vị trí cố định</th>
+                      <th class="p-3 min-w-[140px] whitespace-nowrap">SAU GIỜ NGHỈ</th>
+                      <th class="p-3 min-w-[120px] whitespace-nowrap">4h-6h</th>
+                      <th class="p-3 min-w-[120px] whitespace-nowrap">Xuất Tải</th>
+                      <th class="p-3 min-w-[130px] whitespace-nowrap">NOTE</th>
+                      <th class="p-3 text-center min-w-[140px] whitespace-nowrap">Trạng Thái</th>
                       <th class="p-3 text-center w-14 whitespace-nowrap">Đổi</th>
                     </tr>
                   </thead>
@@ -623,16 +623,16 @@
               </div>
             </div>
 
-            <!-- Cột Live Activity Feed (1/4) -->
-            <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 flex flex-col h-full shadow-xl">
+            <!-- Cột Live Activity Feed (xl:col-span-3 2xl:col-span-3) -->
+            <div class="xl:col-span-3 2xl:col-span-3 bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4 shadow-xl sticky top-20">
               <div class="flex items-center justify-between pb-3 border-b border-[#1E293B] mb-3">
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
                   <span class="pulse-live-dot"></span>
                   <span>Lịch Sử Điểm Danh</span>
                 </h3>
-                <span class="text-[10px] text-emerald-400 font-mono">Realtime</span>
+                <span id="adminLiveActivityCount" class="text-[10px] text-emerald-400 font-mono">Realtime</span>
               </div>
-              <div id="adminLiveActivityList" class="space-y-2 flex-1 overflow-y-auto max-h-[500px]">
+              <div id="adminLiveActivityList" class="space-y-2.5 overflow-y-auto max-h-[calc(100vh-220px)] pr-1">
                 <!-- Activity Feed items -->
               </div>
             </div>
@@ -1438,21 +1438,21 @@
     </div>
   </div>
 
-  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v82) -->
-  <script src="./js/config.js?v=v82"></script>
-  <script src="./js/utils.js?v=v82"></script>
-  <script src="./js/firebaseInit.js?v=v82"></script>
-  <script src="./js/dataManager.js?v=v82"></script>
-  <script src="./js/employee.js?v=v82"></script>
-  <script src="./js/admin/adminCore.js?v=v82"></script>
-  <script src="./js/admin/adminUI.js?v=v82"></script>
-  <script src="./js/admin/adminSalary.js?v=v82"></script>
-  <script src="./js/admin/adminBooking.js?v=v82"></script>
-  <script src="./js/admin/adminRequests.js?v=v82"></script>
-  <script src="./js/admin/adminRegistration.js?v=v82"></script>
-  <script src="./js/admin/adminManager.js?v=v82"></script>
-  <script src="./js/registration/regAPI.js?v=v82"></script>
-  <script src="./js/registration/regApp.js?v=v82"></script>
-  <script src="./js/app.js?v=v82"></script>
+  <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v83) -->
+  <script src="./js/config.js?v=v83"></script>
+  <script src="./js/utils.js?v=v83"></script>
+  <script src="./js/firebaseInit.js?v=v83"></script>
+  <script src="./js/dataManager.js?v=v83"></script>
+  <script src="./js/employee.js?v=v83"></script>
+  <script src="./js/admin/adminCore.js?v=v83"></script>
+  <script src="./js/admin/adminUI.js?v=v83"></script>
+  <script src="./js/admin/adminSalary.js?v=v83"></script>
+  <script src="./js/admin/adminBooking.js?v=v83"></script>
+  <script src="./js/admin/adminRequests.js?v=v83"></script>
+  <script src="./js/admin/adminRegistration.js?v=v83"></script>
+  <script src="./js/admin/adminManager.js?v=v83"></script>
+  <script src="./js/registration/regAPI.js?v=v83"></script>
+  <script src="./js/registration/regApp.js?v=v83"></script>
+  <script src="./js/app.js?v=v83"></script>
 </body>
 </html>

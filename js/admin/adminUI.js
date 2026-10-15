@@ -178,31 +178,31 @@ const AdminUI = {
             <span class="px-2 py-0.5 rounded text-xs bg-slate-800 text-slate-300 font-mono">${emp.identity || emp.dinhDanh || 'A-OS'}</span>
           </td>
           <!-- Vị trí cố định -->
-          <td class="p-2 min-w-[120px]">
-            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+          <td class="p-2 min-w-[140px]">
+            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
                    value="${pos1}" data-pos-key="Vị trí cố định" placeholder="Vị trí cố định..." />
           </td>
           <!-- SAU GIỜ NGHỈ -->
-          <td class="p-2 min-w-[120px]">
-            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+          <td class="p-2 min-w-[140px]">
+            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
                    value="${pos2}" data-pos-key="SAU GIỜ NGHỈ" placeholder="Sau giờ nghỉ..." />
           </td>
           <!-- 4h-6h -->
-          <td class="p-2 min-w-[100px]">
-            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+          <td class="p-2 min-w-[120px]">
+            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
                    value="${pos3}" data-pos-key="4h-6h" placeholder="4h-6h..." />
           </td>
           <!-- Xuất Tải -->
-          <td class="p-2 min-w-[100px]">
-            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+          <td class="p-2 min-w-[120px]">
+            <input type="text" class="pos-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
                    value="${pos4}" data-pos-key="Xuất Tải" placeholder="Xuất tải..." />
           </td>
           <!-- NOTE -->
-          <td class="p-2 min-w-[110px]">
-            <input type="text" class="pos-input note-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
+          <td class="p-2 min-w-[130px]">
+            <input type="text" class="pos-input note-input bg-slate-800/80 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 w-full focus:outline-none focus:border-agari-red transition font-medium"
                    value="${noteVal}" data-pos-key="NOTE" placeholder="Ghi chú..." />
           </td>
-          <td class="p-3 text-center whitespace-nowrap" onclick="AdminManager.openStatusModal('${emp.id}')">
+          <td class="p-3 text-center min-w-[140px] whitespace-nowrap" onclick="AdminManager.openStatusModal('${emp.id}')">
             ${statusBadge}
           </td>
           <td class="p-3 text-center">
@@ -222,24 +222,38 @@ const AdminUI = {
     // Lọc các nhân viên đã confirmed để đưa vào Feed
     const confirmed = DataManager.state.roster.filter((e) => (e.status || '').toLowerCase() === 'confirmed');
 
+    const countEl = document.getElementById('adminLiveActivityCount');
+    if (countEl) {
+      countEl.innerHTML = `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono border border-emerald-500/40">${confirmed.length} ĐÃ ĐIỂM DANH</span>`;
+    }
+
     if (confirmed.length === 0) {
       container.innerHTML = `
-        <div class="text-xs text-slate-500 text-center py-4">Chưa có lượt điểm danh nào</div>
+        <div class="text-xs text-slate-500 text-center py-6 border border-dashed border-slate-800 rounded-xl">
+          Chưa có lượt điểm danh nào trong ca
+        </div>
       `;
       return;
     }
 
-    container.innerHTML = confirmed.slice(0, 15).map((e) => `
-      <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition">
-        <div class="flex items-center gap-2">
-          <span class="pulse-live-dot"></span>
-          <div>
-            <div class="font-bold text-white">${e.name}</div>
-            <div class="text-slate-400 font-mono text-[10px]">${e.id}</div>
+    container.innerHTML = confirmed.slice(0, 50).map((e) => `
+      <div class="p-3 rounded-xl bg-slate-800/70 border border-slate-700/60 hover:border-slate-600 transition flex items-center justify-between gap-3 text-xs shadow-sm">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-sm shadow-emerald-400/50"></span>
+          <div class="truncate">
+            <div class="font-bold text-slate-100 truncate">${e.name}</div>
+            <div class="text-slate-400 font-mono text-[11px] flex items-center gap-1.5 mt-0.5">
+              <span class="bg-slate-900/80 px-1.5 py-0.5 rounded text-amber-300 font-semibold border border-slate-700/80">${e.id}</span>
+              ${e.identity ? `<span class="text-slate-400">${e.identity}</span>` : ''}
+            </div>
           </div>
         </div>
-        <div class="font-mono text-emerald-400 text-right">
-          ${e.checkinTime || 'Vừa xong'}
+        <div class="shrink-0 text-right">
+          <div class="font-mono font-bold text-emerald-400 text-xs flex items-center gap-1 justify-end">
+            <span>🕒</span>
+            <span>${e.checkinTime || 'Vừa xong'}</span>
+          </div>
+          <span class="text-[10px] font-medium text-emerald-300/80 uppercase">Có mặt</span>
         </div>
       </div>
     `).join('');

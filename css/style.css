@@ -95,6 +95,55 @@ body {
   }
 }
 
+/* Admin Wide PC Container (Eliminates excessive empty side margins) */
+.admin-container {
+  width: 100%;
+  max-width: 98%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .admin-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .admin-container {
+    max-width: 96%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .admin-container {
+    max-width: 97%;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Custom dark scrollbar for admin panels */
+#viewAdminPortal ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+#viewAdminPortal ::-webkit-scrollbar-track {
+  background: #080D1A;
+}
+#viewAdminPortal ::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+#viewAdminPortal ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
 /* Custom Modals Constraint (Z-INDEX <= 1050) */
 .custom-modal-backdrop {
   position: fixed;
