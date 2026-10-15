@@ -14,7 +14,13 @@ const AdminManager = {
     // Nút Thêm Nhân Sự Đột Xuất
     const btnAddEmp = document.getElementById('btnAddTempEmployee');
     if (btnAddEmp) {
-      btnAddEmp.addEventListener('click', () => this.promptAddEmployee());
+      btnAddEmp.addEventListener('click', () => this.promptAddEmployee('single'));
+    }
+
+    // Nút Thêm Hàng Loạt
+    const btnAddBulk = document.getElementById('btnAddBulkEmployee');
+    if (btnAddBulk) {
+      btnAddBulk.addEventListener('click', () => this.promptAddEmployee('bulk'));
     }
 
     // Nút OFF Hàng Loạt
@@ -146,45 +152,107 @@ const AdminManager = {
   },
 
   /**
-   * Thêm nhân viên CTV đột xuất vào ca trực
+   * Thêm nhân viên CTV đột xuất vào ca trực (Hỗ trợ Thêm 1 Người & Thêm Hàng Loạt)
    */
-  async promptAddEmployee() {
+  async promptAddEmployee(initialMode = 'single') {
     if (typeof Swal === 'undefined') return;
+
+    const isBulkDefault = initialMode === 'bulk';
 
     const { value: formValues } = await Swal.fire({
       title: 'Thêm Nhân Sự Vào Ca Đột Xuất',
+      width: '32rem',
       html: `
-        <div class="text-left space-y-3 p-2">
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Mã NV / CTV: <span class="text-red-500">*</span></label>
-            <input id="swal_emp_id" class="swal2-input !m-0 !w-full !text-sm font-mono" placeholder="VD: OPS11999" />
+        <div class="text-left p-1">
+          <!-- Tabs chọn chế độ: 1 Người vs Hàng Loạt -->
+          <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl mb-4 border border-slate-200">
+            <button type="button" id="tabAddSingleBtn" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${isBulkDefault ? 'text-slate-600 hover:text-slate-900' : 'bg-white text-slate-900 shadow-sm'}">
+              <span>👤</span>
+              <span>Thêm 1 Người</span>
+            </button>
+            <button type="button" id="tabAddBulkBtn" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${isBulkDefault ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+              <span>👥</span>
+              <span>Thêm Hàng Loạt</span>
+            </button>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên: <span class="text-red-500">*</span></label>
-            <input id="swal_emp_name" class="swal2-input !m-0 !w-full !text-sm uppercase" placeholder="VD: LÊ QUỐC BẢO" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại / Zalo:</label>
-            <input id="swal_emp_phone" class="swal2-input !m-0 !w-full !text-sm font-mono" placeholder="VD: 0912345678" />
-          </div>
-          <div class="grid grid-cols-2 gap-2">
+
+          <!-- FORM 1: THÊM 1 NGƯỜI (Khớp giao diện gốc) -->
+          <div id="formAddSingle" style="${isBulkDefault ? 'display: none;' : 'display: block;'}" class="space-y-3">
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Định danh:</label>
-              <select id="swal_emp_identity" class="swal2-select !m-0 !w-full !text-sm !h-10">
-                <option value="A-OS" selected>A-OS</option>
-                <option value="OPS">OPS</option>
-                <option value="CTV">CTV</option>
-                <option value="FULL">FULL</option>
-              </select>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Mã NV / CTV: <span class="text-red-500">*</span></label>
+              <input id="swal_emp_id" class="swal2-input !m-0 !w-full !text-sm font-mono" placeholder="VD: OPS11999" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Vị trí cố định:</label>
-              <input id="swal_emp_pos" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Xả xe 1" />
+              <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên: <span class="text-red-500">*</span></label>
+              <input id="swal_emp_name" class="swal2-input !m-0 !w-full !text-sm uppercase" placeholder="VD: LÊ QUỐC BẢO" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại / Zalo:</label>
+              <input id="swal_emp_phone" class="swal2-input !m-0 !w-full !text-sm font-mono" placeholder="VD: 0912345678" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Định danh:</label>
+                <select id="swal_emp_identity" class="swal2-select !m-0 !w-full !text-sm !h-10">
+                  <option value="A-OS" selected>A-OS</option>
+                  <option value="OPS">OPS</option>
+                  <option value="CTV">CTV</option>
+                  <option value="FULL">FULL</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Vị trí cố định:</label>
+                <input id="swal_emp_pos" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Xả xe 1" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Ghi chú (NOTE):</label>
+              <input id="swal_emp_note" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Nhân sự tăng cường..." />
             </div>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Ghi chú (NOTE):</label>
-            <input id="swal_emp_note" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Nhân sự tăng cường..." />
+
+          <!-- FORM 2: THÊM HÀNG LOẠT -->
+          <div id="formAddBulk" style="${isBulkDefault ? 'display: block;' : 'display: none;'}" class="space-y-3">
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-2.5 text-xs text-blue-900 leading-relaxed">
+              <div class="font-bold flex items-center gap-1.5 text-blue-800 mb-1">
+                <span>📋</span>
+                <span>Dán danh sách từ Excel, Sheets hoặc tin nhắn:</span>
+              </div>
+              <div class="font-mono text-[11px] text-blue-800 bg-white/80 p-2 rounded-lg border border-blue-100">
+                Mỗi dòng 1 người. Hỗ trợ định dạng:<br>
+                • <b>MãNV&nbsp;&nbsp;HọTên</b><br>
+                • <b>MãNV&nbsp;&nbsp;HọTên&nbsp;&nbsp;VịTrí</b><br>
+                • <i>(Hoặc dán cả STT: 1&nbsp;&nbsp;MãNV&nbsp;&nbsp;HọTên)</i>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">
+                Danh sách nhân sự hàng loạt: <span class="text-red-500">*</span>
+              </label>
+              <textarea id="swal_bulk_text" rows="6" class="w-full text-xs font-mono p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-slate-50 leading-relaxed" placeholder="OPS11999  LÊ QUỐC BẢO&#10;OPS12000  NGUYỄN VĂN A  Xả xe 1&#10;OPS12001  TRẦN VĂN B"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Định danh mặc định:</label>
+                <select id="swal_bulk_identity" class="swal2-select !m-0 !w-full !text-sm !h-10">
+                  <option value="A-OS" selected>A-OS</option>
+                  <option value="OPS">OPS</option>
+                  <option value="CTV">CTV</option>
+                  <option value="FULL">FULL</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Vị trí cố định chung:</label>
+                <input id="swal_bulk_pos" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Xả xe (nếu dòng trống)" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Ghi chú (NOTE) chung:</label>
+              <input id="swal_bulk_note" class="swal2-input !m-0 !w-full !text-sm" placeholder="VD: Tăng cường ca..." />
+            </div>
           </div>
         </div>
       `,
@@ -193,49 +261,162 @@ const AdminManager = {
       confirmButtonColor: '#D90012',
       confirmButtonText: 'Thêm & Lưu Ngay',
       cancelButtonText: 'Hủy',
-      preConfirm: () => {
-        const id = document.getElementById('swal_emp_id').value.trim();
-        const name = document.getElementById('swal_emp_name').value.trim();
-        const phone = document.getElementById('swal_emp_phone').value.trim();
-        const identity = document.getElementById('swal_emp_identity').value.trim();
-        const pos = document.getElementById('swal_emp_pos').value.trim();
-        const note = document.getElementById('swal_emp_note').value.trim();
-        if (!id || !name) {
-          Swal.showValidationMessage('Vui lòng nhập Mã và Họ tên nhân viên!');
-          return false;
+      didOpen: () => {
+        const btnSingle = document.getElementById('tabAddSingleBtn');
+        const btnBulk = document.getElementById('tabAddBulkBtn');
+        const contentSingle = document.getElementById('formAddSingle');
+        const contentBulk = document.getElementById('formAddBulk');
+
+        if (btnSingle && btnBulk && contentSingle && contentBulk) {
+          btnSingle.addEventListener('click', () => {
+            contentSingle.style.display = 'block';
+            contentBulk.style.display = 'none';
+            btnSingle.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-white text-slate-900 shadow-sm';
+            btnBulk.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900';
+            const inputId = document.getElementById('swal_emp_id');
+            if (inputId) inputId.focus();
+          });
+          btnBulk.addEventListener('click', () => {
+            contentSingle.style.display = 'none';
+            contentBulk.style.display = 'block';
+            btnBulk.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-white text-slate-900 shadow-sm';
+            btnSingle.className = 'flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900';
+            const textarea = document.getElementById('swal_bulk_text');
+            if (textarea) textarea.focus();
+          });
         }
-        return { id, name, phone, identity, pos, note };
+      },
+      preConfirm: () => {
+        const isBulk = document.getElementById('formAddBulk')?.style.display === 'block';
+
+        if (!isBulk) {
+          const id = document.getElementById('swal_emp_id')?.value.trim();
+          const name = document.getElementById('swal_emp_name')?.value.trim();
+          const phone = document.getElementById('swal_emp_phone')?.value.trim() || '';
+          const identity = document.getElementById('swal_emp_identity')?.value.trim() || 'A-OS';
+          const pos = document.getElementById('swal_emp_pos')?.value.trim() || '';
+          const note = document.getElementById('swal_emp_note')?.value.trim() || '';
+
+          if (!id || !name) {
+            Swal.showValidationMessage('Vui lòng nhập Mã và Họ tên nhân viên!');
+            return false;
+          }
+          return { isBulk: false, employees: [{ id, name, phone, identity, pos, note }] };
+        } else {
+          const bulkText = document.getElementById('swal_bulk_text')?.value.trim();
+          if (!bulkText) {
+            Swal.showValidationMessage('Vui lòng dán danh sách nhân sự!');
+            return false;
+          }
+          const defaultIdentity = document.getElementById('swal_bulk_identity')?.value.trim() || 'A-OS';
+          const defaultPos = document.getElementById('swal_bulk_pos')?.value.trim() || '';
+          const defaultNote = document.getElementById('swal_bulk_note')?.value.trim() || '';
+
+          const lines = bulkText.split('\n');
+          const employees = [];
+
+          for (let i = 0; i < lines.length; i++) {
+            const rawLine = lines[i].trim();
+            if (!rawLine) continue;
+
+            // Tách theo tab, dấu gạch đứng, dấu phẩy, hoặc khoảng cách
+            let rawParts = [];
+            if (rawLine.includes('\t')) {
+              rawParts = rawLine.split('\t').map((s) => s.trim()).filter(Boolean);
+            } else if (rawLine.includes('|')) {
+              rawParts = rawLine.split('|').map((s) => s.trim()).filter(Boolean);
+            } else if (rawLine.includes(',')) {
+              rawParts = rawLine.split(',').map((s) => s.trim()).filter(Boolean);
+            } else {
+              rawParts = rawLine.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+            }
+
+            if (rawParts.length === 0) continue;
+
+            // Bỏ qua cột STT nếu có (ví dụ: "1", "2")
+            if (/^\d{1,4}$/.test(rawParts[0]) && rawParts.length > 2) {
+              rawParts.shift();
+            }
+
+            if (rawParts.length < 2) {
+              Swal.showValidationMessage(`Dòng ${i + 1} ("${rawLine}") thiếu thông tin. Cần có ít nhất: MãNV HọTên`);
+              return false;
+            }
+
+            const id = rawParts[0].trim();
+            let name = '';
+            let pos = defaultPos;
+            let note = defaultNote;
+
+            if (!rawLine.includes('\t') && !rawLine.includes('|') && !rawLine.includes(',')) {
+              name = rawParts.slice(1).join(' ').trim();
+            } else {
+              name = rawParts[1].trim();
+              if (rawParts.length > 2) pos = rawParts[2].trim() || defaultPos;
+              if (rawParts.length > 3) note = rawParts[3].trim() || defaultNote;
+            }
+
+            if (!id || !name) {
+              Swal.showValidationMessage(`Dòng ${i + 1} thiếu Mã hoặc Họ Tên!`);
+              return false;
+            }
+
+            employees.push({
+              id,
+              name,
+              phone: '',
+              identity: defaultIdentity,
+              pos,
+              note
+            });
+          }
+
+          if (employees.length === 0) {
+            Swal.showValidationMessage('Không tìm thấy nhân sự hợp lệ nào trong nội dung dán!');
+            return false;
+          }
+
+          return { isBulk: true, employees };
+        }
       }
     });
 
-    if (formValues) {
+    if (formValues && formValues.employees && formValues.employees.length > 0) {
       const currentHeaders = AdminUI.tableHeaders && AdminUI.tableHeaders.length > 0
         ? AdminUI.tableHeaders
         : ['Vị trí cố định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'];
 
-      const positions = {};
-      currentHeaders.forEach((h, idx) => {
-        if (idx === 0) {
-          positions[h] = formValues.pos || 'Chưa xếp';
-        } else {
-          positions[h] = 'Chưa xếp';
-        }
+      let addedCount = 0;
+      const addedNames = [];
+
+      formValues.employees.forEach((empData) => {
+        const positions = {};
+        currentHeaders.forEach((h, idx) => {
+          if (idx === 0) {
+            positions[h] = empData.pos || 'Chưa xếp';
+          } else {
+            positions[h] = 'Chưa xếp';
+          }
+        });
+        positions['NOTE'] = empData.note || '';
+
+        const newEmp = {
+          stt: DataManager.state.roster.length + 1,
+          id: Utils.sanitizeId(empData.id),
+          name: empData.name.toUpperCase(),
+          phone: empData.phone || '',
+          identity: empData.identity || 'A-OS',
+          status: 'pending',
+          checkinTime: '',
+          positions: positions,
+          note: empData.note || ''
+        };
+
+        DataManager.state.roster.push(newEmp);
+        addedCount++;
+        addedNames.push(newEmp.name);
       });
-      positions['NOTE'] = formValues.note || '';
 
-      const newEmp = {
-        stt: DataManager.state.roster.length + 1,
-        id: Utils.sanitizeId(formValues.id),
-        name: formValues.name.toUpperCase(),
-        phone: formValues.phone,
-        identity: formValues.identity || 'A-OS',
-        status: 'pending',
-        checkinTime: '',
-        positions: positions,
-        note: formValues.note || ''
-      };
-
-      DataManager.state.roster.push(newEmp);
       DataManager.recalculateStats();
       AdminUI.updateStatsCards();
       AdminUI.renderRosterTable();
@@ -254,7 +435,11 @@ const AdminManager = {
         console.warn('[AdminManager] Google Sheets save error when adding emp:', err);
       });
 
-      Utils.toast(`Đã thêm & lưu nhân sự: ${newEmp.name}`, 'success');
+      if (formValues.isBulk) {
+        Utils.toast(`Đã thêm thành công & lưu ${addedCount} nhân sự vào ca!`, 'success');
+      } else {
+        Utils.toast(`Đã thêm & lưu nhân sự: ${addedNames[0]}`, 'success');
+      }
     }
   },
 
