@@ -144,63 +144,126 @@ const DataManager = {
     }
   },
 
-  async loadRoster(shiftId, date = Utils.formatDateISO()) {
+  async loadRoster(shiftId, date = Utils.formatDateISO(), forceReloadSheets = false) {
     this.state.currentShift = shiftId;
     this.state.currentDate = date;
 
-    // 1. Đọc từ Cache LocalStorage trước để giao diện tức thì
-    const cached = this.getCachedRoster(shiftId);
-    if (cached && Array.isArray(cached) && cached.length) {
-      this.state.roster = cached;
-      this.recalculateStats();
+    // 1. Đọc từ Cache LocalStorage trước để hiển thị giao diện tức thì nếu không phải ép tải lại
+    if (!forceReloadSheets) {
+      const cached = this.getCachedRoster(shiftId);
+      if (cached && Array.isArray(cached) && cached.length > 2) {
+        this.state.roster = cached;
+        this.recalculateStats();
+      }
     }
 
-    // 2. Đọc từ Firebase Firestore (Tầng 1)
-    try {
+    // 2. Tải song song từ Google Sheets (Master Roster) và Firestore (Realtime statuses)
+    let firestoreRoster = null;
+    let sheetsRoster = null;
+
+    const firestorePromise = (async () => {
       if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
-        const firestoreRoster = await FirebaseService.loadRoster(shiftId);
-        if (firestoreRoster && Array.isArray(firestoreRoster) && firestoreRoster.length) {
-          this.state.roster = firestoreRoster;
-          this.recalculateStats();
-          this.saveCachedRoster(shiftId, firestoreRoster);
-          return this.state.roster;
+        try {
+          return await FirebaseService.loadRoster(shiftId);
+        } catch (e) {
+          console.warn('[DataManager] Firestore loadRoster:', e);
         }
       }
-    } catch (e) {
-      console.warn('[DataManager] Firestore loadRoster:', e);
+      return null;
+    })();
+
+    const sheetsPromise = (async () => {
+      try {
+        const url = `${CONFIG.APPS_SCRIPT_URL}?action=load&shiftId=${encodeURIComponent(shiftId)}`;
+        const getRes = await fetch(url).then((r) => r.json()).catch(() => null);
+        if (Array.isArray(getRes) && getRes.length > 0) {
+          return getRes;
+        }
+        // Thử POST get_roster nếu GET không có kết quả
+        const postRes = await this.callApi('get_roster', { shiftId: shiftId, shift: shiftId, date: date });
+        if (postRes && postRes.success && Array.isArray(postRes.data) && postRes.data.length > 0) {
+          return postRes.data;
+        }
+      } catch (err) {
+        console.warn('[DataManager] GAS load error:', err);
+      }
+      return null;
+    })();
+
+    const [fsRes, shRes] = await Promise.all([firestorePromise, sheetsPromise]);
+    firestoreRoster = fsRes;
+    sheetsRoster = shRes;
+
+    // 3. XỬ LÝ HỢP NHẤT DỮ LIỆU THÔNG MINH (CHỐNG MẤT DANH SÁCH TUYỆT ĐỐI)
+    if (sheetsRoster && Array.isArray(sheetsRoster) && sheetsRoster.length > 0) {
+      // Google Sheets là nguồn gốc chính thức (ví dụ 41 nhân viên)
+      const mergedRoster = sheetsRoster.map((item, idx) => {
+        const emp = { ...item };
+        emp.stt = idx + 1;
+
+        // Nếu Firestore có cập nhật trạng thái điểm danh, thời gian, vị trí thì giữ lại
+        if (firestoreRoster && Array.isArray(firestoreRoster)) {
+          const fsMatch = firestoreRoster.find((f) => Utils.isIdMatch(f.id, emp.id) || Utils.isIdMatch(f.cccd, emp.id));
+          if (fsMatch) {
+            if (fsMatch.status && fsMatch.status !== 'pending') {
+              emp.status = fsMatch.status;
+            }
+            if (fsMatch.checkinTime) {
+              emp.checkinTime = fsMatch.checkinTime;
+            }
+            if (fsMatch.positions && Object.keys(fsMatch.positions).length) {
+              emp.positions = { ...emp.positions, ...fsMatch.positions };
+            }
+            if (fsMatch.note) {
+              emp.note = fsMatch.note;
+            }
+          }
+        }
+        return emp;
+      });
+
+      // Nếu Firestore có nhân sự bổ sung mà Google Sheets chưa có (VD: Thêm Đột Xuất / Xin Lên Ca)
+      if (firestoreRoster && Array.isArray(firestoreRoster)) {
+        firestoreRoster.forEach((fsEmp) => {
+          const already = mergedRoster.some((m) => Utils.isIdMatch(m.id, fsEmp.id) || Utils.isIdMatch(m.cccd, fsEmp.id));
+          if (!already && fsEmp.id && fsEmp.name) {
+            mergedRoster.push({
+              ...fsEmp,
+              stt: mergedRoster.length + 1
+            });
+          }
+        });
+      }
+
+      this.state.roster = mergedRoster;
+      this.recalculateStats();
+      this.saveCachedRoster(shiftId, mergedRoster);
+
+      // Tự động chữa lành (Heal) Firestore ngay lập tức bằng danh sách đầy đủ
+      if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+        FirebaseService.saveRoster(shiftId, mergedRoster).catch((e) => console.warn(e));
+      }
+
+      return this.state.roster;
     }
 
-    // 3. Đồng bộ từ Google Sheets qua GAS Web App (Tầng 2)
-    try {
-      // Gọi GET action=load
-      const url = `${CONFIG.APPS_SCRIPT_URL}?action=load&shiftId=${encodeURIComponent(shiftId)}`;
-      const getRes = await fetch(url).then((r) => r.json()).catch(() => null);
-      if (Array.isArray(getRes) && getRes.length > 0) {
-        this.state.roster = getRes;
-        this.recalculateStats();
-        this.saveCachedRoster(shiftId, getRes);
-        if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
-          FirebaseService.saveRoster(shiftId, getRes);
-        }
-        return this.state.roster;
-      }
-
-      // Hoặc gọi POST get_roster
-      const res = await this.callApi('get_roster', { shiftId: shiftId, shift: shiftId, date: date });
-      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
-        this.state.roster = res.data;
-        this.recalculateStats();
-        this.saveCachedRoster(shiftId, res.data);
-        if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
-          FirebaseService.saveRoster(shiftId, res.data);
-        }
-        return this.state.roster;
-      }
-    } catch (err) {
-      console.warn('[DataManager] GAS load error:', err);
+    // Nếu Google Sheets không phản hồi (offline), dùng Firestore nếu có
+    if (firestoreRoster && Array.isArray(firestoreRoster) && firestoreRoster.length > 0) {
+      this.state.roster = firestoreRoster;
+      this.recalculateStats();
+      this.saveCachedRoster(shiftId, firestoreRoster);
+      return this.state.roster;
     }
 
-    // Nếu cả 3 nguồn đều trống thì mới nạp dữ liệu mẫu
+    // Nếu cả 2 đều trống, fallback về LocalStorage
+    const cachedFallback = this.getCachedRoster(shiftId);
+    if (cachedFallback && Array.isArray(cachedFallback) && cachedFallback.length > 0) {
+      this.state.roster = cachedFallback;
+      this.recalculateStats();
+      return this.state.roster;
+    }
+
+    // Fallback demo cuối cùng
     if (!this.state.roster || !this.state.roster.length) {
       this.initDemoRoster(shiftId);
     }

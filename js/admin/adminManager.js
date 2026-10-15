@@ -29,6 +29,26 @@ const AdminManager = {
       btnMassOff.addEventListener('click', () => this.promptMassOff());
     }
 
+    // Nút Tải Lại Lịch từ Google Sheets
+    const btnRefresh = document.getElementById('btnRefreshShiftRoster');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', async () => {
+        const shiftId = DataManager.state.currentShift;
+        Utils.showLoading('Đang đồng bộ lại danh sách từ Google Sheets...');
+        try {
+          await DataManager.loadRoster(shiftId, DataManager.state.currentDate, true);
+          AdminUI.updateStatsCards();
+          AdminUI.renderRosterTable();
+          AdminUI.renderActivityFeed();
+          Utils.hideLoading();
+          Utils.toast(`Đã tải lại thành công ${DataManager.state.roster.length} nhân sự từ Google Sheets!`, 'success');
+        } catch (e) {
+          Utils.hideLoading();
+          Utils.toast('Lỗi khi tải lại lịch: ' + e.message, 'error');
+        }
+      });
+    }
+
     // Nút Mở Modal Cập Nhật Lịch Từ Sheets
     const btnOpenScheduleModal = document.getElementById('btnOpenScheduleModal');
     if (btnOpenScheduleModal) {

@@ -327,26 +327,14 @@ const EmployeeModule = {
         // Bắn cập nhật sang Firebase Realtime
         FirebaseService.recordCheckinRealtime(shiftId, empData);
 
-        // Cập nhật lại trong DataManager.state.roster
-        if (Array.isArray(DataManager.state.roster)) {
+        // Cập nhật lại trong DataManager.state.roster nếu đang có sẵn danh sách đầy đủ
+        if (Array.isArray(DataManager.state.roster) && DataManager.state.roster.length > 5) {
           const idx = DataManager.state.roster.findIndex(
             (e) => String(e.id || '').toLowerCase() === String(empData.id || empData.empId || '').toLowerCase()
           );
           if (idx >= 0) {
             DataManager.state.roster[idx] = { ...DataManager.state.roster[idx], ...empData };
-          } else {
-            DataManager.state.roster.push(empData);
           }
-          // Lưu vào Firestore & LocalStorage
-          FirebaseService.saveRoster(shiftId, DataManager.state.roster);
-          try {
-            const cacheKey = `agr_roster_${shiftId}_${Utils.getTodayISODate()}`;
-            localStorage.setItem(cacheKey, JSON.stringify({
-              timestamp: Date.now(),
-              roster: DataManager.state.roster,
-              headers: DataManager.state.headers || []
-            }));
-          } catch (e) {}
         }
 
         // Hiển thị thẻ kết quả & vị trí làm việc
@@ -532,19 +520,18 @@ const EmployeeModule = {
       Utils.hideLoading();
 
       if (res && res.success) {
-        // Cập nhật tức thời trạng thái 'off' trong Firestore & Cache nếu xin nghỉ hôm nay
+        // Cập nhật trạng thái trong LocalStorage nếu đang có sẵn
         const todayStr = Utils.formatDateISO();
         if (offDate === todayStr) {
           const shiftId = DataManager.state.currentShift;
-          const roster = DataManager.getCachedRoster(shiftId) || DataManager.state.roster;
-          const target = roster.find((emp) => Utils.isIdMatch(emp.id, empId) || Utils.isIdMatch(emp.cccd, empId) || emp.phone === phone);
-          if (target) {
-            target.status = 'off';
-            if (!target.positions) target.positions = {};
-            target.positions['NOTE'] = reason;
-            DataManager.saveCachedRoster(shiftId, roster);
-            if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
-              FirebaseService.saveRoster(shiftId, roster).catch((e) => console.warn(e));
+          const roster = DataManager.getCachedRoster(shiftId);
+          if (roster && Array.isArray(roster) && roster.length > 5) {
+            const target = roster.find((emp) => Utils.isIdMatch(emp.id, empId) || Utils.isIdMatch(emp.cccd, empId) || emp.phone === phone);
+            if (target) {
+              target.status = 'off';
+              if (!target.positions) target.positions = {};
+              target.positions['NOTE'] = reason;
+              DataManager.saveCachedRoster(shiftId, roster);
             }
           }
         }
@@ -600,34 +587,16 @@ const EmployeeModule = {
       Utils.hideLoading();
 
       if (res && res.success) {
-        // Đồng bộ tức thời nhân sự vào Firestore & LocalStorage của ca đích
+        // Ghi nhận sự kiện realtime mà không ghi đè master roster
         const todayStr = Utils.formatDateISO();
         if (targetDate === todayStr) {
-          const shiftRoster = DataManager.getCachedRoster(targetShift) || [];
-          const existing = shiftRoster.find((emp) => Utils.isIdMatch(emp.id, empId) || Utils.isIdMatch(emp.cccd, empId));
-          if (!existing) {
-            const newEmp = {
-              stt: shiftRoster.length + 1,
-              id: Utils.sanitizeId(empId),
-              name: empName.toUpperCase(),
-              phone: phone,
-              identity: 'A-OS',
+          if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+            FirebaseService.recordCheckinRealtime(targetShift, {
+              id: empId,
+              name: empName,
               status: 'pending',
-              checkinTime: '',
-              positions: {
-                'Vị trí cố định': 'Chưa xếp',
-                'SAU GIỜ NGHỈ': 'Chưa xếp',
-                '4h-6h': 'Chưa xếp',
-                'Xuất Tải': 'Chưa xếp',
-                'NOTE': note ? `Xin lên ca: ${note}` : 'Xin lên ca (A-OS)'
-              },
               note: note ? `Xin lên ca: ${note}` : 'Xin lên ca (A-OS)'
-            };
-            shiftRoster.push(newEmp);
-            DataManager.saveCachedRoster(targetShift, shiftRoster);
-            if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
-              FirebaseService.saveRoster(targetShift, shiftRoster).catch((e) => console.warn(e));
-            }
+            }).catch((e) => console.warn(e));
           }
         }
 
