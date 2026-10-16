@@ -958,7 +958,7 @@ const EmployeeModule = {
       }
     }
 
-    Utils.showLoading('Đang gửi khiếu nại lên Google Sheets...');
+    Utils.showLoading('Đang ghi nhận lên hệ thống...');
 
     try {
       const res = await DataManager.callApi('submit_complaint', {
