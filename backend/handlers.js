@@ -214,7 +214,9 @@ function handleRequest(data, shiftId, sheet) {
               return sendErrorResponse("Bạn đã đăng ký " + reqType + " cho ca này vào ngày " + reqDate + " thành công rồi, vui lòng không gửi lại!");
             }
           } else {
-            return sendErrorResponse("Bạn đã gửi đơn " + reqType + " cho ngày " + reqDate + " rồi, vui lòng không gửi lại!");
+            if (!rowTargetShift || !reqTargetShift || rowTargetShift === reqTargetShift) {
+              return sendErrorResponse("Bạn đã gửi đơn " + reqType + (reqTargetShift ? (" cho ca " + reqTargetShift) : "") + " vào ngày " + reqDate + " rồi, vui lòng không gửi lại!");
+            }
           }
         }
       }
@@ -242,8 +244,9 @@ function handleRequest(data, shiftId, sheet) {
         var sName = allSheets[s].getName();
         var isTargetMatch = true;
         if (reqTargetShift && reqTargetShift !== "ALL") {
-          var expectedSheetName = "Ca_" + reqTargetShift.replace(":", "").replace("-", "_");
-          if (sName !== expectedSheetName) {
+          var cleanTarget = reqTargetShift.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+          var cleanSheet = sName.replace(/^Ca_/i, "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+          if (cleanSheet !== cleanTarget) {
             isTargetMatch = false;
           }
         }
@@ -283,8 +286,19 @@ function handleRequest(data, shiftId, sheet) {
 
     // 2. TỰ ĐỘNG THÊM VÀO SHEET CA ĐÍCH (NẾU XIN LÊN CA)
     if (reqType === "XIN LÊN CA" && reqTargetShift) {
-      var targetSheetName = "Ca_" + reqTargetShift.replace(":", "").replace("-", "_");
-      var targetSheet = reqSs.getSheetByName(targetSheetName);
+      var cleanTarget = reqTargetShift.replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+      var targetSheet = null;
+      var allSheetsForLen = reqSs.getSheets();
+      for (var ts = 0; ts < allSheetsForLen.length; ts++) {
+        var tsName = allSheetsForLen[ts].getName();
+        if (tsName.indexOf("Ca_") === 0 && tsName.replace(/^Ca_/i, "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase() === cleanTarget) {
+          targetSheet = allSheetsForLen[ts];
+          break;
+        }
+      }
+      if (!targetSheet) {
+        targetSheet = reqSs.getSheetByName("Ca_" + reqTargetShift.replace(":", "").replace("-", "_"));
+      }
       if (targetSheet) {
         var tDataRange = targetSheet.getDataRange();
         var tValues = tDataRange.getValues();

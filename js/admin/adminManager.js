@@ -469,23 +469,100 @@ const AdminManager = {
   async promptMassOff() {
     const confirm = await Utils.confirm(
       'Xác nhận OFF Hàng Loạt',
-      'Bạn có muốn chuyển toàn bộ nhân sự đang ở trạng thái <strong>Chưa điểm danh</strong> sang <strong>XIN OFF</strong>?'
+      'Bạn có muốn chuyển toàn bộ nhân sự đang ở trạng thái <strong>Chưa điểm danh</strong> sang <strong>XIN OFF</strong> và tự động đồng bộ lên Google Sheets?'
     );
 
     if (!confirm.isConfirmed) return;
 
+    const shiftSelect = document.getElementById('adminShiftSelect');
+    const shiftId = shiftSelect ? shiftSelect.value : DataManager.state.currentShift;
+
+    // Đồng bộ các input vị trí nếu admin có nhập trên giao diện
+    const tableRows = document.querySelectorAll('#rosterTableBody tr[data-emp-id]');
+    if (tableRows.length > 0) {
+      tableRows.forEach((row) => {
+        const empId = row.dataset.empId;
+        const targetEmp = DataManager.state.roster.find((e) => Utils.isIdMatch(e.id, empId));
+        if (targetEmp) {
+          if (!targetEmp.positions) targetEmp.positions = {};
+          const inputs = row.querySelectorAll('input.position-input');
+          inputs.forEach((inp) => {
+            const key = inp.dataset.posKey;
+            const val = inp.value.trim();
+            if (key === 'NOTE') {
+              targetEmp.note = val;
+              targetEmp.positions['NOTE'] = val;
+            } else {
+              targetEmp.positions[key] = val;
+            }
+          });
+        }
+      });
+    }
+
     let count = 0;
     DataManager.state.roster.forEach((e) => {
-      if ((e.status || '').toLowerCase() === 'pending') {
+      const st = (e.status || '').toLowerCase();
+      if (st === 'pending' || st === 'chưa điểm danh' || !st) {
         e.status = 'off';
+        e.checkinTime = '';
         count++;
       }
     });
 
+    if (count === 0) {
+      Utils.toast('Không có nhân sự nào ở trạng thái Chưa điểm danh', 'info');
+      return;
+    }
+
+    // 1. Cập nhật thống kê & render UI ngay lập tức
     DataManager.recalculateStats();
     AdminUI.updateStatsCards();
     AdminUI.renderRosterTable();
-    Utils.toast(`Đã chuyển ${count} nhân sự sang trạng thái OFF!`, 'info');
+    if (typeof AdminUI.renderActivityFeed === 'function') {
+      AdminUI.renderActivityFeed();
+    }
+
+    // 2. Lưu vào đệm LocalStorage
+    DataManager.saveCachedRoster(shiftId, DataManager.state.roster);
+
+    // 3. Đồng bộ Realtime lên Firebase Firestore (Tầng 1)
+    if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+      FirebaseService.saveRoster(shiftId, DataManager.state.roster).catch((err) => {
+        console.warn('[AdminManager] Firebase save error in promptMassOff:', err);
+      });
+    }
+
+    // 4. Lưu và đồng bộ lên Google Sheets qua GAS (Tầng 2)
+    Utils.showLoading(`Đang chuyển ${count} nhân sự sang XIN OFF và lưu vào Google Sheets...`);
+    try {
+      let colHeaders = ['Vị trí cố định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'];
+      if (DataManager.state.roster[0]?.positions && typeof DataManager.state.roster[0].positions === 'object') {
+        const keys = Object.keys(DataManager.state.roster[0].positions).filter((k) => k !== 'NOTE');
+        if (keys.length > 0) colHeaders = keys;
+      }
+
+      const res = await DataManager.saveSchedule(shiftId, DataManager.state.roster, colHeaders);
+      Utils.hideLoading();
+
+      if (res && res.success) {
+        Utils.showAlert(
+          'OFF Hàng Loạt Thành Công!',
+          `Đã chuyển <strong>${count}</strong> nhân sự sang trạng thái <strong>XIN OFF</strong> và tự động cập nhật lên Google Sheets & Firebase!`,
+          'success'
+        );
+      } else {
+        Utils.showAlert(
+          'Đã cập nhật trạng thái',
+          `Đã cập nhật giao diện và Firebase. Phản hồi Google Sheets: ${res?.message || 'Đang xử lý'}`,
+          'warning'
+        );
+      }
+    } catch (err) {
+      Utils.hideLoading();
+      console.warn('Lỗi lưu OFF hàng loạt lên Google Sheets:', err);
+      Utils.showAlert('Cảnh báo lưu Sheets', `Đã đổi trạng thái trên giao diện nhưng lỗi lưu Google Sheets: ${err.message}`, 'error');
+    }
   },
 
   // ==================== CẬP NHẬT TRẠNG THÁI (Ảnh 1) ====================

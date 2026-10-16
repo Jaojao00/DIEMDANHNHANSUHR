@@ -192,6 +192,25 @@ const App = {
     if (modal) {
       modal.classList.add('active');
       document.body.style.overflow = 'hidden';
+
+      if (modalId === 'modalXinOff') {
+        const form = document.getElementById('formXinOff');
+        if (form) {
+          if (form.offDate && !form.offDate.value && typeof Utils !== 'undefined') {
+            form.offDate.value = Utils.formatDateISO();
+          }
+          if (form.targetShift && typeof DataManager !== 'undefined' && DataManager.state?.currentShift) {
+            form.targetShift.value = DataManager.state.currentShift;
+          }
+        }
+      } else if (modalId === 'modalXinLenCa') {
+        const form = document.getElementById('formXinLenCa');
+        if (form) {
+          if (form.targetDate && !form.targetDate.value && typeof Utils !== 'undefined') {
+            form.targetDate.value = Utils.formatDateISO();
+          }
+        }
+      }
     }
   },
 

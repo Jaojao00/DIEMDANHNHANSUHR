@@ -149,6 +149,7 @@ const AdminRequests = {
           const roster = DataManager.getCachedRoster(shiftId) || DataManager.state.roster;
           const emp = roster.find((e) => Utils.isIdMatch(e.id, target.empId));
 
+          const colHeaders = ['Vị trí cố định', 'SAU GIỜ NGHỈ', '4h-6h', 'Xuất Tải'];
           if (target.type === 'XIN OFF') {
             if (emp) {
               emp.status = 'off';
@@ -156,6 +157,7 @@ const AdminRequests = {
               if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
                 FirebaseService.saveRoster(shiftId, roster).catch((e) => console.warn(e));
               }
+              DataManager.saveSchedule(shiftId, roster, colHeaders).catch((e) => console.warn('[AdminRequests] saveSchedule error:', e));
               if (shiftId === DataManager.state.currentShift) {
                 DataManager.recalculateStats();
                 AdminUI.updateStatsCards();
@@ -186,6 +188,7 @@ const AdminRequests = {
               if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
                 FirebaseService.saveRoster(shiftId, roster).catch((e) => console.warn(e));
               }
+              DataManager.saveSchedule(shiftId, roster, colHeaders).catch((e) => console.warn('[AdminRequests] saveSchedule error:', e));
               if (shiftId === DataManager.state.currentShift) {
                 DataManager.recalculateStats();
                 AdminUI.updateStatsCards();

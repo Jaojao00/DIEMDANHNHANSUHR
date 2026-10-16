@@ -481,9 +481,10 @@ const EmployeeModule = {
     const empName = form.empName.value.trim();
     const phone = form.phone.value.trim();
     const offDate = form.offDate.value;
+    const targetShift = form.targetShift ? form.targetShift.value : (DataManager.state.currentShift || '18:00-22:00');
     const reason = form.reason.value.trim();
 
-    if (!empId || !empName || !phone || !offDate || !reason) {
+    if (!empId || !empName || !phone || !offDate || !reason || !targetShift) {
       Utils.toast('Vui lòng điền đầy đủ tất cả các trường', 'warning');
       return;
     }
@@ -512,31 +513,46 @@ const EmployeeModule = {
         phone: phone,
         date: offDate,
         reason: reason,
-        shift: DataManager.state.currentShift,
-        targetShift: DataManager.state.currentShift,
+        shift: targetShift,
+        targetShift: targetShift,
         timestamp: Utils.getCurrentVNTime()
       });
 
       Utils.hideLoading();
 
       if (res && res.success) {
-        // Cập nhật trạng thái trong LocalStorage nếu đang có sẵn
+        // Cập nhật trạng thái trong LocalStorage & Firebase nếu là hôm nay
         const todayStr = Utils.formatDateISO();
         if (offDate === todayStr) {
-          const shiftId = DataManager.state.currentShift;
+          const shiftId = targetShift;
           const roster = DataManager.getCachedRoster(shiftId);
-          if (roster && Array.isArray(roster) && roster.length > 5) {
+          if (roster && Array.isArray(roster) && roster.length > 0) {
             const target = roster.find((emp) => Utils.isIdMatch(emp.id, empId) || Utils.isIdMatch(emp.cccd, empId) || emp.phone === phone);
             if (target) {
               target.status = 'off';
+              target.note = reason;
               if (!target.positions) target.positions = {};
               target.positions['NOTE'] = reason;
               DataManager.saveCachedRoster(shiftId, roster);
+              if (DataManager.state.currentShift === shiftId) {
+                DataManager.state.roster = roster;
+                DataManager.recalculateStats();
+              }
             }
+          }
+
+          if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+            FirebaseService.recordCheckinRealtime(shiftId, {
+              id: empId,
+              name: empName,
+              phone: phone,
+              status: 'off',
+              note: reason
+            }).catch(() => {});
           }
         }
 
-        Utils.showAlert('Gửi đơn thành công', 'Đơn xin nghỉ đã được ghi vào hệ thống và đồng bộ.', 'success');
+        Utils.showAlert('Gửi đơn thành công', `Đơn xin nghỉ ca ${targetShift} ngày ${offDate} đã được ghi nhận vào hệ thống và đồng bộ.`, 'success');
         form.reset();
         window.App?.closeModal('modalXinOff');
       } else {
