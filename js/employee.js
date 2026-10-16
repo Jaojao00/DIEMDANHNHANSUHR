@@ -941,11 +941,16 @@ const EmployeeModule = {
     }
 
     let imageBase64 = '';
+    let imageFilename = '';
+    let imageMimeType = '';
 
-    if (fileInput.files && fileInput.files[0]) {
+    if (fileInput && fileInput.files && fileInput.files[0]) {
+      const file = fileInput.files[0];
+      imageFilename = file.name || `KhieuNai_${empId}_${Date.now()}.jpg`;
+      imageMimeType = file.type || 'image/jpeg';
       Utils.showLoading('Đang nén ảnh minh chứng...');
       try {
-        const compressed = await Utils.compressImage(fileInput.files[0], 500, 0.8);
+        const compressed = await Utils.compressImage(file, 500, 0.8);
         imageBase64 = compressed.base64;
         console.log(`[KhieuNai] Ảnh nén thành công: ${compressed.sizeKB} KB`);
       } catch (err) {
@@ -953,16 +958,19 @@ const EmployeeModule = {
       }
     }
 
-    Utils.showLoading('Đang gửi khiếu nại lên Google Drive & Sheets...');
+    Utils.showLoading('Đang gửi khiếu nại lên Google Sheets...');
 
     try {
       const res = await DataManager.callApi('submit_complaint', {
         empId,
         empName,
         phone,
+        type: complaintType,
         complaintType,
         content,
         imageBase64,
+        imageFilename: imageFilename || (imageBase64 ? `KhieuNai_${empId}_${Date.now()}.jpg` : ''),
+        imageMimeType: imageMimeType || 'image/jpeg',
         driveFolderId: CONFIG.GDRIVE_FOLDER_ID,
         timestamp: Utils.getCurrentVNTime()
       });
@@ -970,11 +978,11 @@ const EmployeeModule = {
       Utils.hideLoading();
 
       if (res && res.success) {
-        Utils.showAlert(
-          'Đã tiếp nhận khiếu nại',
-          'Phiếu khiếu nại kèm minh chứng đã gửi thành công tới phòng Nhân sự với trạng thái "Chờ xử lý".',
-          'success'
-        );
+        let msg = 'Phiếu khiếu nại đã gửi thành công tới phòng Nhân sự với trạng thái "Chờ xử lý".';
+        if (res.imgUrl && res.imgUrl.startsWith('Lỗi tải ảnh')) {
+          msg += '<br/><br/><div class="p-2.5 bg-amber-50 rounded-lg border border-amber-200 text-amber-900 text-xs text-left">⚠️ <strong>Lưu ý:</strong> Ảnh minh chứng chưa tải được vào Drive do hệ thống Google Apps Script đang chờ Admin cấp quyền Drive. Bạn có thể gửi ảnh trực tiếp cho Quản lý ca qua Zalo.</div>';
+        }
+        Utils.showAlert('Đã tiếp nhận khiếu nại', msg, 'success');
         form.reset();
         window.App?.closeModal('modalKhieuNai');
       } else {

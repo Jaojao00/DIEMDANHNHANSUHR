@@ -1255,19 +1255,38 @@ function handleSubmitComplaint(data) {
       sheet.appendRow(["Thời gian", "Mã OPS/CCCD", "Họ Tên", "SĐT liên hệ", "Loại khiếu nại", "Nội dung", "Link ảnh minh chứng", "Trạng thái"]);
     }
     
-    var timeStr = Utilities.formatDate(new Date(), "GMT+7", "dd/MM/yyyy HH:mm:ss");
+    var timeStr = Utilities.formatDate(new Date(), CONFIG.TIMEZONE || "GMT+7", "dd/MM/yyyy HH:mm:ss");
     var imgUrl = "";
     
-    // N?u c ?nh dnh km
-    if (data.imageFilename && data.imageBase64) {
+    // Nếu có ảnh đính kèm
+    if (data.imageBase64) {
       try {
-        var folder = DriveApp.getFolderById("18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu");
+        var folderId = data.driveFolderId || CONFIG.GDRIVE_FOLDER_ID || "18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu";
+        var folder = DriveApp.getFolderById(folderId);
         
-        var blob = Utilities.newBlob(Utilities.base64Decode(data.imageBase64), data.imageMimeType || "image/png", data.imageFilename);
+        var base64Data = data.imageBase64.toString();
+        var mimeType = data.imageMimeType || "image/jpeg";
+        if (base64Data.indexOf(",") !== -1) {
+          var parts = base64Data.split(",");
+          var mimeMatch = parts[0].match(/:(.*?);/);
+          if (mimeMatch && mimeMatch[1]) {
+            mimeType = mimeMatch[1];
+          }
+          base64Data = parts[1];
+        }
+        
+        var filename = data.imageFilename || ("KhieuNai_" + (data.empId || "OPS") + "_" + Utilities.formatDate(new Date(), "GMT+7", "yyyyMMdd_HHmmss") + ".jpg");
+        var decodedBytes = Utilities.base64Decode(base64Data);
+        var blob = Utilities.newBlob(decodedBytes, mimeType, filename);
         var file = folder.createFile(blob);
+        try {
+          file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        } catch (shareErr) {
+          Logger.log("Sharing permission warning: " + shareErr);
+        }
         imgUrl = file.getUrl();
       } catch (e) {
-        imgUrl = "L?i t?i ?nh: " + e.toString();
+        imgUrl = "Lỗi tải ảnh: " + e.toString();
       }
     }
     
@@ -1276,16 +1295,22 @@ function handleSubmitComplaint(data) {
       data.empId || "",
       data.empName || "",
       data.phone || "",
-      data.type || "",
+      data.type || data.complaintType || "",
       data.content || "",
       imgUrl,
       "Chờ xử lý"
     ]);
     
-    return sendSuccessResponse({ message: "Đã gửi khiếu nại thành công!" });
+    return sendSuccessResponse({ message: "Đã gửi khiếu nại thành công!", imgUrl: imgUrl });
   } catch (e) {
     return sendErrorResponse(e.toString());
   }
+}
+
+function authorizeDrivePermissions() {
+  var folder = DriveApp.getFolderById("18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu");
+  Logger.log("Drive authorized successfully! Folder: " + folder.getName());
+  return "Drive authorized OK: " + folder.getName();
 }
 
   function handleGetSalaryList(data) {

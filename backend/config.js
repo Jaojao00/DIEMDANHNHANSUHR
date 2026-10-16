@@ -1,5 +1,6 @@
 var CONFIG = {
   SPREADSHEET_ID: "1J4azfR-SJfl3fXLQfxN_vI3eOsn1miDPLyntJw0HVeI",
+  GDRIVE_FOLDER_ID: "18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu",
   TIMEZONE: "Asia/Ho_Chi_Minh",
   ADMIN_EXPIRY_MINUTES: 60
 };
