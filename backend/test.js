@@ -25,3 +25,11 @@ function testGetShift() {
   }
   console.log(JSON.stringify(periods));
 }
+
+function authorizeDrivePermissions() {
+  var folder = DriveApp.getFolderById("18JlzPq70UtlMv0LijpvoftCiQ_qLkpgu");
+  var testFile = folder.createFile("test_verify_write.txt", "Drive write access OK");
+  testFile.setTrashed(true);
+  Logger.log("Drive FULL WRITE authorized successfully! Folder: " + folder.getName());
+  return "Drive write permission OK: " + folder.getName();
+}
