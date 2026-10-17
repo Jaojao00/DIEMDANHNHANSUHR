@@ -92,8 +92,9 @@ const AdminCore = {
 
       // Kiểm tra thành công hoặc hỗ trợ tài khoản cấu hình mặc định (fallback)
       const validEmails = ['tainguyenhr.dev@gmail.com', 'ptbt472@gmail.com'];
-      if ((res && res.success && res.adminToken) || (validEmails.includes(email) && password.length >= 6)) {
-        const token = (res && res.adminToken) ? res.adminToken : 'agr_token_' + Math.random().toString(36).substring(2) + Date.now();
+      const realToken = (res && res.success) ? (res.adminToken || res.token) : null;
+      if (realToken || (validEmails.includes(email) && password.length >= 6)) {
+        const token = realToken ? realToken : 'agr_token_' + Math.random().toString(36).substring(2) + Date.now();
         
         // Lưu token chuẩn xác vào localStorage (Nguyên tắc 3)
         localStorage.setItem(CONFIG.STORAGE_KEYS.ADMIN_TOKEN, token);

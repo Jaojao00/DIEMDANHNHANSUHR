@@ -108,20 +108,35 @@ function handleLoadRoster(shiftId, returnPlainArray) {
     return returnPlainArray ? ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON) : sendSuccessResponse([]);
   }
   var headers = values[0] || [];
+  var totalCols = headers.length;
+
+  var statusIndex = -1;
+  var timeIndex = -1;
+  var phoneIndex = -1;
   var noteIndex = -1;
-  for (var h = 0; h < headers.length; h++) {
+
+  for (var h = 0; h < totalCols; h++) {
     var hStr = String(headers[h] || "").trim().toLowerCase();
-    if (hStr === "ghi chú" || hStr === "note") {
-      noteIndex = h;
-      break;
-    }
+    if (hStr === "trạng thái" || hStr === "status") statusIndex = h;
+    else if (hStr === "thời gian" || hStr === "timestamp" || hStr === "giờ điểm danh") timeIndex = h;
+    else if (hStr === "sđt" || hStr === "sdt" || hStr === "số đt" || hStr === "phone") phoneIndex = h;
+    else if (hStr === "ghi chú" || hStr === "note") noteIndex = h;
   }
-  var N = noteIndex !== -1 ? noteIndex - 4 : (headers.length > 4 ? headers.length - 4 : 0);
-  if (N < 0) N = 0;
+
+  // Fallback to standard 4 tail columns if not found by name
+  if (phoneIndex === -1 && totalCols >= 4) phoneIndex = totalCols - 1;
+  if (timeIndex === -1 && totalCols >= 4) timeIndex = totalCols - 2;
+  if (statusIndex === -1 && totalCols >= 4) statusIndex = totalCols - 3;
+  if (noteIndex === -1 && totalCols >= 4) noteIndex = totalCols - 4;
+
+  var firstTail = noteIndex !== -1 ? noteIndex : (statusIndex !== -1 ? statusIndex : totalCols - 4);
+  var N = firstTail > 4 ? firstTail - 4 : 0;
+
   var colHeaders = [];
   for (var c = 0; c < N; c++) {
     colHeaders.push(headers[4 + c] || ("Vị trí " + (c + 1)));
   }
+
   var result = [];
   for (var i = 1; i < values.length; i++) {
     var r = values[i];
@@ -133,6 +148,20 @@ function handleLoadRoster(shiftId, returnPlainArray) {
       posArr.push(pVal);
       posObj[colHeaders[j]] = pVal;
     }
+
+    var rawStatus = (statusIndex >= 0 && statusIndex < r.length && r[statusIndex]) ? String(r[statusIndex]).trim().toLowerCase() : "pending";
+    if (!rawStatus) rawStatus = "pending";
+
+    var timeVal = (timeIndex >= 0 && timeIndex < r.length && r[timeIndex]) ? r[timeIndex] : "";
+    if (timeVal instanceof Date) {
+      timeVal = Utilities.formatDate(timeVal, CONFIG.TIMEZONE, "HH:mm:ss");
+    } else if (typeof timeVal === "string" && timeVal.indexOf("1899-12-30T") !== -1) {
+      try {
+        var d = new Date(timeVal);
+        timeVal = Utilities.formatDate(d, CONFIG.TIMEZONE, "HH:mm:ss");
+      } catch (e) {}
+    }
+
     result.push({
       stt: r[0] || "",
       id: r[1] || "",
@@ -141,10 +170,10 @@ function handleLoadRoster(shiftId, returnPlainArray) {
       identity: r[3] || "",
       positions: posObj,
       positionList: posArr,
-      note: r[4 + N] || "",
-      status: (r[4 + N + 1] || "pending").toString().toLowerCase(),
-      timestamp: r[4 + N + 2] || "",
-      phone: r[4 + N + 3] || ""
+      note: (noteIndex >= 0 && noteIndex < r.length) ? (r[noteIndex] || "") : "",
+      status: rawStatus,
+      timestamp: timeVal,
+      phone: (phoneIndex >= 0 && phoneIndex < r.length) ? (r[phoneIndex] || "") : ""
     });
   }
   if (returnPlainArray) {
@@ -570,52 +599,68 @@ function handleRejectChangeRequest(data, shiftId, sheet) {
 }
 
 function handleGetBooking(data, shiftId, sheet) {
-
-      try {
-        var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-        var bookingSheet = ss.getSheetByName("SOC_South");
-        if (!bookingSheet) return sendJsonResponse({ status: "success", data: [] });
-        
-        var dataRange = bookingSheet.getDataRange().getValues();
-        var bookings = [];
-        
-        // Skip header row (row 0)
-        for (var i = 1; i < dataRange.length; i++) {
-          var row = dataRange[i];
-          // Check if row is empty by checking if Ticket Number (col 1) is empty
-          if (!row[1] && !row[2]) continue;
-          
-          var dateVal = row[2]; // Ngày fulfill
-          if (dateVal instanceof Date) {
-            // Formatting JS Date to YYYY-MM-DD
-            var y = dateVal.getFullYear();
-            var m = ("0" + (dateVal.getMonth() + 1)).slice(-2);
-            var d = ("0" + dateVal.getDate()).slice(-2);
-            dateVal = y + "-" + m + "-" + d;
-          } else {
-            dateVal = dateVal.toString();
-          }
-          
-          bookings.push({
-            commit: row[0],
-            ticket: row[1],
-            date: dateVal,
-            region: row[3],
-            department: row[4],
-            socName: row[5],
-            area: row[6],
-            shift: row[7],
-            vendor: row[8],
-            totalReq: row[9],
-            totalKpi: row[10],
-            latestCommit: row[11]
-          });
-        }
-        return sendJsonResponse({ status: "success", data: bookings });
-      } catch (e) {
-        return sendJsonResponse({ status: "error", message: e.toString() });
+  try {
+    var ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    var bookingSheet = null;
+    var allSheets = ss.getSheets();
+    for (var s = 0; s < allSheets.length; s++) {
+      if (allSheets[s].getSheetId() === 1670239083) {
+        bookingSheet = allSheets[s];
+        break;
       }
+    }
+    if (!bookingSheet) {
+      bookingSheet = ss.getSheetByName("SOC_South") || ss.getSheetByName("Booking") || ss.getSheetByName("BOOKING_SOC");
+    }
+    if (!bookingSheet) return sendJsonResponse({ success: true, status: "success", data: [] });
     
+    var dataRange = bookingSheet.getDataRange().getValues();
+    var bookings = [];
+    
+    // Skip header row (row 0)
+    for (var i = 1; i < dataRange.length; i++) {
+      var row = dataRange[i];
+      // Check if row is empty by checking if Ticket Number (col 1) is empty
+      if (!row[1] && !row[2]) continue;
+      
+      var dateVal = row[2]; // Ngày fulfill
+      if (dateVal instanceof Date) {
+        dateVal = Utilities.formatDate(dateVal, CONFIG.TIMEZONE, "yyyy-MM-dd");
+      } else if (dateVal) {
+        dateVal = dateVal.toString().trim();
+      } else {
+        dateVal = "";
+      }
+      
+      var commitVal = row[0] || "";
+      var ticketVal = row[1] || "";
+      var totalReqVal = Number(row[9] || 0);
+      var totalKpiVal = Number(row[10] || 0);
+      var latestCommitVal = Number(row[11] || 0);
+      var vendorCommitVal = latestCommitVal || (String(commitVal).toUpperCase() === "YES" ? totalReqVal : 0);
+      
+      bookings.push({
+        id: ticketVal,
+        commit: commitVal,
+        ticket: ticketVal,
+        date: dateVal,
+        fulfillDate: dateVal,
+        region: row[3] || "",
+        department: row[4] || "",
+        socName: row[5] || "",
+        area: row[6] || "",
+        shift: row[7] || "",
+        vendor: row[8] || "",
+        totalReq: totalReqVal,
+        totalKpi: totalKpiVal,
+        latestCommit: latestCommitVal,
+        vendorCommit: vendorCommitVal
+      });
+    }
+    return sendJsonResponse({ success: true, status: "success", data: bookings });
+  } catch (e) {
+    return sendJsonResponse({ success: false, status: "error", message: e.toString() });
+  }
 }
 
 function handleGetAdminLogs(data, shiftId, sheet) {
@@ -1058,7 +1103,7 @@ function handleAdminLogin(data) {
   
   if (admins[email] && admins[email] === pass) {
     var token = generateAdminToken(email);
-    return sendSuccessResponse({ token: token }, "Đăng nhập thành công");
+    return sendSuccessResponse({ token: token, adminToken: token }, "Đăng nhập thành công");
   }
   
   return sendErrorResponse("Email hoặc mật khẩu không đúng!");
@@ -1413,15 +1458,26 @@ function handleGetAllRegistrations(data) {
             totalDays++;
             if (row[ci] && row[ci] !== "OFF") workCount++;
           }
+          var tsVal = row[0];
+          if (tsVal instanceof Date) {
+            tsVal = Utilities.formatDate(tsVal, CONFIG.TIMEZONE, "dd/MM/yyyy HH:mm");
+          } else if (tsVal) {
+            tsVal = tsVal.toString().trim();
+          } else {
+            tsVal = "";
+          }
+
           result.push({
-            timestamp: row[0],
-            empId: row[1],
-            name: row[2],
-            phone: row[3],
-            osGender: row[4],
-            shiftId: row[5],
-            shiftLabel: row[6],
+            timestamp: tsVal,
+            empId: row[1] || "",
+            name: row[2] || "",
+            phone: row[3] || "",
+            osGender: row[4] || "",
+            shiftId: row[5] || "",
+            shiftLabel: row[6] || row[5] || "",
+            shift: row[6] || row[5] || "",
             workDays: workCount,
+            workDaysCount: workCount,
             totalDays: totalDays,
             sheetName: sName
           });

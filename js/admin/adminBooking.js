@@ -74,8 +74,12 @@ const AdminBooking = {
 
     try {
       const res = await DataManager.callApi('get_booking');
-      if (res && res.success && Array.isArray(res.data)) {
-        this.bookings = res.data;
+      if (res && (res.success || res.status === 'success') && Array.isArray(res.data) && res.data.length > 0) {
+        this.bookings = res.data.map(b => ({
+          ...b,
+          fulfillDate: b.fulfillDate || b.date || '',
+          vendorCommit: b.vendorCommit != null ? b.vendorCommit : (b.latestCommit || (b.commit === 'YES' ? b.totalReq : 0))
+        }));
       } else {
         this.bookings = this.generateSampleBookings();
       }

@@ -71,9 +71,22 @@ const AdminRegistration = {
     }
 
     try {
-      const res = await DataManager.callApi('get_registrations');
-      if (res && res.success && Array.isArray(res.data)) {
-        this.regData = res.data;
+      let res = await DataManager.callApi('get_registrations');
+      if (!res || !res.success || !Array.isArray(res.data) || res.data.length === 0) {
+        try {
+          const directRes = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=get_registrations`).then(r => r.json());
+          if (directRes && directRes.success && Array.isArray(directRes.data)) {
+            res = directRes;
+          }
+        } catch (e) {}
+      }
+
+      if (res && (res.success || res.status === 'success') && Array.isArray(res.data) && res.data.length > 0) {
+        this.regData = res.data.map(item => ({
+          ...item,
+          shift: item.shiftLabel || item.shift || item.shiftId || '',
+          workDaysCount: item.workDaysCount != null ? item.workDaysCount : (item.workDays != null ? item.workDays : 0)
+        }));
       } else {
         this.regData = this.generateSampleRegData();
       }
@@ -103,13 +116,13 @@ const AdminRegistration = {
     tbody.innerHTML = this.regData.map((emp, idx) => `
       <tr class="hover:bg-slate-800/50 transition border-b border-slate-800/80 text-sm">
         <td class="p-3 text-center text-slate-400 font-mono">${idx + 1}</td>
-        <td class="p-3 font-mono font-bold text-agari-yellow">${emp.empId}</td>
-        <td class="p-3 font-medium text-white">${emp.name}</td>
-        <td class="p-3 text-slate-400 font-mono text-xs">${emp.phone}</td>
-        <td class="p-3 font-mono text-slate-300 text-xs">${emp.shift}</td>
+        <td class="p-3 font-mono font-bold text-agari-yellow">${emp.empId || ''}</td>
+        <td class="p-3 font-medium text-white">${emp.name || ''}</td>
+        <td class="p-3 text-slate-400 font-mono text-xs">${emp.phone || ''}</td>
+        <td class="p-3 font-mono text-slate-300 text-xs">${emp.shift || emp.shiftLabel || emp.shiftId || ''}</td>
         <td class="p-3 text-center">
           <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono text-xs font-bold">
-            ${emp.workDaysCount || 12} ngày làm
+            ${emp.workDaysCount != null ? emp.workDaysCount : (emp.workDays || 0)} ngày làm
           </span>
         </td>
         <td class="p-3 text-center font-mono text-slate-400 text-xs">${emp.timestamp || Utils.formatDateVN()}</td>

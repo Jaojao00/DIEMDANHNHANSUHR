@@ -254,6 +254,14 @@ function doGet(e) {
 
 
 
+    if (action === "get_registrations") {
+      return handleGetAllRegistrations(e.parameter);
+    }
+
+    if (action === "get_booking") {
+      return handleGetBooking(e.parameter);
+    }
+
     // Pre-flight check (CORS ping)
     return ContentService.createTextOutput(JSON.stringify({ status: "AGR API is running" })).setMimeType(ContentService.MimeType.JSON);
     
