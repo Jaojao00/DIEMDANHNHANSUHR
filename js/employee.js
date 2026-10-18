@@ -17,14 +17,26 @@ const EmployeeModule = {
   },
 
   bindEvents() {
-    // 1. Chọn ca làm việc (Giai đoạn 1 -> Giai đoạn 2)
+    // 1. Chọn ca làm việc (Giai đoạn 1 -> Hiện thông báo lưu ý điểm danh)
     const shiftCards = document.querySelectorAll('#shiftCardsList .shift-card-item');
     shiftCards.forEach((card) => {
       card.addEventListener('click', () => {
         const shiftId = card.getAttribute('data-shift');
-        if (shiftId) this.selectShift(shiftId);
+        if (shiftId) this.promptShiftAttendanceNotice(shiftId);
       });
     });
+
+    // Nút xác nhận tiếp tục vào điểm danh trong thông báo
+    const btnContinueCheckin = document.getElementById('btnNoticeContinueCheckin');
+    if (btnContinueCheckin) {
+      btnContinueCheckin.addEventListener('click', () => this.confirmProceedToCheckin());
+    }
+
+    // Nút chuyển sang Xin Lên Ca trong thông báo
+    const btnGoToXinLenCa = document.getElementById('btnNoticeGoToXinLenCa');
+    if (btnGoToXinLenCa) {
+      btnGoToXinLenCa.addEventListener('click', () => this.goToXinLenCaFromNotice());
+    }
 
     // 2. Nút Quay lại chọn ca
     const btnBack = document.getElementById('btnBackToShifts');
@@ -102,6 +114,66 @@ const EmployeeModule = {
     const formLookupSalary = document.getElementById('formLookupSalary');
     if (formLookupSalary) {
       formLookupSalary.addEventListener('submit', (e) => this.handleLookupSalary(e));
+    }
+  },
+
+  pendingShiftId: null,
+
+  /**
+   * Hiển thị thông báo lưu ý điểm danh khi click vào ca làm việc:
+   * "Có tên trong danh sách mới điểm danh được, không có thì kêu xin lên ca"
+   */
+  promptShiftAttendanceNotice(shiftId) {
+    this.pendingShiftId = shiftId;
+    const modal = document.getElementById('modalAttendanceNotice');
+    if (modal && window.AgariApp && typeof window.AgariApp.openModal === 'function') {
+      const shiftInfo = (typeof CONFIG !== 'undefined' && CONFIG.SHIFTS) ? CONFIG.SHIFTS.find(s => s.id === shiftId) : null;
+      const shiftNameEl = document.getElementById('noticeShiftName');
+      if (shiftNameEl) {
+        shiftNameEl.textContent = shiftInfo ? `${shiftInfo.name} (${shiftInfo.id})` : shiftId;
+      }
+      window.AgariApp.openModal('modalAttendanceNotice');
+    } else {
+      // Fallback nếu modal không tồn tại
+      this.selectShift(shiftId);
+    }
+  },
+
+  /**
+   * Xác nhận tiếp tục vào màn hình điểm danh (đối với nhân sự đã có tên trong ca)
+   */
+  confirmProceedToCheckin() {
+    if (window.AgariApp && typeof window.AgariApp.closeModal === 'function') {
+      window.AgariApp.closeModal('modalAttendanceNotice');
+    }
+    const shiftId = this.pendingShiftId || DataManager.state?.currentShift || '18:00-22:00';
+    this.selectShift(shiftId);
+  },
+
+  /**
+   * Chuyển hướng sang form Xin Lên Ca (đối với nhân sự chưa có tên trong danh sách)
+   */
+  goToXinLenCaFromNotice() {
+    const shiftId = this.pendingShiftId || DataManager.state?.currentShift || '18:00-22:00';
+    if (window.AgariApp && typeof window.AgariApp.closeModal === 'function') {
+      window.AgariApp.closeModal('modalAttendanceNotice');
+      window.AgariApp.openModal('modalXinLenCa');
+    }
+
+    const form = document.getElementById('formXinLenCa');
+    if (form) {
+      if (form.targetShift && shiftId) {
+        form.targetShift.value = shiftId;
+      }
+      if (form.targetDate && !form.targetDate.value && typeof Utils !== 'undefined') {
+        form.targetDate.value = Utils.formatDateISO();
+      }
+      const savedId = localStorage.getItem('agr_empId') || '';
+      const savedName = localStorage.getItem('agr_empName') || '';
+      const savedPhone = localStorage.getItem('agr_empPhone') || '';
+      if (form.empId && !form.empId.value && savedId) form.empId.value = savedId;
+      if (form.empName && !form.empName.value && savedName) form.empName.value = savedName;
+      if (form.phone && !form.phone.value && savedPhone) form.phone.value = savedPhone;
     }
   },
 
@@ -350,11 +422,38 @@ const EmployeeModule = {
           });
         }
       } else {
-        Utils.showAlert(
-          'Không tìm thấy trong ca trực',
-          response?.message || `Mã "${identifier}" chưa có trong danh sách phân ca "${shiftId}". Hãy kiểm tra lại ca đã chọn hoặc liên hệ Admin Zalo ca trực!`,
-          'error'
-        );
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            title: 'Chưa Có Tên Trong Ca Làm Này!',
+            html: `
+              <div class="text-sm text-slate-700 leading-relaxed mb-3">
+                Mã nhân viên <strong>${identifier}</strong> không có tên trong danh sách phân ca <strong>${shiftId}</strong>.
+              </div>
+              <div class="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-amber-950 text-xs text-left leading-relaxed">
+                <div class="font-bold mb-1 text-amber-900 flex items-center gap-1.5">
+                  <span>📢</span> Lưu ý quan trọng:
+                </div>
+                Chỉ nhân sự có tên trong danh sách phân ca mới được điểm danh. Nếu bạn làm bù hoặc thế ca (A-OS), vui lòng nhấn <strong>"Đi Xin Lên Ca"</strong> để gửi đơn cho Quản lý phê duyệt!
+              </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#F59E0B',
+            cancelButtonColor: '#64748B',
+            confirmButtonText: '🚀 Đi Xin Lên Ca',
+            cancelButtonText: 'Đóng'
+          }).then((res) => {
+            if (res.isConfirmed) {
+              this.goToXinLenCaFromNotice();
+            }
+          });
+        } else {
+          Utils.showAlert(
+            'Chưa có tên trong ca',
+            `Mã "${identifier}" chưa có tên trong danh sách phân ca "${shiftId}". Vui lòng gửi đơn Xin Lên Ca!`,
+            'warning'
+          );
+        }
       }
     } catch (err) {
       Utils.hideLoading();
