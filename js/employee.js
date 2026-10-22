@@ -85,6 +85,15 @@ const EmployeeModule = {
       });
     }
 
+    // Gắn kiểm tra và chuẩn hóa realtime Mã OPS cho toàn bộ form nhân viên
+    if (typeof Utils !== 'undefined' && Utils.bindOpsInputValidation) {
+      Utils.bindOpsInputValidation(document.getElementById('empIdentifierInput'), document.getElementById('empIdentifierNotice'));
+      Utils.bindOpsInputValidation(document.querySelector('#formXinOff input[name="empId"]'));
+      Utils.bindOpsInputValidation(document.querySelector('#formXinLenCa input[name="empId"]'));
+      Utils.bindOpsInputValidation(document.querySelector('#formKhieuNai input[name="empId"]'));
+      Utils.bindOpsInputValidation(document.getElementById('itemReqEmpId'));
+    }
+
     // Form Xin Nghỉ / Xin Off
     const formXinOff = document.getElementById('formXinOff');
     if (formXinOff) {
@@ -294,8 +303,15 @@ const EmployeeModule = {
     const shiftId = (shiftEl ? shiftEl.value : null) || DataManager.state.currentShift || '22:00-06:00';
 
     if (!identifier) {
-      Utils.toast('Vui lòng nhập Mã Nhân Viên (Mã Ops)', 'warning');
+      Utils.toast('Vui lòng nhập Mã Nhân Viên (Mã OPS)', 'warning');
       inputEl.focus();
+      return;
+    }
+
+    if (!Utils.isValidOpsId(identifier)) {
+      Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(identifier), 'warning');
+      inputEl.focus();
+      inputEl.select();
       return;
     }
 
@@ -588,6 +604,13 @@ const EmployeeModule = {
       return;
     }
 
+    if (!Utils.isValidOpsId(empId)) {
+      Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
+      if (form.empId) { form.empId.focus(); form.empId.select(); }
+      return;
+    }
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+
     // Kiểm tra khung giờ xin nghỉ: Từ 06:00 đến 18:00 hàng ngày
     const currentMinutes = Utils.getVNMinutesInDay();
     const startMinutes = 6 * 60;  // 06:00 (360 phút)
@@ -606,7 +629,7 @@ const EmployeeModule = {
     try {
       const res = await DataManager.callApi('request', {
         type: 'XIN_OFF',
-        empId: empId,
+        empId: cleanEmpId,
         empName: empName,
         name: empName,
         phone: phone,
@@ -642,7 +665,7 @@ const EmployeeModule = {
 
           if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
             FirebaseService.recordCheckinRealtime(shiftId, {
-              id: empId,
+              id: empId: cleanEmpId,
               name: empName,
               phone: phone,
               status: 'off',
@@ -681,12 +704,19 @@ const EmployeeModule = {
       return;
     }
 
+    if (!Utils.isValidOpsId(empId)) {
+      Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
+      if (form.empId) { form.empId.focus(); form.empId.select(); }
+      return;
+    }
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+
     Utils.showLoading('Đang gửi yêu cầu lên ca...');
 
     try {
       const res = await DataManager.callApi('request', {
         type: 'XIN_LEN_CA',
-        empId: empId,
+        empId: cleanEmpId,
         empName: empName,
         name: empName,
         phone: phone,
@@ -707,7 +737,7 @@ const EmployeeModule = {
         if (targetDate === todayStr) {
           if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
             FirebaseService.recordCheckinRealtime(targetShift, {
-              id: empId,
+              id: empId: cleanEmpId,
               name: empName,
               status: 'pending',
               note: note ? `Xin lên ca: ${note}` : 'Xin lên ca (A-OS)'
@@ -882,6 +912,14 @@ const EmployeeModule = {
       return;
     }
 
+    if (!Utils.isValidOpsId(empId)) {
+      Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
+      const itemEmpInp = document.getElementById('itemReqEmpId');
+      if (itemEmpInp) { itemEmpInp.focus(); itemEmpInp.select(); }
+      return;
+    }
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+
     let role = '';
     let quantity = '';
     let pickupDate = '';
@@ -1038,6 +1076,13 @@ const EmployeeModule = {
       Utils.toast('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
       return;
     }
+
+    if (!Utils.isValidOpsId(empId)) {
+      Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
+      if (form.empId) { form.empId.focus(); form.empId.select(); }
+      return;
+    }
+    const cleanEmpId = Utils.normalizeOpsId(empId);
 
     let imageBase64 = '';
     let imageFilename = '';

@@ -228,20 +228,22 @@
 
           <!-- Attendance Form -->
           <form id="attendanceForm" autocomplete="off" class="space-y-4">
-            <!-- Mã Nhân Viên -->
+            <!-- Mã Nhân Viên (Mã OPS) -->
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5" for="empIdentifierInput">
-                MÃ NHÂN VIÊN <span class="text-agari-red">*</span>
+                MÃ OPS NHÂN VIÊN <span class="text-agari-red">*</span>
               </label>
               <div class="relative">
-                <input type="text" id="empIdentifierInput" name="empId" required placeholder="VD: Ops224190"
+                <input type="text" id="empIdentifierInput" name="empId" required placeholder="VD: OPS170621 hoặc Ops170621"
                        class="w-full bg-slate-50 hover:bg-slate-50/80 focus:bg-white border border-slate-200 text-slate-900 text-base font-mono rounded-xl p-3.5 pl-4 pr-11 focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:outline-none transition uppercase placeholder:normal-case placeholder:text-slate-400 font-semibold shadow-sm" />
                 <button type="button" id="btnAutoLookup" class="absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400 hover:text-agari-red transition" title="Tra cứu mã">
                   🔍
                 </button>
               </div>
-              <div class="text-[11px] text-slate-500 mt-1.5">
-                Dạng: Ops + 5-6 chữ số (Tự động nhận diện họ tên & số điện thoại)
+              <div id="empIdentifierNotice" class="mt-1"></div>
+              <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5">
+                <span>📌</span>
+                <span>Bắt buộc có chữ <strong>OPS + 4 đến 6 số</strong> (Ví dụ: <code class="text-red-600 font-bold">OPS170621</code> hoặc <code class="text-red-600 font-bold">Ops170621</code>)</span>
               </div>
             </div>
 
@@ -919,8 +921,9 @@
 
       <form id="formXinOff" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS / Số CCCD:</label>
-          <input type="text" name="empId" placeholder="VD: OPS10291" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS: <span class="text-red-500">*</span></label>
+          <input type="text" name="empId" placeholder="VD: OPS170621 hoặc Ops170621" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono uppercase focus:border-agari-red focus:outline-none font-bold placeholder:normal-case" />
+          <p class="text-[11px] text-slate-500 mt-1">Bắt buộc: <strong>OPS + 4-6 số</strong> (Ví dụ: OPS170621)</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
@@ -967,8 +970,9 @@
 
       <form id="formXinLenCa" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS / Số CCCD:</label>
-          <input type="text" name="empId" placeholder="VD: OPS10291" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS: <span class="text-red-500">*</span></label>
+          <input type="text" name="empId" placeholder="VD: OPS170621 hoặc Ops170621" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono uppercase focus:border-agari-red focus:outline-none font-bold placeholder:normal-case" />
+          <p class="text-[11px] text-slate-500 mt-1">Bắt buộc: <strong>OPS + 4-6 số</strong> (Ví dụ: OPS170621)</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
@@ -1033,8 +1037,9 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqEmpId">MÃ NHÂN VIÊN <span class="text-red-500">*</span></label>
-          <input type="text" id="itemReqEmpId" name="empId" required placeholder="Ví dụ: OPS12345" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono uppercase focus:border-purple-600 focus:outline-none" />
+          <label class="block text-xs font-bold text-slate-700 mb-1" for="itemReqEmpId">MÃ OPS NHÂN VIÊN <span class="text-red-500">*</span></label>
+          <input type="text" id="itemReqEmpId" name="empId" required placeholder="Ví dụ: OPS170621 hoặc Ops170621" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono uppercase focus:border-purple-600 focus:outline-none font-bold placeholder:normal-case" />
+          <p class="text-[11px] text-slate-500 mt-1">Bắt buộc: OPS + 4-6 số (Ví dụ: OPS170621)</p>
         </div>
 
         <div>
@@ -1111,8 +1116,9 @@
 
       <form id="formKhieuNai" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS / Số CCCD:</label>
-          <input type="text" name="empId" placeholder="VD: OPS10291" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none uppercase" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS: <span class="text-red-500">*</span></label>
+          <input type="text" name="empId" placeholder="VD: OPS170621 hoặc Ops170621" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none uppercase font-bold placeholder:normal-case" />
+          <p class="text-[11px] text-slate-500 mt-1">Bắt buộc: OPS + 4-6 số (Ví dụ: OPS170621)</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
@@ -1197,8 +1203,9 @@
       <form id="formSubmitRegistration" class="space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Mã CTV:</label>
-            <input type="text" name="empId" required placeholder="VD: OPS10291" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono uppercase" />
+            <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS: <span class="text-red-500">*</span></label>
+            <input type="text" name="empId" required placeholder="VD: OPS170621 hoặc Ops170621" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono uppercase font-bold placeholder:normal-case" />
+            <p class="text-[10px] text-slate-500 mt-0.5">OPS + 4-6 số (VD: OPS170621)</p>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Họ Tên:</label>
@@ -1265,7 +1272,7 @@
       <form id="formLookupSchedule" class="space-y-4 mb-5">
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
           <label class="block text-xs font-bold text-slate-700 mb-1.5">
-            Nhập Mã OPS / Mã CTV của bạn:
+            Nhập Mã OPS của bạn: <span class="text-agari-red">*</span>
           </label>
           <div class="flex gap-2">
             <input 
@@ -1273,8 +1280,8 @@
               id="lookupScheduleEmpId" 
               name="empId" 
               required 
-              placeholder="VD: OPS185911" 
-              class="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono uppercase font-bold focus:border-agari-red focus:outline-none shadow-inner" 
+              placeholder="VD: OPS170621 hoặc Ops170621" 
+              class="flex-1 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm font-mono uppercase font-bold focus:border-agari-red focus:outline-none shadow-inner placeholder:normal-case" 
             />
             <button 
               type="submit" 
@@ -1803,20 +1810,20 @@
   </div>
 
   <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v92) -->
-  <script src="./js/config.js?v=v93"></script>
-  <script src="./js/utils.js?v=v93"></script>
-  <script src="./js/firebaseInit.js?v=v93"></script>
-  <script src="./js/dataManager.js?v=v93"></script>
-  <script src="./js/employee.js?v=v93"></script>
-  <script src="./js/admin/adminCore.js?v=v93"></script>
-  <script src="./js/admin/adminUI.js?v=v93"></script>
-  <script src="./js/admin/adminSalary.js?v=v93"></script>
-  <script src="./js/admin/adminBooking.js?v=v93"></script>
-  <script src="./js/admin/adminRequests.js?v=v93"></script>
-  <script src="./js/admin/adminRegistration.js?v=v93"></script>
-  <script src="./js/admin/adminManager.js?v=v93"></script>
-  <script src="./js/registration/regAPI.js?v=v93"></script>
-  <script src="./js/registration/regApp.js?v=v93"></script>
-  <script src="./js/app.js?v=v93"></script>
+  <script src="./js/config.js?v=v94"></script>
+  <script src="./js/utils.js?v=v94"></script>
+  <script src="./js/firebaseInit.js?v=v94"></script>
+  <script src="./js/dataManager.js?v=v94"></script>
+  <script src="./js/employee.js?v=v94"></script>
+  <script src="./js/admin/adminCore.js?v=v94"></script>
+  <script src="./js/admin/adminUI.js?v=v94"></script>
+  <script src="./js/admin/adminSalary.js?v=v94"></script>
+  <script src="./js/admin/adminBooking.js?v=v94"></script>
+  <script src="./js/admin/adminRequests.js?v=v94"></script>
+  <script src="./js/admin/adminRegistration.js?v=v94"></script>
+  <script src="./js/admin/adminManager.js?v=v94"></script>
+  <script src="./js/registration/regAPI.js?v=v94"></script>
+  <script src="./js/registration/regApp.js?v=v94"></script>
+  <script src="./js/app.js?v=v94"></script>
 </body>
 </html>

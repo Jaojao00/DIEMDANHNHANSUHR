@@ -6,6 +6,11 @@ const RegApp = {
     this.generateCycleDays();
     this.bindEvents();
     this.initLookupSchedule();
+
+    if (typeof Utils !== "undefined" && Utils.bindOpsInputValidation) {
+      Utils.bindOpsInputValidation(document.querySelector("#formSubmitRegistration input[name=\"empId\"]"));
+      Utils.bindOpsInputValidation(document.getElementById("lookupScheduleEmpId"));
+    }
   },
 
   generateCycleDays() {
@@ -113,6 +118,16 @@ const RegApp = {
       return;
     }
 
+    if (!Utils.isValidOpsId(empId)) {
+      Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
+      if (form.empId) {
+        form.empId.focus();
+        form.empId.select();
+      }
+      return;
+    }
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+
     // Thu thập các ngày đã tích chọn thành mảng đối tượng { date, label, choice } chuẩn theo backend
     const selectionsArray = this.currentCycleDays.map((day) => {
       const selected = form.querySelector(`input[name="day_${day.date}"]:checked`);
@@ -127,7 +142,7 @@ const RegApp = {
 
     try {
       const payload = {
-        empId,
+        empId: cleanEmpId,
         empName,
         empPhone: phone,
         phone,
@@ -207,10 +222,16 @@ const RegApp = {
         e.preventDefault();
         const empId = (input ? input.value : '').trim().toUpperCase();
         if (!empId) {
-          Utils.toast('Vui lòng nhập Mã OPS / CTV', 'warning');
+          Utils.toast('Vui lòng nhập Mã OPS', 'warning');
           return;
         }
-        this.handleLookupSchedule(empId);
+        if (!Utils.isValidOpsId(empId)) {
+          Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
+          if (input) { input.focus(); input.select(); }
+          return;
+        }
+        const cleanEmpId = Utils.normalizeOpsId(empId);
+        this.handleLookupSchedule(cleanEmpId);
       });
     }
 
