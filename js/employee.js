@@ -665,7 +665,7 @@ const EmployeeModule = {
 
           if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
             FirebaseService.recordCheckinRealtime(shiftId, {
-              id: empId: cleanEmpId,
+              id: cleanEmpId,
               name: empName,
               phone: phone,
               status: 'off',
@@ -737,7 +737,7 @@ const EmployeeModule = {
         if (targetDate === todayStr) {
           if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
             FirebaseService.recordCheckinRealtime(targetShift, {
-              id: empId: cleanEmpId,
+              id: cleanEmpId,
               name: empName,
               status: 'pending',
               note: note ? `Xin lên ca: ${note}` : 'Xin lên ca (A-OS)'
@@ -998,7 +998,7 @@ const EmployeeModule = {
     try {
       const res = await DataManager.callApi('request_item', {
         type: reqType,
-        empId: empId.toUpperCase(),
+        empId: cleanEmpId,
         name: name.toUpperCase(),
         shift: shift,
         role: role,
@@ -1106,7 +1106,7 @@ const EmployeeModule = {
 
     try {
       const res = await DataManager.callApi('submit_complaint', {
-        empId,
+        empId: cleanEmpId,
         empName,
         phone,
         type: complaintType,

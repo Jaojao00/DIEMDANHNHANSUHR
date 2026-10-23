@@ -519,7 +519,7 @@
           <p class="text-xs text-slate-400 mt-1">Đăng nhập tài khoản phân quyền quản lý ca trực</p>
         </div>
 
-        <form id="formAdminLogin" class="space-y-4">
+        <form id="formAdminLogin" onsubmit="event.preventDefault(); if (window.AdminCore) AdminCore.handleLogin(event);" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-400 mb-1">Email Quản Trị:</label>
             <input type="email" name="email" value="tainguyenhr.dev@gmail.com" required
@@ -1810,20 +1810,20 @@
   </div>
 
   <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v92) -->
-  <script src="./js/config.js?v=v94"></script>
-  <script src="./js/utils.js?v=v94"></script>
-  <script src="./js/firebaseInit.js?v=v94"></script>
-  <script src="./js/dataManager.js?v=v94"></script>
-  <script src="./js/employee.js?v=v94"></script>
-  <script src="./js/admin/adminCore.js?v=v94"></script>
-  <script src="./js/admin/adminUI.js?v=v94"></script>
-  <script src="./js/admin/adminSalary.js?v=v94"></script>
-  <script src="./js/admin/adminBooking.js?v=v94"></script>
-  <script src="./js/admin/adminRequests.js?v=v94"></script>
-  <script src="./js/admin/adminRegistration.js?v=v94"></script>
-  <script src="./js/admin/adminManager.js?v=v94"></script>
-  <script src="./js/registration/regAPI.js?v=v94"></script>
-  <script src="./js/registration/regApp.js?v=v94"></script>
-  <script src="./js/app.js?v=v94"></script>
+  <script src="./js/config.js?v=v95"></script>
+  <script src="./js/utils.js?v=v95"></script>
+  <script src="./js/firebaseInit.js?v=v95"></script>
+  <script src="./js/dataManager.js?v=v95"></script>
+  <script src="./js/employee.js?v=v95"></script>
+  <script src="./js/admin/adminCore.js?v=v95"></script>
+  <script src="./js/admin/adminUI.js?v=v95"></script>
+  <script src="./js/admin/adminSalary.js?v=v95"></script>
+  <script src="./js/admin/adminBooking.js?v=v95"></script>
+  <script src="./js/admin/adminRequests.js?v=v95"></script>
+  <script src="./js/admin/adminRegistration.js?v=v95"></script>
+  <script src="./js/admin/adminManager.js?v=v95"></script>
+  <script src="./js/registration/regAPI.js?v=v95"></script>
+  <script src="./js/registration/regApp.js?v=v95"></script>
+  <script src="./js/app.js?v=v95"></script>
 </body>
 </html>

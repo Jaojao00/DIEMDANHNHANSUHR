@@ -8,17 +8,30 @@ const App = {
     this.initTheme();
     this.bindGlobalEvents();
 
-    // Khởi tạo các module con
-    FirebaseService.init();
-    EmployeeModule.init();
-    AdminCore.init();
-    AdminUI.init();
-    AdminSalary.init();
-    AdminBooking.init();
-    AdminRequests.init();
-    AdminRegistration.init();
-    AdminManager.init();
-    RegApp.init();
+    // Dọn dẹp query param email/password trên URL nếu người dùng submit form GET trước đó
+    if (window.location.search && (window.location.search.includes('email=') || window.location.search.includes('password='))) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Khởi tạo an toàn từng module con với try/catch
+    const safeInit = (name, fn) => {
+      try {
+        if (typeof fn === 'function') fn();
+      } catch (err) {
+        console.error(`[App] Lỗi khởi tạo ${name}:`, err);
+      }
+    };
+
+    safeInit('FirebaseService', () => typeof FirebaseService !== 'undefined' && FirebaseService.init && FirebaseService.init());
+    safeInit('EmployeeModule', () => typeof EmployeeModule !== 'undefined' && EmployeeModule.init && EmployeeModule.init());
+    safeInit('AdminCore', () => typeof AdminCore !== 'undefined' && AdminCore.init && AdminCore.init());
+    safeInit('AdminUI', () => typeof AdminUI !== 'undefined' && AdminUI.init && AdminUI.init());
+    safeInit('AdminSalary', () => typeof AdminSalary !== 'undefined' && AdminSalary.init && AdminSalary.init());
+    safeInit('AdminBooking', () => typeof AdminBooking !== 'undefined' && AdminBooking.init && AdminBooking.init());
+    safeInit('AdminRequests', () => typeof AdminRequests !== 'undefined' && AdminRequests.init && AdminRequests.init());
+    safeInit('AdminRegistration', () => typeof AdminRegistration !== 'undefined' && AdminRegistration.init && AdminRegistration.init());
+    safeInit('AdminManager', () => typeof AdminManager !== 'undefined' && AdminManager.init && AdminManager.init());
+    safeInit('RegApp', () => typeof RegApp !== 'undefined' && RegApp.init && RegApp.init());
 
     // Khởi tạo popup thông báo chào mừng & giới thiệu hệ thống mới
     this.initWelcomeNotice();
