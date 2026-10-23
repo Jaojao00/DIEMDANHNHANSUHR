@@ -308,12 +308,14 @@ const EmployeeModule = {
       return;
     }
 
-    if (!Utils.isValidOpsId(identifier)) {
+    const cleanIdentifier = Utils.normalizeOpsId(identifier);
+    if (!Utils.isValidOpsId(cleanIdentifier)) {
       Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(identifier), 'warning');
       inputEl.focus();
       inputEl.select();
       return;
     }
+    inputEl.value = cleanIdentifier;
 
     if (!name) {
       Utils.toast('Vui lòng nhập Họ và Tên', 'warning');
@@ -604,12 +606,13 @@ const EmployeeModule = {
       return;
     }
 
-    if (!Utils.isValidOpsId(empId)) {
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (!Utils.isValidOpsId(cleanEmpId)) {
       Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
       if (form.empId) { form.empId.focus(); form.empId.select(); }
       return;
     }
-    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (form.empId) form.empId.value = cleanEmpId;
 
     // Kiểm tra khung giờ xin nghỉ: Từ 06:00 đến 18:00 hàng ngày
     const currentMinutes = Utils.getVNMinutesInDay();
@@ -704,12 +707,13 @@ const EmployeeModule = {
       return;
     }
 
-    if (!Utils.isValidOpsId(empId)) {
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (!Utils.isValidOpsId(cleanEmpId)) {
       Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
       if (form.empId) { form.empId.focus(); form.empId.select(); }
       return;
     }
-    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (form.empId) form.empId.value = cleanEmpId;
 
     Utils.showLoading('Đang gửi yêu cầu lên ca...');
 
@@ -912,13 +916,15 @@ const EmployeeModule = {
       return;
     }
 
-    if (!Utils.isValidOpsId(empId)) {
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (!Utils.isValidOpsId(cleanEmpId)) {
       Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
       const itemEmpInp = document.getElementById('itemReqEmpId');
       if (itemEmpInp) { itemEmpInp.focus(); itemEmpInp.select(); }
       return;
     }
-    const cleanEmpId = Utils.normalizeOpsId(empId);
+    const itemEmpInp = document.getElementById('itemReqEmpId');
+    if (itemEmpInp) itemEmpInp.value = cleanEmpId;
 
     let role = '';
     let quantity = '';
@@ -1077,12 +1083,13 @@ const EmployeeModule = {
       return;
     }
 
-    if (!Utils.isValidOpsId(empId)) {
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (!Utils.isValidOpsId(cleanEmpId)) {
       Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
       if (form.empId) { form.empId.focus(); form.empId.select(); }
       return;
     }
-    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (form.empId) form.empId.value = cleanEmpId;
 
     let imageBase64 = '';
     let imageFilename = '';

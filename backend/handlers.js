@@ -1,3 +1,17 @@
+function normalizeOpsId(id) {
+  if (!id) return "";
+  var s = id.toString().trim().replace(/\s+/g, "");
+  s = s.replace(/^0[pP][sS]/i, "OPS");
+  s = s.replace(/^(OÓP|ÓPS|ÓP|ÔPS|OÔP|OOP)/i, "OPS");
+  return s.toUpperCase();
+}
+
+function isValidOpsId(id) {
+  if (!id) return false;
+  var s = normalizeOpsId(id);
+  return /^OPS\d{4,6}$/.test(s);
+}
+
 /**
  * Module: Handlers
  * Chứa logic xử lý của từng action.
@@ -203,9 +217,8 @@ function handleRequest(data, shiftId, sheet) {
       reqType = "XIN LÊN CA";
     }
     
-    var reqEmpId = (data.empId || "").toString().trim();
-    // KIỂM TRA ĐỊNH DẠNG MÃ OPS: Bắt buộc OPS + 4 đến 6 chữ số
-    if (!/^OPS\d{4,6}$/i.test(reqEmpId)) {
+    var reqEmpId = normalizeOpsId(data.empId);
+    if (!isValidOpsId(reqEmpId)) {
       return ContentService.createTextOutput(JSON.stringify({
         success: false,
         error: "Mã OPS không hợp lệ (" + reqEmpId + ")! Mã bắt buộc phải bắt đầu bằng OPS kèm 4 đến 6 chữ số phía sau (Ví dụ: OPS170621 hoặc Ops170621)."
@@ -722,8 +735,8 @@ function handleCheckin(data, shiftId, sheet) {
     if (!rawInput) {
       return sendErrorResponse("Vui lòng cung cấp Mã Nhân Viên (Mã OPS)");
     }
-    // KIỂM TRA ĐỊNH DẠNG MÃ OPS: Bắt buộc OPS + 4 đến 6 chữ số
-    if (!/^OPS\d{4,6}$/i.test(rawInput)) {
+    rawInput = normalizeOpsId(rawInput);
+    if (!isValidOpsId(rawInput)) {
       return sendErrorResponse("Mã OPS không hợp lệ (" + rawInput + ")! Mã bắt buộc phải bắt đầu bằng OPS kèm 4 đến 6 chữ số phía sau (Ví dụ: OPS170621 hoặc Ops170621).");
     }
     rawInput = rawInput.toUpperCase();
@@ -799,9 +812,8 @@ function handleSubmitRegistration(data, shiftId, sheet) {
       try {
         lock.waitLock(30000);
         
-        // KIỂM TRA ĐỊNH DẠNG MÃ OPS: Bắt buộc OPS + 4 đến 6 chữ số
-        var rawEmpId = (data.empId || "").toString().trim();
-        if (!/^OPS\d{4,6}$/i.test(rawEmpId)) {
+        var rawEmpId = normalizeOpsId(data.empId);
+        if (!isValidOpsId(rawEmpId)) {
           return ContentService.createTextOutput(JSON.stringify({
             success: false,
             error: "Mã OPS không hợp lệ (" + rawEmpId + ")! Mã bắt buộc phải bắt đầu bằng OPS kèm 4 đến 6 chữ số phía sau (Ví dụ: OPS170621 hoặc Ops170621)."
@@ -1148,8 +1160,8 @@ function handleItemRequest(data) {
     
     var reqType = (data.type || "").toString().trim();
     var isDuVe = reqType.toLowerCase().indexOf("dư vé") !== -1 || reqType.toLowerCase().indexOf("du ve") !== -1;
-    var empId = (data.empId || "").toString().trim();
-    if (!/^OPS\d{4,6}$/i.test(empId)) {
+    var empId = normalizeOpsId(data.empId);
+    if (!isValidOpsId(empId)) {
       return sendErrorResponse("Mã OPS không hợp lệ (" + empId + ")! Mã bắt buộc phải có dạng OPS kèm 4 đến 6 số (Ví dụ: OPS170621 hoặc Ops170621).");
     }
     empId = empId.toUpperCase();
@@ -1322,8 +1334,8 @@ function handleLookupSalary(data) {
 
 function handleSubmitComplaint(data) {
   try {
-    var empId = (data.empId || "").toString().trim();
-    if (!/^OPS\d{4,6}$/i.test(empId)) {
+    var empId = normalizeOpsId(data.empId);
+    if (!isValidOpsId(empId)) {
       return sendErrorResponse("Mã OPS không hợp lệ (" + empId + ")! Mã bắt buộc phải có dạng OPS kèm 4 đến 6 số (Ví dụ: OPS170621 hoặc Ops170621).");
     }
     data.empId = empId.toUpperCase();

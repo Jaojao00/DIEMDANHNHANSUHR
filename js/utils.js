@@ -1,23 +1,34 @@
 // CÁC HÀM TIỆN ÍCH HỆ THỐNG AGARI HR (UTILS)
 const Utils = {
-  /**
-   * Kiểm tra định dạng Mã OPS hợp lệ:
-   * Bắt buộc có tiền tố OPS (không phân biệt hoa thường) + 4 đến 6 chữ số phía sau.
-   * Ví dụ hợp lệ: OPS170621, Ops170621, ops1234, OPS264973
-   * Không hợp lệ: OÓP237266, 264973, OPS12, OPS1234567, OP12345
-   */
-  isValidOpsId(id) {
-    if (!id || typeof id !== 'string') return false;
-    const clean = id.trim();
-    return /^OPS\d{4,6}$/i.test(clean);
-  },
-
-  /**
-   * Chuẩn hóa Mã OPS về dạng chữ in hoa: 'OPS' + số (ví dụ: 'ops170621' -> 'OPS170621')
+    /**
+   * Chuẩn hóa thông minh Mã OPS:
+   * - Viết thường hay viết hoa đều được: ops, Ops, OPS, oPs, ...
+   * - Tự động sửa lỗi phổ biến gõ nhầm số 0 thành chữ O: 0ps, 0PS, 0Ps -> OPS
+   * - Tự động sửa lỗi bộ gõ tiếng Việt Telex: oóp, óps, óp, ôps, oop -> OPS
+   * - Tự động loại bỏ khoảng trắng thừa: "ops 248693" -> "OPS248693"
+   * - Chuẩn hóa tất cả về chữ in hoa: 'OPS' + [4-6 chữ số]
    */
   normalizeOpsId(id) {
     if (!id) return '';
-    return String(id).trim().toUpperCase();
+    let s = String(id).trim().replace(/\s+/g, '');
+    // Sửa số 0 ở đầu nếu là 0ps / 0PS thành OPS
+    s = s.replace(/^0[pP][sS]/i, 'OPS');
+    // Sửa lỗi Telex nếu có: OÓP, ÓPS, ÓP, ÔPS, OÔP, OOP -> OPS
+    s = s.replace(/^(OÓP|ÓPS|ÓP|ÔPS|OÔP|OOP)/i, 'OPS');
+    return s.toUpperCase();
+  },
+
+  /**
+   * Kiểm tra định dạng Mã OPS hợp lệ:
+   * - Không phân biệt chữ thường hay hoa: ops, Ops, OPS, oPs,... đều được chấp nhận
+   * - Chấp nhận cả số 0 nếu gõ nhầm thay cho chữ O: 0ps, 0PS,...
+   * - Phía sau bắt buộc là 4 đến 6 chữ số
+   * Ví dụ hợp lệ: OPS170621, Ops170621, ops170621, 0PS248693, 0ps248693, ops1234
+   */
+  isValidOpsId(id) {
+    if (!id || typeof id !== 'string') return false;
+    const s = this.normalizeOpsId(id);
+    return /^OPS\d{4,6}$/.test(s);
   },
 
   /**
@@ -29,7 +40,7 @@ const Utils = {
         <div class="text-left text-xs sm:text-sm space-y-2">
           <p>Vui lòng điền <strong>Mã OPS</strong> của bạn để tiếp tục.</p>
           <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
-            <strong>Quy định:</strong> Bắt buộc có chữ <code>OPS</code> kèm <strong>4 đến 6 chữ số</strong> phía sau.<br>
+            <strong>Quy định:</strong> Chữ <code>Ops</code> (viết thường hay hoa đều được: ops, Ops, OPS) kèm <strong>4 đến 6 chữ số</strong>.<br>
             Ví dụ đúng: <span class="font-mono text-emerald-700 font-bold">OPS170621</span> hoặc <span class="font-mono text-emerald-700 font-bold">Ops170621</span>
           </div>
         </div>
@@ -37,15 +48,17 @@ const Utils = {
     }
 
     const clean = String(id).trim();
+    const normalized = this.normalizeOpsId(clean);
 
-    // 1. Chỉ toàn chữ số (như 264973 ở ảnh người dùng gửi)
+    // 1. Chỉ toàn chữ số (như 264973)
     if (/^\d{4,6}$/.test(clean)) {
       return `
         <div class="text-left text-xs sm:text-sm space-y-2">
           <p class="text-red-600 font-bold">❌ Mã bạn nhập "${clean}" bị THIẾU chữ "OPS" ở đầu!</p>
           <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
             Hệ thống không chấp nhận mã chỉ có số.<br>
-            👉 Vui lòng sửa lại thành: <span class="font-mono font-bold text-emerald-700 text-sm">OPS${clean}</span>
+            👉 Vui lòng thêm chữ Ops vào đầu (thường hay hoa đều được):<br>
+            <span class="font-mono font-bold text-emerald-700 text-sm">OPS${clean}</span> hoặc <span class="font-mono font-bold text-emerald-700 text-sm">Ops${clean}</span>
           </div>
         </div>
       `;
@@ -56,35 +69,22 @@ const Utils = {
         <div class="text-left text-xs sm:text-sm space-y-2">
           <p class="text-red-600 font-bold">❌ Mã bạn nhập "${clean}" chỉ có số và sai độ dài!</p>
           <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
-            👉 Quy định chuẩn: Bắt buộc có chữ <code>OPS</code> + kèm <strong>4 đến 6 số</strong> phía sau (Ví dụ: <strong>OPS170621</strong>).
+            👉 Quy định chuẩn: Bắt buộc có chữ <code>Ops</code> (viết thường hay hoa đều được) kèm <strong>4 đến 6 số</strong> phía sau (Ví dụ: <strong>OPS170621</strong> hoặc <strong>Ops170621</strong>).
           </div>
         </div>
       `;
     }
 
-    // 2. Bị dính dấu tiếng Việt (như OÓP237266 do Unikey Telex)
-    if (/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(clean)) {
-      return `
-        <div class="text-left text-xs sm:text-sm space-y-2">
-          <p class="text-red-600 font-bold">❌ Mã bạn nhập "${clean}" bị dính dấu tiếng Việt!</p>
-          <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
-            Do bạn đang bật bộ gõ Unikey/Telex nên gõ chữ <em>"O"</em> bị biến thành <em>"OÓP"</em> hoặc có dấu.<br>
-            👉 Vui lòng tắt gõ dấu hoặc nhập chuẩn: <span class="font-mono font-bold text-emerald-700 text-sm">OPS170621</span> hoặc <span class="font-mono text-emerald-700 font-bold text-sm">Ops170621</span>
-          </div>
-        </div>
-      `;
-    }
-
-    // 3. Có chữ OPS nhưng phần số bị sai số lượng
-    if (/^OPS/i.test(clean)) {
-      const numbers = clean.slice(3);
+    // 2. Có chữ OPS nhưng phần số bị sai số lượng
+    if (/^OPS/i.test(normalized)) {
+      const numbers = normalized.slice(3);
       if (!/^\d+$/.test(numbers)) {
         return `
           <div class="text-left text-xs sm:text-sm space-y-2">
-            <p class="text-red-600 font-bold">❌ Phần sau chữ OPS phải là các chữ số!</p>
+            <p class="text-red-600 font-bold">❌ Phần sau chữ Ops phải là các chữ số!</p>
             <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
               Bạn đang nhập: "<strong>${clean}</strong>".<br>
-              👉 Vui lòng chỉ nhập số sau chữ OPS (Ví dụ: <strong>OPS170621</strong>).
+              👉 Vui lòng chỉ nhập số sau chữ Ops (Ví dụ: <strong>OPS170621</strong> hoặc <strong>Ops170621</strong>).
             </div>
           </div>
         `;
@@ -94,7 +94,7 @@ const Utils = {
           <div class="text-left text-xs sm:text-sm space-y-2">
             <p class="text-red-600 font-bold">❌ Số lượng chữ số không hợp lệ (Hiện tại có ${numbers.length} số)!</p>
             <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
-              Quy định: Sau chữ OPS phải có từ <strong>4 đến 6 chữ số</strong>.<br>
+              Quy định: Sau chữ Ops phải có từ <strong>4 đến 6 chữ số</strong>.<br>
               👉 Ví dụ đúng: <span class="font-mono font-bold text-emerald-700">OPS170621</span> (6 số) hoặc <span class="font-mono font-bold text-emerald-700">Ops1234</span> (4 số).
             </div>
           </div>
@@ -102,12 +102,12 @@ const Utils = {
       }
     }
 
-    // 4. Lỗi khác
+    // 3. Lỗi khác
     return `
       <div class="text-left text-xs sm:text-sm space-y-2">
         <p class="text-red-600 font-bold">❌ Mã OPS "${clean}" không đúng định dạng!</p>
         <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs leading-relaxed">
-          Định dạng hợp lệ bắt buộc gồm chữ <code>OPS</code> + kèm <strong>4 đến 6 số</strong> phía sau.<br>
+          Định dạng hợp lệ gồm chữ <code>Ops</code> (viết thường hay hoa đều được: ops, Ops, OPS) kèm <strong>4 đến 6 số</strong> phía sau.<br>
           👉 Ví dụ đúng: <span class="font-mono font-bold text-emerald-700">OPS170621</span> hoặc <span class="font-mono text-emerald-700">Ops170621</span>
         </div>
       </div>
@@ -120,7 +120,7 @@ const Utils = {
   bindOpsInputValidation(inputEl, helperEl = null) {
     if (!inputEl) return;
     
-    // Khi gõ: nếu đang lỗi mà đã gõ đúng thì xóa lỗi
+    // Khi gõ: nếu đã hợp lệ thì gỡ viền đỏ
     inputEl.addEventListener('input', () => {
       let val = inputEl.value;
       if (inputEl.classList.contains('border-red-500')) {
@@ -131,7 +131,7 @@ const Utils = {
       }
     });
 
-    // Khi người dùng click ra ngoài (blur): tự động uppercase, trim và cảnh báo nếu sai
+    // Khi người dùng click ra ngoài (blur): tự động chuẩn hóa và cập nhật giá trị vào ô nhập
     inputEl.addEventListener('blur', () => {
       let val = (inputEl.value || '').trim();
       if (!val) {
@@ -139,18 +139,18 @@ const Utils = {
         if (helperEl) helperEl.innerHTML = '';
         return;
       }
-      val = val.toUpperCase();
-      inputEl.value = val;
 
-      if (!Utils.isValidOpsId(val)) {
-        inputEl.classList.add('border-red-500', 'bg-red-50');
-        if (helperEl) {
-          helperEl.innerHTML = `<span class="text-red-500 font-semibold text-[11px]">⚠️ Sai định dạng! Bắt buộc: OPS + 4-6 số (VD: OPS170621)</span>`;
-        }
-      } else {
+      if (Utils.isValidOpsId(val)) {
+        const norm = Utils.normalizeOpsId(val);
+        inputEl.value = norm;
         inputEl.classList.remove('border-red-500', 'bg-red-50');
         if (helperEl) {
-          helperEl.innerHTML = `<span class="text-emerald-600 font-semibold text-[11px]">✓ Mã OPS hợp lệ</span>`;
+          helperEl.innerHTML = `<span class="text-emerald-600 font-semibold text-[11px]">✓ Mã hợp lệ: ${norm}</span>`;
+        }
+      } else {
+        inputEl.classList.add('border-red-500', 'bg-red-50');
+        if (helperEl) {
+          helperEl.innerHTML = `<span class="text-red-500 font-semibold text-[11px]">⚠️ Sai định dạng! Bắt buộc: Ops (thường/hoa) + 4-6 số (VD: OPS170621 hoặc Ops170621)</span>`;
         }
       }
     });

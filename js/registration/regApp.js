@@ -118,7 +118,8 @@ const RegApp = {
       return;
     }
 
-    if (!Utils.isValidOpsId(empId)) {
+    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (!Utils.isValidOpsId(cleanEmpId)) {
       Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
       if (form.empId) {
         form.empId.focus();
@@ -126,7 +127,7 @@ const RegApp = {
       }
       return;
     }
-    const cleanEmpId = Utils.normalizeOpsId(empId);
+    if (form.empId) form.empId.value = cleanEmpId;
 
     // Thu thập các ngày đã tích chọn thành mảng đối tượng { date, label, choice } chuẩn theo backend
     const selectionsArray = this.currentCycleDays.map((day) => {
@@ -225,12 +226,13 @@ const RegApp = {
           Utils.toast('Vui lòng nhập Mã OPS', 'warning');
           return;
         }
-        if (!Utils.isValidOpsId(empId)) {
+        const cleanEmpId = Utils.normalizeOpsId(empId);
+        if (!Utils.isValidOpsId(cleanEmpId)) {
           Utils.showAlert('Mã OPS Không Hợp Lệ', Utils.getOpsIdErrorMessage(empId), 'warning');
           if (input) { input.focus(); input.select(); }
           return;
         }
-        const cleanEmpId = Utils.normalizeOpsId(empId);
+        if (input) input.value = cleanEmpId;
         this.handleLookupSchedule(cleanEmpId);
       });
     }
