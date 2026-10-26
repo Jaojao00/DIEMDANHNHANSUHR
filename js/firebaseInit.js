@@ -181,6 +181,69 @@ const FirebaseService = {
   },
 
   /**
+   * Lưu cấu hình chu kỳ đăng ký lịch lên Firestore để đồng bộ tức thì cho tất cả máy nhân viên
+   */
+  async saveRegistrationConfig(dateFrom, dateTo) {
+    if (!this.isInitialized || !this.db) return false;
+    try {
+      await this.db.doc('settings/registration_cycle').set({
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      console.log('[Firebase] Đã lưu cấu hình chu kỳ lên Firestore:', dateFrom, dateTo);
+      return true;
+    } catch (e) {
+      console.warn('[Firebase] saveRegistrationConfig error:', e);
+      return false;
+    }
+  },
+
+  /**
+   * Lắng nghe thời gian thực cấu hình chu kỳ đăng ký lịch
+   */
+  listenToRegistrationConfig(callback) {
+    if (!this.isInitialized || !this.db) return null;
+    try {
+      const unsubscribe = this.db.doc('settings/registration_cycle').onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data && data.dateFrom && data.dateTo) {
+            callback(data);
+          }
+        }
+      }, (err) => {
+        console.warn('[Firebase] listenToRegistrationConfig snapshot error:', err);
+      });
+      this.listeners.push(unsubscribe);
+      return unsubscribe;
+    } catch (e) {
+      console.warn('[Firebase] listenToRegistrationConfig error:', e);
+      return null;
+    }
+  },
+
+  /**
+   * Tải cấu hình chu kỳ từ Firestore một lần
+   */
+  async getRegistrationConfig() {
+    if (!this.isInitialized || !this.db) return null;
+    try {
+      const snap = await this.db.doc('settings/registration_cycle').get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (data && data.dateFrom && data.dateTo) {
+          return data;
+        }
+      }
+      return null;
+    } catch (e) {
+      console.warn('[Firebase] getRegistrationConfig error:', e);
+      return null;
+    }
+  },
+  
+  /**
    * Hủy tất cả listeners khi chuyển ca
    */
   clearListeners() {

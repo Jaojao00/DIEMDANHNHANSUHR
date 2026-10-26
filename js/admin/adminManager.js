@@ -715,10 +715,10 @@ const AdminManager = {
       apiInput.value = localStorage.getItem('agari_custom_gas_url') || CONFIG.APPS_SCRIPT_URL;
     }
     if (fromInput) {
-      fromInput.value = localStorage.getItem('agari_reg_date_from') || '2026-10-16';
+      fromInput.value = localStorage.getItem('agari_reg_date_from') || '2026-11-01';
     }
     if (toInput) {
-      toInput.value = localStorage.getItem('agari_reg_date_to') || '2026-10-31';
+      toInput.value = localStorage.getItem('agari_reg_date_to') || '2026-11-15';
     }
 
     window.App?.openModal('settingsModal');
@@ -730,8 +730,8 @@ const AdminManager = {
     const toInput = document.getElementById('settingsRegDateTo');
 
     const newUrl = apiInput ? apiInput.value.trim() : '';
-    const dateFrom = fromInput ? fromInput.value : '2026-10-16';
-    const dateTo = toInput ? toInput.value : '2026-10-31';
+    const dateFrom = fromInput ? fromInput.value : '2026-11-01';
+    const dateTo = toInput ? toInput.value : '2026-11-15';
 
     if (newUrl) {
       CONFIG.APPS_SCRIPT_URL = newUrl;
@@ -753,9 +753,19 @@ const AdminManager = {
         window.RegApp.generateCycleDays();
       }
 
+      // Đồng bộ tức thì lên Firebase Firestore cho mọi nhân viên
+      if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+        FirebaseService.saveRegistrationConfig(dateFrom, dateTo);
+      }
+
       Utils.showLoading('Đang lưu cài đặt chu kỳ lên Google Sheets...');
       try {
-        await DataManager.callApi('save_reg_config', { dateFrom, dateTo });
+        await DataManager.callApi('save_reg_config', {
+          dateFrom,
+          dateTo,
+          regDateFrom: dateFrom,
+          regDateTo: dateTo
+        });
       } catch (err) {
         console.warn('Lỗi gọi save_reg_config:', err);
       }

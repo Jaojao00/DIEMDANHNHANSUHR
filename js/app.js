@@ -158,6 +158,9 @@ const App = {
     document.querySelectorAll('[data-open-modal]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const modalId = e.currentTarget.dataset.openModal;
+        if (modalId === 'modalDangKyLich' && window.RegApp && typeof window.RegApp.fetchRemoteConfig === 'function') {
+          window.RegApp.fetchRemoteConfig();
+        }
         this.openModal(modalId);
       });
     });

@@ -1,6 +1,6 @@
-// CẤU HÌNH HỆ THỐNG AGARI HR (DIEMDANHNHANSUHR - v96)
+// CẤU HÌNH HỆ THỐNG AGARI HR (DIEMDANHNHANSUHR - v97)
 const CONFIG = {
-  VERSION: 'v96',
+  VERSION: 'v97',
   APP_NAME: 'Tài Nguyễn HR - Agari HR Operations Portal',
   
   // Google Apps Script REST API Web App Endpoint

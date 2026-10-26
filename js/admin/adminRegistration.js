@@ -11,8 +11,8 @@ const AdminRegistration = {
     const fromInput = document.getElementById('regConfigDateFrom');
     const toInput = document.getElementById('regConfigDateTo');
     if (fromInput && toInput) {
-      fromInput.value = localStorage.getItem('agari_reg_date_from') || '2026-10-16';
-      toInput.value = localStorage.getItem('agari_reg_date_to') || '2026-10-31';
+      fromInput.value = localStorage.getItem('agari_reg_date_from') || '2026-11-01';
+      toInput.value = localStorage.getItem('agari_reg_date_to') || '2026-11-15';
     }
   },
 
@@ -142,6 +142,18 @@ const AdminRegistration = {
 
     localStorage.setItem('agari_reg_date_from', from);
     localStorage.setItem('agari_reg_date_to', to);
+
+    // Cập nhật các ô input cài đặt khác
+    const settingsFrom = document.getElementById('settingsRegDateFrom');
+    const settingsTo = document.getElementById('settingsRegDateTo');
+    if (settingsFrom) settingsFrom.value = from;
+    if (settingsTo) settingsTo.value = to;
+
+    // Đồng bộ tức thì lên Firebase Firestore cho mọi nhân viên
+    if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
+      FirebaseService.saveRegistrationConfig(from, to);
+    }
+
     if (window.RegApp && typeof window.RegApp.generateCycleDays === 'function') {
       window.RegApp.generateCycleDays();
     }
@@ -151,7 +163,9 @@ const AdminRegistration = {
     try {
       const res = await DataManager.callApi('save_reg_config', {
         dateFrom: from,
-        dateTo: to
+        dateTo: to,
+        regDateFrom: from,
+        regDateTo: to
       });
 
       Utils.hideLoading();

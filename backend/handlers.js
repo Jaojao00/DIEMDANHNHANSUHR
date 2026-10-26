@@ -1032,53 +1032,38 @@ function handleSaveRegConfig(data, shiftId, sheet) {
 
       try {
         var configSheet = getConfigSheet();
-        
         var configData = configSheet.getDataRange().getValues();
         var fromFound = false, toFound = false;
+
+        var fromStr = (data.regDateFrom || data.dateFrom || "").toString().trim();
+        var toStr = (data.regDateTo || data.dateTo || "").toString().trim();
         
         for (var i = 1; i < configData.length; i++) {
           if (configData[i][0] === "reg_date_from") {
-            if (data.regDateFrom) {
-              var parts = data.regDateFrom.split("-");
-              var dFrom = new Date(parts[0], parts[1] - 1, parts[2]);
-              configSheet.getRange(i + 1, 2).setValue(dFrom);
-            } else {
-              configSheet.getRange(i + 1, 2).setValue("");
-            }
+            configSheet.getRange(i + 1, 2).setValue(fromStr);
             fromFound = true;
           }
           if (configData[i][0] === "reg_date_to") {
-            if (data.regDateTo) {
-              var parts = data.regDateTo.split("-");
-              var dTo = new Date(parts[0], parts[1] - 1, parts[2]);
-              configSheet.getRange(i + 1, 2).setValue(dTo);
-            } else {
-              configSheet.getRange(i + 1, 2).setValue("");
-            }
+            configSheet.getRange(i + 1, 2).setValue(toStr);
             toFound = true;
           }
         }
         
-        if (!fromFound) {
-          if (data.regDateFrom) {
-            var parts = data.regDateFrom.split("-");
-            var dFrom = new Date(parts[0], parts[1] - 1, parts[2]);
-            configSheet.appendRow(["reg_date_from", dFrom]);
-          } else {
-            configSheet.appendRow(["reg_date_from", ""]);
-          }
+        if (!fromFound && fromStr) {
+          configSheet.appendRow(["reg_date_from", fromStr]);
         }
-        if (!toFound) {
-          if (data.regDateTo) {
-            var parts = data.regDateTo.split("-");
-            var dTo = new Date(parts[0], parts[1] - 1, parts[2]);
-            configSheet.appendRow(["reg_date_to", dTo]);
-          } else {
-            configSheet.appendRow(["reg_date_to", ""]);
-          }
+        if (!toFound && toStr) {
+          configSheet.appendRow(["reg_date_to", toStr]);
         }
         
-        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Đã lưu cấu hình đăng ký" })).setMimeType(ContentService.MimeType.JSON);
+        return ContentService.createTextOutput(JSON.stringify({ 
+          success: true, 
+          message: "Đã lưu cấu hình đăng ký",
+          dateFrom: fromStr,
+          dateTo: toStr,
+          regDateFrom: fromStr,
+          regDateTo: toStr
+        })).setMimeType(ContentService.MimeType.JSON);
       } catch(cfgErr) {
         return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi lưu cấu hình: " + cfgErr.toString() })).setMimeType(ContentService.MimeType.JSON);
       }

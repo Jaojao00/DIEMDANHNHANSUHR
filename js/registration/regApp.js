@@ -2,10 +2,12 @@
 const RegApp = {
   currentCycleDays: [],
 
-  init() {
+  async init() {
     this.generateCycleDays();
     this.bindEvents();
     this.initLookupSchedule();
+    this.setupRealtimeSync();
+    this.fetchRemoteConfig();
 
     if (typeof Utils !== "undefined" && Utils.bindOpsInputValidation) {
       Utils.bindOpsInputValidation(document.querySelector("#formSubmitRegistration input[name=\"empId\"]"));
@@ -15,8 +17,8 @@ const RegApp = {
 
   generateCycleDays() {
     // Lấy chu kỳ ngày được cấu hình từ Admin hoặc mặc định 16/10/2026 - 31/10/2026
-    const savedFrom = localStorage.getItem('agari_reg_date_from') || '2026-10-16';
-    const savedTo = localStorage.getItem('agari_reg_date_to') || '2026-10-31';
+    const savedFrom = localStorage.getItem('agari_reg_date_from') || '2026-11-01';
+    const savedTo = localStorage.getItem('agari_reg_date_to') || '2026-11-15';
 
     const days = [];
     let curr = new Date(savedFrom + 'T00:00:00');

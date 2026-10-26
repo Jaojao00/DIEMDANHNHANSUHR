@@ -157,9 +157,8 @@ function doGet(e) {
     if (action === "get_reg_config") {
       try {
         var configSheet = getConfigSheet();
-        
         var configData = configSheet.getDataRange().getValues();
-        var result = { regDateFrom: "", regDateTo: "" };
+        var result = { regDateFrom: "", regDateTo: "", dateFrom: "", dateTo: "" };
         
         for (var i = 1; i < configData.length; i++) {
           var val = configData[i][1];
@@ -168,12 +167,29 @@ function doGet(e) {
             if (val instanceof Date) {
               strVal = Utilities.formatDate(val, CONFIG.TIMEZONE, "yyyy-MM-dd");
             } else {
-              strVal = val.toString();
+              strVal = val.toString().trim();
             }
           }
-          if (configData[i][0] === "reg_date_from") result.regDateFrom = strVal;
-          if (configData[i][0] === "reg_date_to") result.regDateTo = strVal;
+          if (configData[i][0] === "reg_date_from") {
+            result.regDateFrom = strVal;
+            result.dateFrom = strVal;
+          }
+          if (configData[i][0] === "reg_date_to") {
+            result.regDateTo = strVal;
+            result.dateTo = strVal;
+          }
         }
+        
+        // Mặc định tháng 11 nếu chưa có cấu hình trong sheet
+        if (!result.dateFrom) {
+          result.dateFrom = "2026-11-01";
+          result.regDateFrom = "2026-11-01";
+        }
+        if (!result.dateTo) {
+          result.dateTo = "2026-11-15";
+          result.regDateTo = "2026-11-15";
+        }
+        result.success = true;
         
         return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
       } catch(cfgErr) {
