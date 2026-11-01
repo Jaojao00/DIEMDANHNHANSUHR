@@ -11,6 +11,8 @@ const AnnouncementsModule = {
   activeCommentsId: null,
   commentsUnsub: null,
   commentsCache: {},
+  editingVotes: {},
+  hasLoadedOnce: false,
 
   init() {
     this.bindEvents();
@@ -24,10 +26,50 @@ const AnnouncementsModule = {
       }
 
       FirebaseService.listenToAnnouncements((items) => {
+        const isFirstLoad = !this.hasLoadedOnce;
+        this.hasLoadedOnce = true;
         this.announcements = items || [];
         this.render();
         this.updateBadge();
+
+        if (isFirstLoad) {
+          this.checkAndAutoOpenPopup();
+        }
       });
+    }
+  },
+
+  checkAndAutoOpenPopup() {
+    if (!this.announcements || !this.announcements.length) return;
+
+    const todayStr = (typeof Utils !== 'undefined' && Utils.formatDateISO) ? Utils.formatDateISO(new Date()) : new Date().toISOString().split('T')[0];
+    const isDismissedToday = localStorage.getItem('agari_ann_dismissed_' + todayStr) === 'true';
+
+    // Lấy bài mới nhất hoặc bài được ghim
+    const latestItem = this.announcements[0];
+    const lastSeenId = localStorage.getItem('agari_last_seen_ann_id');
+
+    // Điều kiện tự động bật: Có bài mới chưa xem hoặc chưa bấm 'Không hiện lại hôm nay'
+    const isNewPost = latestItem && latestItem.id !== lastSeenId;
+    const shouldOpen = isNewPost || !isDismissedToday;
+
+    if (shouldOpen) {
+      setTimeout(() => {
+        // Tắt modal chào mừng static nếu đang mở để ưu tiên bảng tin mới
+        const welcomeModal = document.getElementById('modalWelcomeNotice');
+        if (welcomeModal && welcomeModal.classList.contains('active')) {
+          welcomeModal.classList.remove('active');
+        }
+
+        if (window.App && App.openModal) {
+          App.openModal('modalAnnouncements');
+        }
+
+        // Tự động chuyển tab sang 'Bình Chọn' nếu bài mới nhất là cuộc bình chọn
+        if (latestItem && latestItem.type === 'poll') {
+          this.setFilter('poll');
+        }
+      }, 700);
     }
   },
 
@@ -46,6 +88,37 @@ const AnnouncementsModule = {
       btnHeaderNotice.addEventListener('click', () => {
         if (window.App && App.openModal) {
           App.openModal('modalAnnouncements');
+        }
+      });
+    }
+
+    // Nút Không hiện lại hôm nay trong modal Thông báo & Bình chọn
+    const btnDismissToday = document.getElementById('btnDismissAnnouncementsToday');
+    if (btnDismissToday) {
+      btnDismissToday.addEventListener('click', () => {
+        const todayStr = (typeof Utils !== 'undefined' && Utils.formatDateISO) ? Utils.formatDateISO(new Date()) : new Date().toISOString().split('T')[0];
+        localStorage.setItem('agari_ann_dismissed_' + todayStr, 'true');
+        if (this.announcements && this.announcements.length) {
+          localStorage.setItem('agari_last_seen_ann_id', this.announcements[0].id);
+        }
+        if (window.App && App.closeModal) {
+          App.closeModal('modalAnnouncements');
+        }
+        if (typeof Utils !== 'undefined' && Utils.toast) {
+          Utils.toast('Đã ghi nhớ: Không tự động mở thông báo trong hôm nay!', 'info');
+        }
+      });
+    }
+
+    // Nút Đã hiểu & đóng modal
+    const btnCloseModal = document.getElementById('btnCloseAnnouncementsModal');
+    if (btnCloseModal) {
+      btnCloseModal.addEventListener('click', () => {
+        if (this.announcements && this.announcements.length) {
+          localStorage.setItem('agari_last_seen_ann_id', this.announcements[0].id);
+        }
+        if (window.App && App.closeModal) {
+          App.closeModal('modalAnnouncements');
         }
       });
     }
@@ -98,6 +171,10 @@ const AnnouncementsModule = {
           const empName = document.getElementById('swalInputEmpName').value.trim();
           if (!empId) {
             Swal.showValidationMessage('Vui lòng nhập Mã OPS');
+            return false;
+          }
+          if (typeof Utils !== 'undefined' && Utils.isValidOpsId && !Utils.isValidOpsId(empId)) {
+            Swal.showValidationMessage('Mã OPS không hợp lệ! (Bắt buộc: Ops + 4-6 số, VD: OPS170621 hoặc Ops170621)');
             return false;
           }
           if (!empName) {
@@ -178,53 +255,77 @@ const AnnouncementsModule = {
       // Options HTML
       let pollSectionHtml = '';
       if (isPoll && item.options && item.options.length) {
-        const canViewResults = hasVoted || isClosed || item.showResults === 'always';
+        // ĐIỀU KIỆN HIỂN THỊ Ô CHỌN BÌNH CHỌN:
+        // Nếu chưa vote (HOẶC đang bấm nút đổi phương án vote) VÀ cuộc bình chọn chưa đóng
+        const isEditingVote = this.editingVotes && this.editingVotes[item.id];
+        const showVoteForm = (!hasVoted || isEditingVote) && !isClosed;
 
-        if (!canViewResults && !isClosed) {
-          // Giao diện chọn phương án để vote
+        if (showVoteForm) {
           const isMulti = item.pollType === 'multiple';
           const maxChoices = item.maxChoices || 1;
           const inputType = isMulti ? 'checkbox' : 'radio';
 
-          const optionsList = item.options.map((opt) => `
-            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50/40 cursor-pointer transition">
-              <input type="${inputType}" name="poll_opt_${item.id}" value="${opt.id}" class="w-4 h-4 text-purple-600 focus:ring-purple-500 rounded" />
-              <span class="text-xs sm:text-sm font-medium text-slate-800 flex-1">${Utils.escapeHtml(opt.text)}</span>
-            </label>
-          `).join('');
+          const optionsList = item.options.map((opt) => {
+            const isChecked = userVote && userVote.optionIds && userVote.optionIds.includes(opt.id);
+            return `
+              <label class="flex items-center gap-3.5 p-3.5 rounded-2xl border-2 border-slate-200 hover:border-purple-400 hover:bg-purple-50/50 cursor-pointer transition select-none group has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50/70 shadow-sm">
+                <input type="${inputType}" name="poll_opt_${item.id}" value="${opt.id}" ${isChecked ? 'checked' : ''} class="w-5 h-5 text-purple-600 focus:ring-purple-500 rounded border-slate-300 cursor-pointer flex-shrink-0" />
+                <div class="flex-1">
+                  <div class="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-purple-950 transition">
+                    ${Utils.escapeHtml(opt.text)}
+                  </div>
+                  ${(item.showResults === 'always' && totalVotes > 0) ? `
+                    <div class="text-[11px] text-purple-700/80 font-mono mt-0.5">${opt.count || 0} phiếu (${Math.round(((opt.count || 0) / totalVotes) * 100)}%)</div>
+                  ` : ''}
+                </div>
+              </label>
+            `;
+          }).join('');
 
           pollSectionHtml = `
             <div class="mt-4 pt-4 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-slate-700">Các phương án bình chọn:</span>
-                <span class="text-[11px] text-purple-600 font-semibold">${isMulti ? `(Chọn tối đa ${maxChoices} phương án)` : '(Chọn 1 phương án)'}</span>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>🗳️</span>
+                  <span>Chọn ý kiến của bạn:</span>
+                </span>
+                <span class="text-[11px] text-purple-700 font-bold px-2.5 py-0.5 rounded-full bg-purple-100 border border-purple-200">
+                  ${isMulti ? `Chọn tối đa ${maxChoices} phương án` : 'Chọn 1 phương án'}
+                </span>
               </div>
-              <div class="space-y-2 mb-3">
+              <div class="space-y-2.5 mb-3.5">
                 ${optionsList}
               </div>
-              <button onclick="AnnouncementsModule.handleVote('${item.id}', ${isMulti}, ${maxChoices})" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2">
-                <span>🗳️</span>
-                <span>Bình Chọn Ngay</span>
-              </button>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="AnnouncementsModule.handleVote('${item.id}', ${isMulti}, ${maxChoices})" class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-700 hover:to-indigo-800 active:scale-[0.99] text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-purple-500/25 transition flex items-center justify-center gap-2">
+                  <span>🗳️</span>
+                  <span>XÁC NHẬN BÌNH CHỌN</span>
+                </button>
+                ${isEditingVote ? `
+                  <button type="button" onclick="AnnouncementsModule.cancelReVote('${item.id}')" class="px-3.5 py-3.5 rounded-2xl border border-slate-300 hover:bg-slate-100 text-slate-600 font-bold text-xs transition">
+                    Hủy
+                  </button>
+                ` : ''}
+              </div>
             </div>
           `;
         } else {
-          // Giao diện hiển thị thanh kết quả
+          // Giao diện hiển thị thanh kết quả khi đã vote hoặc cuộc bình chọn đã kết thúc
           const optionsList = item.options.map((opt) => {
             const count = opt.count || 0;
             const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
             const isUserChoice = userVote && userVote.optionIds && userVote.optionIds.includes(opt.id);
 
             return `
-              <div class="p-3 rounded-xl border ${isUserChoice ? 'border-purple-300 bg-purple-50/50' : 'border-slate-200 bg-slate-50/60'}">
-                <div class="flex items-center justify-between text-xs sm:text-sm mb-1.5 font-semibold text-slate-800">
+              <div class="p-3.5 rounded-2xl border-2 ${isUserChoice ? 'border-purple-500 bg-purple-50/80 shadow-sm' : 'border-slate-200 bg-slate-50/60'}">
+                <div class="flex items-center justify-between text-xs sm:text-sm mb-1.5 font-bold text-slate-800">
                   <div class="flex items-center gap-2">
                     <span>${Utils.escapeHtml(opt.text)}</span>
-                    ${isUserChoice ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-600 text-white">✓ Lựa chọn của bạn</span>' : ''}
+                    ${isUserChoice ? '<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-600 text-white shadow-xs">✓ Bạn đã chọn</span>' : ''}
                   </div>
-                  <span class="text-purple-700 font-mono">${count} phiếu (${pct}%)</span>
+                  <span class="text-purple-700 font-mono font-bold">${count} phiếu (${pct}%)</span>
                 </div>
-                <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
                   <div class="h-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
                 </div>
               </div>
@@ -233,11 +334,15 @@ const AnnouncementsModule = {
 
           pollSectionHtml = `
             <div class="mt-4 pt-4 border-t border-slate-100">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-slate-700">Kết quả bình chọn (${totalVotes} lượt tham gia):</span>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs sm:text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                  <span>📊</span>
+                  <span>Kết quả bình chọn (${totalVotes} lượt tham gia):</span>
+                </span>
                 ${hasVoted && !isClosed ? `
-                  <button onclick="AnnouncementsModule.reVote('${item.id}')" class="text-[11px] text-purple-600 hover:underline font-semibold">
-                    Thay đổi lựa chọn
+                  <button type="button" onclick="AnnouncementsModule.reVote('${item.id}')" class="px-3 py-1 rounded-xl border border-purple-300 text-purple-700 hover:bg-purple-100 text-xs font-bold transition flex items-center gap-1">
+                    <span>🔄</span>
+                    <span>Đổi lựa chọn</span>
                   </button>
                 ` : ''}
               </div>
@@ -391,6 +496,7 @@ const AnnouncementsModule = {
     Utils.showLoading('Đang ghi nhận bình chọn của bạn...');
     try {
       await FirebaseService.submitVote(announcementId, empId, empName, optionIds);
+      if (this.editingVotes) delete this.editingVotes[announcementId];
       Utils.hideLoading();
       Utils.toast('Bình chọn thành công! Cảm ơn ý kiến của bạn.', 'success');
     } catch (e) {
@@ -400,14 +506,18 @@ const AnnouncementsModule = {
   },
 
   reVote(announcementId) {
-    // Cho phép hiển thị lại danh sách lựa chọn để thay đổi phương án
     const item = this.announcements.find((a) => a.id === announcementId);
     if (!item || item.status === 'closed') return;
-    const { empId } = this.getCurrentUser();
-    if (item.votes && item.votes[empId]) {
-      delete item.votes[empId];
-      this.render();
+    this.editingVotes = this.editingVotes || {};
+    this.editingVotes[announcementId] = true;
+    this.render();
+  },
+
+  cancelReVote(announcementId) {
+    if (this.editingVotes) {
+      delete this.editingVotes[announcementId];
     }
+    this.render();
   },
 
   toggleComments(announcementId) {
