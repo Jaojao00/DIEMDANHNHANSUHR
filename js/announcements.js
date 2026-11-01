@@ -28,7 +28,21 @@ const AnnouncementsModule = {
       FirebaseService.listenToAnnouncements((items) => {
         const isFirstLoad = !this.hasLoadedOnce;
         this.hasLoadedOnce = true;
-        this.announcements = items || [];
+        
+        // Tự động lọc & xóa bỏ vĩnh viễn các bình chọn mẫu không mong muốn khỏi Firestore
+        const validItems = [];
+        (items || []).forEach((item) => {
+          const t = (item && item.title) ? item.title.toLowerCase() : '';
+          if (t.includes('hoạt động gắn kết') || t.includes('bạn muốn tổ chức hoạt động') || t.includes('bóng đá giao hữu')) {
+            if (item.id && typeof FirebaseService.deleteAnnouncement === 'function') {
+              FirebaseService.deleteAnnouncement(item.id).catch(() => {});
+            }
+          } else {
+            validItems.push(item);
+          }
+        });
+
+        this.announcements = validItems;
         this.render();
         this.updateBadge();
 

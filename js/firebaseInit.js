@@ -547,8 +547,8 @@ const FirebaseService = {
     try {
       const snap = await this.db.collection('announcements').limit(1).get();
       if (snap.empty) {
-        console.log('[Firebase] Seeding initial announcement & poll...');
-        // 1. Bài thông báo mẫu
+        console.log('[Firebase] Seeding initial announcement...');
+        // Bài thông báo mẫu
         await this.saveAnnouncement({
           title: '📢 Chào Mừng Đến Với Hệ Thống AGARI HR - SPX Partner',
           content: 'Kính gửi toàn thể Anh/Chị/Em nhân sự kho SW SOC,\n\nHệ thống AGARI HR chính thức đưa vào vận hành phân hệ "Thông Báo & Bình Chọn". Tại đây, Ban Quản trị sẽ cập nhật kịp thời các thông tin ca trực, chế độ phúc lợi, chính sách mới và lắng nghe mọi ý kiến đóng góp từ nhân viên.\n\nNhân viên có thể tương tác bình luận công khai hoặc ẩn danh để chia sẻ ý kiến một cách thoải mái nhất!',
@@ -557,25 +557,6 @@ const FirebaseService = {
           status: 'active',
           allowComments: true,
           author: 'Ban Quản Trị AGARI HR'
-        });
-
-        // 2. Cuộc bình chọn mẫu
-        await this.saveAnnouncement({
-          title: '📊 Bình chọn: Bạn muốn tổ chức hoạt động gắn kết nào trong tháng này?',
-          content: 'Phòng Nhân sự mong muốn lắng nghe ý kiến của toàn thể ACE để lên kế hoạch tổ chức sự kiện phù hợp nhất cho đội ngũ kho:',
-          type: 'poll',
-          pinned: false,
-          status: 'active',
-          allowComments: true,
-          pollType: 'single',
-          showResults: 'always',
-          author: 'Phòng Nhân Sự',
-          options: [
-            { id: 'opt_1', text: '🏆 Giải Bóng Đá Giao Hữu Kho', count: 0 },
-            { id: 'opt_2', text: '🍕 Tiệc Liên Hoan Pizza & Trà Sữa Cuối Ca', count: 0 },
-            { id: 'opt_3', text: '🏖️ Buổi Dã Ngoại Cuối Tuần (Team Building)', count: 0 },
-            { id: 'opt_4', text: '🎁 Bốc Thăm May Mắn Với Nhiều Phần Quà Hấp Dẫn', count: 0 }
-          ]
         });
       }
     } catch (e) {

@@ -34,6 +34,7 @@ const App = {
     safeInit('RegApp', () => typeof RegApp !== 'undefined' && RegApp.init && RegApp.init());
     safeInit('AnnouncementsModule', () => typeof AnnouncementsModule !== 'undefined' && AnnouncementsModule.init && AnnouncementsModule.init());
     safeInit('AdminAnnouncements', () => typeof AdminAnnouncements !== 'undefined' && AdminAnnouncements.init && AdminAnnouncements.init());
+    safeInit('PreviewScheduleModule', () => typeof PreviewScheduleModule !== 'undefined' && PreviewScheduleModule.init && PreviewScheduleModule.init());
 
     // Khởi tạo popup thông báo chào mừng & giới thiệu hệ thống mới
     this.initWelcomeNotice();
@@ -165,6 +166,9 @@ const App = {
         }
         if (modalId === 'modalAnnouncements' && window.AnnouncementsModule && typeof window.AnnouncementsModule.render === 'function') {
           window.AnnouncementsModule.render();
+        }
+        if (modalId === 'modalPreviewSchedule' && window.PreviewScheduleModule && typeof window.PreviewScheduleModule.open === 'function') {
+          window.PreviewScheduleModule.open();
         }
         this.openModal(modalId);
       });

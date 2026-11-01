@@ -1,5 +1,5 @@
 // Service Worker Agari HR (Offline-First & Smart Caching)
-const CACHE_NAME = 'hr-app-v101';
+const CACHE_NAME = 'hr-app-v102';
 
 const STATIC_ASSETS = [
   './',
@@ -23,6 +23,7 @@ const STATIC_ASSETS = [
   './js/registration/regApp.js',
   './js/announcements.js',
   './js/admin/adminAnnouncements.js',
+  './js/previewSchedule.js',
   './manifest.json'
 ];
 

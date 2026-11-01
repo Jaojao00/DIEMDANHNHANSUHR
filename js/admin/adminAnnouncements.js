@@ -53,7 +53,18 @@ const AdminAnnouncements = {
   loadData() {
     if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized) {
       FirebaseService.listenToAnnouncements((items) => {
-        this.announcements = items || [];
+        const validItems = [];
+        (items || []).forEach((item) => {
+          const t = (item && item.title) ? item.title.toLowerCase() : '';
+          if (t.includes('hoạt động gắn kết') || t.includes('bạn muốn tổ chức hoạt động') || t.includes('bóng đá giao hữu')) {
+            if (item.id && typeof FirebaseService.deleteAnnouncement === 'function') {
+              FirebaseService.deleteAnnouncement(item.id).catch(() => {});
+            }
+          } else {
+            validItems.push(item);
+          }
+        });
+        this.announcements = validItems;
         this.updateStats();
         this.renderAdminList();
       });
