@@ -15,6 +15,75 @@ const RegApp = {
     }
   },
 
+  /**
+   * Đồng bộ realtime từ Firebase Firestore
+   */
+  setupRealtimeSync() {
+    if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized && typeof FirebaseService.listenToRegistrationConfig === 'function') {
+      FirebaseService.listenToRegistrationConfig((cfg) => {
+        if (cfg && cfg.dateFrom && cfg.dateTo) {
+          console.log('[RegApp] Nhận chu kỳ mới realtime:', cfg.dateFrom, cfg.dateTo);
+          this.applyNewDates(cfg.dateFrom, cfg.dateTo);
+        }
+      });
+    }
+  },
+
+  /**
+   * Tải cấu hình chu kỳ từ xa (Firebase -> Google Apps Script)
+   */
+  async fetchRemoteConfig() {
+    try {
+      // 1. Lấy từ Firebase Firestore trước (<100ms)
+      if (typeof FirebaseService !== 'undefined' && FirebaseService.isInitialized && typeof FirebaseService.getRegistrationConfig === 'function') {
+        const fbCfg = await FirebaseService.getRegistrationConfig();
+        if (fbCfg && fbCfg.dateFrom && fbCfg.dateTo) {
+          this.applyNewDates(fbCfg.dateFrom, fbCfg.dateTo);
+          return;
+        }
+      }
+
+      // 2. Lấy từ Google Apps Script Web App
+      if (typeof DataManager !== 'undefined' && typeof DataManager.callApi === 'function') {
+        const res = await DataManager.callApi('get_reg_config');
+        if (res && (res.dateFrom || res.regDateFrom) && (res.dateTo || res.regDateTo)) {
+          const from = res.dateFrom || res.regDateFrom;
+          const to = res.dateTo || res.regDateTo;
+          this.applyNewDates(from, to);
+        }
+      }
+    } catch (e) {
+      console.warn('[RegApp.fetchRemoteConfig] Lỗi lấy chu kỳ từ xa:', e);
+    }
+  },
+
+  /**
+   * Áp dụng ngày mới vào chu kỳ và vẽ lại lịch
+   */
+  applyNewDates(dateFrom, dateTo) {
+    if (!dateFrom || !dateTo) return;
+    const curFrom = localStorage.getItem('agari_reg_date_from');
+    const curTo = localStorage.getItem('agari_reg_date_to');
+
+    localStorage.setItem('agari_reg_date_from', dateFrom);
+    localStorage.setItem('agari_reg_date_to', dateTo);
+
+    // Cập nhật input Admin nếu đang mở
+    const regFrom = document.getElementById('regConfigDateFrom');
+    const regTo = document.getElementById('regConfigDateTo');
+    const setFrom = document.getElementById('settingsRegDateFrom');
+    const setTo = document.getElementById('settingsRegDateTo');
+    if (regFrom) regFrom.value = dateFrom;
+    if (regTo) regTo.value = dateTo;
+    if (setFrom) setFrom.value = dateFrom;
+    if (setTo) setTo.value = dateTo;
+
+    // Nếu chu kỳ thay đổi thì tạo lại ngày và vẽ lại lịch
+    if (curFrom !== dateFrom || curTo !== dateTo || !this.currentCycleDays.length) {
+      this.generateCycleDays();
+    }
+  },
+
   generateCycleDays() {
     // Lấy chu kỳ ngày được cấu hình từ Admin hoặc mặc định 16/10/2026 - 31/10/2026
     const savedFrom = localStorage.getItem('agari_reg_date_from') || '2026-11-01';

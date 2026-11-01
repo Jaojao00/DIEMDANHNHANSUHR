@@ -1,3 +1,12 @@
+const escapeHtml = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 /**
  * PHÂN HỆ THÔNG BÁO & BÌNH CHỌN CHO NHÂN VIÊN (AGARI HR)
  * Cung cấp chức năng:
@@ -189,7 +198,7 @@ const AnnouncementsModule = {
           const optionsList = item.options.map((opt) => `
             <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:border-purple-300 hover:bg-purple-50/40 cursor-pointer transition">
               <input type="${inputType}" name="poll_opt_${item.id}" value="${opt.id}" class="w-4 h-4 text-purple-600 focus:ring-purple-500 rounded" />
-              <span class="text-xs sm:text-sm font-medium text-slate-800 flex-1">${Utils.escapeHtml(opt.text)}</span>
+              <span class="text-xs sm:text-sm font-medium text-slate-800 flex-1">${escapeHtml(opt.text)}</span>
             </label>
           `).join('');
 
@@ -219,7 +228,7 @@ const AnnouncementsModule = {
               <div class="p-3 rounded-xl border ${isUserChoice ? 'border-purple-300 bg-purple-50/50' : 'border-slate-200 bg-slate-50/60'}">
                 <div class="flex items-center justify-between text-xs sm:text-sm mb-1.5 font-semibold text-slate-800">
                   <div class="flex items-center gap-2">
-                    <span>${Utils.escapeHtml(opt.text)}</span>
+                    <span>${escapeHtml(opt.text)}</span>
                     ${isUserChoice ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-600 text-white">✓ Lựa chọn của bạn</span>' : ''}
                   </div>
                   <span class="text-purple-700 font-mono">${count} phiếu (${pct}%)</span>
@@ -254,7 +263,7 @@ const AnnouncementsModule = {
       if (item.imageUrl) {
         imageHtml = `
           <div class="mt-3 rounded-2xl overflow-hidden border border-slate-200 max-h-72 bg-slate-900 flex items-center justify-center">
-            <img src="${Utils.escapeHtml(item.imageUrl)}" alt="Đính kèm" class="w-full h-auto object-cover hover:scale-[1.02] transition cursor-pointer" onclick="window.open('${Utils.escapeHtml(item.imageUrl)}', '_blank')" />
+            <img src="${escapeHtml(item.imageUrl)}" alt="Đính kèm" class="w-full h-auto object-cover hover:scale-[1.02] transition cursor-pointer" onclick="window.open('${escapeHtml(item.imageUrl)}', '_blank')" />
           </div>
         `;
       }
@@ -279,7 +288,7 @@ const AnnouncementsModule = {
               </div>
               <div>
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-bold text-slate-900 text-xs sm:text-sm">${Utils.escapeHtml(item.author || 'Phòng Nhân Sự')}</span>
+                  <span class="font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(item.author || 'Phòng Nhân Sự')}</span>
                   <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isPoll ? 'bg-purple-100 text-purple-700' : 'bg-red-100 text-agari-red'}">
                     ${isPoll ? 'Bình Chọn' : 'Thông Báo'}
                   </span>
@@ -296,11 +305,11 @@ const AnnouncementsModule = {
 
           <!-- Body Title & Content -->
           <h3 class="text-base sm:text-lg font-extrabold text-slate-900 mt-3.5 mb-2 leading-snug">
-            ${Utils.escapeHtml(item.title)}
+            ${escapeHtml(item.title)}
           </h3>
 
           <div class="text-xs sm:text-sm text-slate-600 whitespace-pre-line leading-relaxed">
-            ${Utils.escapeHtml(item.content)}
+            ${escapeHtml(item.content)}
           </div>
 
           ${imageHtml}
@@ -468,7 +477,7 @@ const AnnouncementsModule = {
 
       // QUY TẮC HIỂN THỊ CHO NHÂN VIÊN:
       // Nếu là ẩn danh: Che giấu danh tính, hiển thị "Nhân viên ẩn danh 👤"
-      const displayName = isAnon ? 'Nhân viên ẩn danh' : Utils.escapeHtml(c.empName || 'Nhân sự');
+      const displayName = isAnon ? 'Nhân viên ẩn danh' : escapeHtml(c.empName || 'Nhân sự');
       const avatarContent = isAnon ? '🕵️' : (c.empName ? c.empName.charAt(0).toUpperCase() : '👤');
 
       return `
@@ -483,7 +492,7 @@ const AnnouncementsModule = {
             </div>
             <span class="text-[10px] text-slate-400">${timeStr}</span>
           </div>
-          <div class="text-slate-700 pl-8 leading-relaxed whitespace-pre-line">${Utils.escapeHtml(c.content)}</div>
+          <div class="text-slate-700 pl-8 leading-relaxed whitespace-pre-line">${escapeHtml(c.content)}</div>
         </div>
       `;
     }).join('');

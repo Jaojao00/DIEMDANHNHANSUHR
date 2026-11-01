@@ -1,3 +1,12 @@
+const escapeHtml = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
 /**
  * PHÂN HỆ QUẢN TRỊ THÔNG BÁO & BÌNH CHỌN (ADMIN ANNOUNCEMENTS & POLLS)
  * Cung cấp chức năng:
@@ -132,7 +141,7 @@ const AdminAnnouncements = {
     const div = document.createElement('div');
     div.className = 'flex items-center gap-2 admin-poll-opt-item';
     div.innerHTML = `
-      <input type="text" class="flex-1 bg-[#080D1A] border border-[#1E293B] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-agari-red admin-poll-opt-input" placeholder="Nhập nội dung phương án..." value="${Utils.escapeHtml(defaultText)}" required />
+      <input type="text" class="flex-1 bg-[#080D1A] border border-[#1E293B] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-agari-red admin-poll-opt-input" placeholder="Nhập nội dung phương án..." value="${escapeHtml(defaultText)}" required />
       <button type="button" class="w-8 h-8 rounded-lg bg-red-950/60 hover:bg-red-900 text-red-400 text-xs font-bold transition flex items-center justify-center btn-remove-opt" title="Xóa phương án">✕</button>
     `;
 
@@ -261,7 +270,7 @@ const AdminAnnouncements = {
               return `
                 <div class="bg-[#080D1A] p-2.5 rounded-xl border border-[#1E293B]">
                   <div class="flex items-center justify-between text-xs text-slate-200 mb-1">
-                    <span class="font-medium">${Utils.escapeHtml(opt.text)}</span>
+                    <span class="font-medium">${escapeHtml(opt.text)}</span>
                     <span class="font-mono text-purple-400 font-bold">${count} (${pct}%)</span>
                   </div>
                   <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
@@ -303,11 +312,11 @@ const AdminAnnouncements = {
             </div>
           </div>
 
-          <h3 class="text-base font-bold text-white mt-2.5 mb-1">${Utils.escapeHtml(item.title)}</h3>
-          <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed line-clamp-3">${Utils.escapeHtml(item.content)}</p>
+          <h3 class="text-base font-bold text-white mt-2.5 mb-1">${escapeHtml(item.title)}</h3>
+          <p class="text-xs text-slate-300 whitespace-pre-line leading-relaxed line-clamp-3">${escapeHtml(item.content)}</p>
 
           ${item.imageUrl ? `
-            <div class="mt-2 text-xs text-cyan-400 flex items-center gap-1 cursor-pointer hover:underline" onclick="window.open('${Utils.escapeHtml(item.imageUrl)}', '_blank')">
+            <div class="mt-2 text-xs text-cyan-400 flex items-center gap-1 cursor-pointer hover:underline" onclick="window.open('${escapeHtml(item.imageUrl)}', '_blank')">
               <span>🖼️ Xem ảnh đính kèm</span>
             </div>
           ` : ''}
@@ -470,8 +479,8 @@ const AdminAnnouncements = {
                 `}
 
                 <!-- HIỂN THỊ DANH TÍNH THẬT CHO ADMIN -->
-                <span class="text-amber-300 font-mono font-bold">${Utils.escapeHtml(c.empId || 'Không có mã')}</span>
-                <span class="text-white font-bold">${Utils.escapeHtml(c.empName || 'Chưa rõ tên')}</span>
+                <span class="text-amber-300 font-mono font-bold">${escapeHtml(c.empId || 'Không có mã')}</span>
+                <span class="text-white font-bold">${escapeHtml(c.empName || 'Chưa rõ tên')}</span>
               </div>
               <div class="text-[10px] text-slate-400 mt-0.5">${timeStr}</div>
             </div>
@@ -483,7 +492,7 @@ const AdminAnnouncements = {
           </div>
 
           <div class="text-slate-200 leading-relaxed pl-2 border-l-2 ${isAnon ? 'border-purple-500' : 'border-slate-600'} whitespace-pre-line">
-            ${Utils.escapeHtml(c.content)}
+            ${escapeHtml(c.content)}
           </div>
         </div>
       `;
