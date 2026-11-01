@@ -159,6 +159,8 @@ const AdminCore = {
       window.AdminBooking?.loadBookingData();
     } else if (tabId === 'tabSalary') {
       window.AdminSalary?.loadSalaryData();
+    } else if (tabId === 'tabAnnouncements') {
+      window.AdminAnnouncements?.loadData();
     }
   }
 };

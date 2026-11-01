@@ -91,9 +91,10 @@
 
         <div class="flex items-center gap-2 sm:gap-3">
           <!-- Xem Lại Thông Báo Mới -->
-          <button data-open-modal="modalWelcomeNotice" class="px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 border border-white/25 text-xs font-semibold backdrop-blur transition flex items-center gap-1.5" title="Xem thông báo cập nhật hệ thống">
+          <button id="btnHeaderAnnouncements" data-open-modal="modalAnnouncements" class="relative px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 border border-white/25 text-xs font-semibold backdrop-blur transition flex items-center gap-1.5" title="Bảng tin thông báo & bình chọn nội bộ">
             <span>📢</span>
-            <span class="hidden sm:inline">Thông Báo</span>
+            <span class="hidden sm:inline">Thông Báo & Bình Chọn</span>
+            <span id="headerAnnouncementsBadge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-[#D90012] hidden animate-pulse"></span>
           </button>
 
           <!-- Chuyển sang Cổng Quản Trị -->
@@ -384,6 +385,20 @@
             </div>
           </button>
 
+          <!-- Thông Báo & Bình Chọn -->
+          <button data-open-modal="modalAnnouncements" class="bg-white hover:bg-indigo-50/50 border border-indigo-200 hover:border-indigo-400 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
+            <div class="flex items-center justify-between w-full">
+              <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
+                📢
+              </div>
+              <span id="badgeUnreadAnnouncements" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 hidden">Mới</span>
+            </div>
+            <div>
+              <div class="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition">Thông Báo & Bình Chọn</div>
+              <div class="text-[11px] text-slate-500">Tin tức & đóng góp ý kiến</div>
+            </div>
+          </button>
+
           <!-- Nội Quy & Quy Định -->
           <button data-open-modal="modalNoiQuy" class="bg-white hover:bg-slate-100 border border-slate-200 hover:border-slate-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32">
             <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-xl group-hover:scale-110 transition">
@@ -504,6 +519,10 @@
           <button data-tab="tabSalary" class="admin-nav-tab px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:bg-slate-800">
             <span>💰</span>
             <span>Bảng Lương</span>
+          </button>
+          <button data-tab="tabAnnouncements" class="admin-nav-tab px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 text-slate-400 hover:bg-slate-800">
+            <span>📢</span>
+            <span>Thông Báo & Bình Chọn</span>
           </button>
         </nav>
       </div>
@@ -889,6 +908,60 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <!-- ==================== TAB 5: THÔNG BÁO & BÌNH CHỌN ==================== -->
+        <div id="tabAnnouncements" class="admin-tab-pane space-y-6 hidden">
+          <!-- Overview Stats -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4">
+              <div class="text-xs text-slate-400 uppercase font-semibold">Tổng Bài Đăng</div>
+              <div id="adminStatTotalAnnouncements" class="text-2xl font-black text-white mt-1 font-mono">0</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">Thông báo & bình chọn</div>
+            </div>
+            <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4">
+              <div class="text-xs text-slate-400 uppercase font-semibold">Bình Chọn Đang Mở</div>
+              <div id="adminStatActivePolls" class="text-2xl font-black text-purple-400 mt-1 font-mono">0</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">Đang tiếp nhận ý kiến</div>
+            </div>
+            <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4">
+              <div class="text-xs text-slate-400 uppercase font-semibold">Tổng Lượt Xem</div>
+              <div id="adminStatTotalReads" class="text-2xl font-black text-cyan-400 mt-1 font-mono">0</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">Nhân sự đã đọc</div>
+            </div>
+            <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-4">
+              <div class="text-xs text-slate-400 uppercase font-semibold">Tổng Bình Luận</div>
+              <div id="adminStatTotalComments" class="text-2xl font-black text-amber-400 mt-1 font-mono">0</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">Phản hồi & đóng góp</div>
+            </div>
+          </div>
+
+          <!-- Action bar -->
+          <div class="flex items-center justify-between flex-wrap gap-3 bg-[#0F172A] border border-[#1E293B] p-4 rounded-2xl">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>📢</span>
+                <span>Quản Lý Thông Báo & Bình Chọn Nội Bộ</span>
+              </h3>
+              <p class="text-xs text-slate-400">Đăng tin tức vận hành, mở cuộc thăm dò và kiểm duyệt ý kiến nhân viên</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button id="btnAdminNewAnnouncement" class="px-3.5 py-2 rounded-xl bg-agari-red hover:bg-agari-red-dark text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                <span>➕</span>
+                <span>Tạo Thông Báo</span>
+              </button>
+              <button id="btnAdminNewPoll" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5">
+                <span>📊</span>
+                <span>Tạo Bình Chọn</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Announcements & Polls list -->
+          <div id="adminAnnouncementsList" class="space-y-4">
+            <!-- Rendered via AdminAnnouncements.renderAdminList() -->
           </div>
         </div>
 
@@ -1660,7 +1733,210 @@
   </div>
 
   <!-- MODAL THÔNG BÁO CHÀO MỪNG & GIỚI THIỆU TÍNH NĂNG MỚI (POPUP ON STARTUP) -->
-  <div id="modalWelcomeNotice" class="custom-modal-backdrop">
+  
+  <!-- ============================================================ -->
+  <!-- MODAL BẢNG TIN THÔNG BÁO & BÌNH CHỌN CHO NHÂN VIÊN          -->
+  <!-- ============================================================ -->
+  <div id="modalAnnouncements" class="custom-modal-backdrop">
+    <div class="custom-modal-content !max-w-3xl p-5 sm:p-7 relative overflow-hidden text-left max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-agari-red to-orange-500 text-white flex items-center justify-center text-xl shadow-md">
+            📢
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <span>Bảng Tin & Bình Chọn Nội Bộ</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-agari-red/10 text-agari-red uppercase tracking-wider">
+                AGARI HR
+              </span>
+            </h3>
+            <p class="text-xs text-slate-400">Cập nhật thông tin vận hành & đóng góp ý kiến cho kho SW SOC</p>
+          </div>
+        </div>
+        <button data-close-modal="modalAnnouncements" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Filter Tabs -->
+      <div class="flex items-center gap-2 py-3 border-b border-slate-100 flex-shrink-0 overflow-x-auto">
+        <button data-filter="all" class="filter-announcement-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-agari-red text-white shadow-sm flex items-center gap-1.5">
+          <span>🌟</span>
+          <span>Tất Cả</span>
+        </button>
+        <button data-filter="announcement" class="filter-announcement-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center gap-1.5">
+          <span>📢</span>
+          <span>Thông Báo</span>
+        </button>
+        <button data-filter="poll" class="filter-announcement-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center gap-1.5">
+          <span>📊</span>
+          <span>Bình Chọn</span>
+        </button>
+      </div>
+
+      <!-- Feed Container -->
+      <div id="employeeAnnouncementsList" class="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+        <!-- Rendered dynamically by AnnouncementsModule -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- MODAL ADMIN TẠO THÔNG BÁO HOẶC BÌNH CHỌN                     -->
+  <!-- ============================================================ -->
+  <div id="modalAdminCreateAnnouncement" class="custom-modal-backdrop">
+    <div class="custom-modal-content !max-w-2xl !bg-[#0F172A] !text-white !border-[#1E293B] p-5 sm:p-7 relative overflow-hidden text-left max-h-[92vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-[#1E293B] flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-agari-red to-purple-600 text-white flex items-center justify-center text-xl shadow-md">
+            ✍️
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white">Tạo Bài Đăng Mới</h3>
+            <p class="text-xs text-slate-400">Đăng thông báo nội bộ hoặc mở cuộc bình chọn ý kiến</p>
+          </div>
+        </div>
+        <button data-close-modal="modalAdminCreateAnnouncement" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <form id="formAdminCreateAnnouncement" class="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+        <!-- Switch Post Type -->
+        <div>
+          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Loại bài đăng:</label>
+          <div class="grid grid-cols-2 gap-2 bg-[#080D1A] p-1.5 rounded-xl border border-[#1E293B]">
+            <button type="button" data-type="announcement" class="admin-post-type-btn py-2 px-3 rounded-lg text-xs font-bold transition bg-agari-red text-white shadow-md flex items-center justify-center gap-1.5">
+              <span>📢</span>
+              <span>Thông Báo</span>
+            </button>
+            <button type="button" data-type="poll" class="admin-post-type-btn py-2 px-3 rounded-lg text-xs font-bold transition bg-slate-800 text-slate-400 flex items-center justify-center gap-1.5">
+              <span>📊</span>
+              <span>Bình Chọn (Poll)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tiêu đề -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Tiêu Đề Bài Viết / Câu Hỏi Bình Chọn: <span class="text-red-400">*</span></label>
+          <input type="text" name="title" required placeholder="Nhập tiêu đề rõ ràng, thu hút..." class="w-full bg-[#080D1A] border border-[#1E293B] rounded-xl p-3 text-xs sm:text-sm text-white focus:outline-none focus:border-agari-red" />
+        </div>
+
+        <!-- Nội dung -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Nội Dung Chi Tiết: <span class="text-red-400">*</span></label>
+          <textarea name="content" rows="4" required placeholder="Nhập nội dung thông báo hoặc mô tả chi tiết cho cuộc bình chọn..." class="w-full bg-[#080D1A] border border-[#1E293B] rounded-xl p-3 text-xs sm:text-sm text-white focus:outline-none focus:border-agari-red resize-none"></textarea>
+        </div>
+
+        <!-- Link ảnh / tệp đính kèm -->
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Hình Ảnh Đính Kèm (Link URL, tùy chọn):</label>
+          <input type="url" name="imageUrl" placeholder="https://example.com/image.png (hoặc để trống)" class="w-full bg-[#080D1A] border border-[#1E293B] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-agari-red font-mono" />
+        </div>
+
+        <!-- KHU VỰC CẤU HÌNH BÌNH CHỌN (POLL CONFIG) -->
+        <div id="adminPollConfigArea" class="hidden p-4 rounded-2xl bg-[#080D1A] border border-purple-900/50 space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-[#1E293B]">
+            <h4 class="text-xs font-bold text-purple-300 flex items-center gap-1.5 uppercase tracking-wider">
+              <span>📊</span>
+              <span>Thiết Lập Các Phương Án Bình Chọn</span>
+            </h4>
+            <button type="button" id="btnAdminAddPollOption" class="text-xs text-purple-400 hover:text-purple-300 font-bold flex items-center gap-1">
+              <span>+ Thêm phương án</span>
+            </button>
+          </div>
+
+          <!-- Danh sách phương án -->
+          <div id="adminPollOptionsList" class="space-y-2.5">
+            <!-- Rendered by JS -->
+          </div>
+
+          <!-- Kiểu chọn & Hiển thị kết quả -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 mb-1">Hình thức chọn:</label>
+              <select name="pollType" class="w-full bg-[#0F172A] border border-[#1E293B] rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="single">Chỉ chọn 1 đáp án</option>
+                <option value="multiple">Được chọn nhiều đáp án</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 mb-1">Hiển thị kết quả:</label>
+              <select name="showResults" class="w-full bg-[#0F172A] border border-[#1E293B] rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                <option value="always">Công khai tỷ lệ ngay</option>
+                <option value="after_vote">Chỉ xem sau khi bình chọn</option>
+                <option value="hidden">Ẩn kết quả</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tùy chọn nâng cao -->
+        <div class="p-3.5 rounded-xl bg-[#080D1A] border border-[#1E293B] flex items-center justify-between flex-wrap gap-4">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" name="isPinned" class="w-4 h-4 text-amber-500 rounded border-slate-700 bg-slate-900 focus:ring-amber-400" />
+            <span class="text-xs font-bold text-amber-300 flex items-center gap-1">
+              <span>📌</span>
+              <span>Ghim lên đầu trang</span>
+            </span>
+          </label>
+
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" name="allowComments" checked class="w-4 h-4 text-agari-red rounded border-slate-700 bg-slate-900 focus:ring-agari-red" />
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-1">
+              <span>💬</span>
+              <span>Cho phép bình luận</span>
+            </span>
+          </label>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-2">
+          <button type="submit" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-agari-red to-orange-600 hover:from-agari-red-dark hover:to-orange-700 text-white font-bold text-sm shadow-lg shadow-red-600/30 transition flex items-center justify-center gap-2">
+            <span>🚀</span>
+            <span>Đăng Lên Hệ Thống Ngay</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ============================================================ -->
+  <!-- MODAL ADMIN KIỂM DUYỆT BÌNH LUẬN & XÁC THỰC DANH TÍNH ẨN DANH -->
+  <!-- ============================================================ -->
+  <div id="modalAdminViewComments" class="custom-modal-backdrop">
+    <div class="custom-modal-content !max-w-2xl !bg-[#0F172A] !text-white !border-[#1E293B] p-5 sm:p-7 relative overflow-hidden text-left max-h-[90vh] flex flex-col">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-[#1E293B] flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-900/80 text-indigo-300 border border-indigo-700/60 flex items-center justify-center text-xl shadow-md">
+            🛡️
+          </div>
+          <div>
+            <h3 id="adminCommentsModalTitle" class="text-base font-bold text-white">Kiểm Duyệt Bình Luận</h3>
+            <p class="text-xs text-slate-400">Quyền Admin: Cho phép xác thực danh tính thật của bình luận ẩn danh</p>
+          </div>
+        </div>
+        <button data-close-modal="modalAdminViewComments" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Danh sách bình luận -->
+      <div id="adminCommentsContainer" class="flex-1 overflow-y-auto py-4 space-y-3 pr-1">
+        <!-- Rendered by AdminAnnouncements.renderAdminComments() -->
+      </div>
+    </div>
+  </div>
+
+<div id="modalWelcomeNotice" class="custom-modal-backdrop">
     <div class="custom-modal-content !max-w-2xl p-6 sm:p-7 relative overflow-hidden text-left">
       <!-- Background decorative glow -->
       <div class="absolute -top-12 -right-12 w-36 h-36 bg-red-100/80 rounded-full blur-2xl pointer-events-none"></div>
@@ -1810,20 +2086,22 @@
   </div>
 
   <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v92) -->
-  <script src="./js/config.js?v=v97"></script>
-  <script src="./js/utils.js?v=v97"></script>
-  <script src="./js/firebaseInit.js?v=v97"></script>
-  <script src="./js/dataManager.js?v=v97"></script>
-  <script src="./js/employee.js?v=v97"></script>
-  <script src="./js/admin/adminCore.js?v=v97"></script>
-  <script src="./js/admin/adminUI.js?v=v97"></script>
-  <script src="./js/admin/adminSalary.js?v=v97"></script>
-  <script src="./js/admin/adminBooking.js?v=v97"></script>
-  <script src="./js/admin/adminRequests.js?v=v97"></script>
-  <script src="./js/admin/adminRegistration.js?v=v97"></script>
-  <script src="./js/admin/adminManager.js?v=v97"></script>
-  <script src="./js/registration/regAPI.js?v=v97"></script>
-  <script src="./js/registration/regApp.js?v=v97"></script>
-  <script src="./js/app.js?v=v97"></script>
+  <script src="./js/config.js?v=v98"></script>
+  <script src="./js/utils.js?v=v98"></script>
+  <script src="./js/firebaseInit.js?v=v98"></script>
+  <script src="./js/dataManager.js?v=v98"></script>
+  <script src="./js/employee.js?v=v98"></script>
+  <script src="./js/admin/adminCore.js?v=v98"></script>
+  <script src="./js/admin/adminUI.js?v=v98"></script>
+  <script src="./js/admin/adminSalary.js?v=v98"></script>
+  <script src="./js/admin/adminBooking.js?v=v98"></script>
+  <script src="./js/admin/adminRequests.js?v=v98"></script>
+  <script src="./js/admin/adminRegistration.js?v=v98"></script>
+  <script src="./js/admin/adminManager.js?v=v98"></script>
+  <script src="./js/registration/regAPI.js?v=v98"></script>
+  <script src="./js/registration/regApp.js?v=v98"></script>
+    <script src="./js/announcements.js?v=v98"></script>
+  <script src="./js/admin/adminAnnouncements.js?v=v98"></script>
+  <script src="./js/app.js?v=v98"></script>
 </body>
 </html>

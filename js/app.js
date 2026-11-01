@@ -32,6 +32,8 @@ const App = {
     safeInit('AdminRegistration', () => typeof AdminRegistration !== 'undefined' && AdminRegistration.init && AdminRegistration.init());
     safeInit('AdminManager', () => typeof AdminManager !== 'undefined' && AdminManager.init && AdminManager.init());
     safeInit('RegApp', () => typeof RegApp !== 'undefined' && RegApp.init && RegApp.init());
+    safeInit('AnnouncementsModule', () => typeof AnnouncementsModule !== 'undefined' && AnnouncementsModule.init && AnnouncementsModule.init());
+    safeInit('AdminAnnouncements', () => typeof AdminAnnouncements !== 'undefined' && AdminAnnouncements.init && AdminAnnouncements.init());
 
     // Khởi tạo popup thông báo chào mừng & giới thiệu hệ thống mới
     this.initWelcomeNotice();
@@ -160,6 +162,9 @@ const App = {
         const modalId = e.currentTarget.dataset.openModal;
         if (modalId === 'modalDangKyLich' && window.RegApp && typeof window.RegApp.fetchRemoteConfig === 'function') {
           window.RegApp.fetchRemoteConfig();
+        }
+        if (modalId === 'modalAnnouncements' && window.AnnouncementsModule && typeof window.AnnouncementsModule.render === 'function') {
+          window.AnnouncementsModule.render();
         }
         this.openModal(modalId);
       });
