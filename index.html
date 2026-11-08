@@ -325,16 +325,6 @@
             </div>
           </button>
 
-          <!-- Khiếu Nại Công Lương (Hoạt động bình thường) -->
-          <button data-open-modal="modalKhieuNai" class="bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32">
-            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl group-hover:scale-110 transition">
-              📝
-            </div>
-            <div>
-              <div class="font-bold text-slate-700 text-sm group-hover:text-amber-700 transition">Khiếu Nại Công</div>
-              <div class="text-[11px] text-slate-500">Gửi khiếu nại công ca & lương</div>
-            </div>
-          </button>
 
           <!-- Tra Cứu Bảng Lương Cá Nhân -->
           <button data-open-modal="modalLookupSalary" class="bg-white hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32">
@@ -372,20 +362,6 @@
             </div>
           </button>
 
-          <!-- Xin Sửa Lịch (Change Request) -->
-          <button data-open-modal="modalChangeRequest" class="bg-white hover:bg-amber-50/40 border border-slate-200 hover:border-amber-300 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
-            <div class="flex items-center justify-between w-full">
-              <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-xl group-hover:scale-110 transition">
-                🔄
-              </div>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Bảo trì</span>
-            </div>
-            <div>
-              <div class="font-bold text-slate-700 text-sm group-hover:text-amber-700 transition">Sửa Lịch Đăng Ký</div>
-              <div class="text-[11px] text-amber-600 font-medium">Tạm đóng bảo trì</div>
-            </div>
-          </button>
-
           <!-- Thông Báo & Bình Chọn -->
           <button data-open-modal="modalAnnouncements" class="bg-white hover:bg-indigo-50/50 border border-indigo-200 hover:border-indigo-400 p-4 rounded-2xl shadow-sm hover:shadow transition text-left group flex flex-col justify-between h-32 relative overflow-hidden">
             <div class="flex items-center justify-between w-full">
@@ -397,22 +373,6 @@
             <div>
               <div class="font-bold text-slate-800 text-sm group-hover:text-indigo-600 transition">Thông Báo & Bình Chọn</div>
               <div class="text-[11px] text-slate-500">Tin tức & đóng góp ý kiến</div>
-            </div>
-          </button>
-
-          <!-- Xem Trước Lịch Phân Bổ Ca (MỚI) -->
-          <button data-open-modal="modalPreviewSchedule" class="bg-gradient-to-br from-violet-50/70 via-white to-purple-50/50 hover:from-violet-100/80 hover:to-white border-2 border-violet-300 hover:border-violet-500 p-4 rounded-2xl shadow-sm hover:shadow-md transition text-left group flex flex-col justify-between h-32 relative overflow-hidden ring-1 ring-violet-200">
-            <div class="flex items-center justify-between w-full">
-              <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center text-xl group-hover:scale-110 transition shadow-inner">
-                🗓️
-              </div>
-              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-red-500 via-rose-500 to-amber-500 text-white shadow-md animate-pulse border border-amber-300 tracking-wide uppercase">
-                MỚI 🔥
-              </span>
-            </div>
-            <div>
-              <div class="font-bold text-slate-800 text-sm group-hover:text-violet-700 transition">Xem Trước Lịch</div>
-              <div class="text-[11px] text-violet-600 font-medium">Lịch sắp xếp 01/11 - 15/11</div>
             </div>
           </button>
 
@@ -1194,55 +1154,6 @@
     </div>
   </div>
 
-  <!-- MODAL 4: KHIẾU NẠI CÔNG LƯƠNG -->
-  <div id="modalKhieuNai" class="custom-modal-backdrop">
-    <div class="custom-modal-content p-6 max-w-lg w-full">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>📝</span> Khiếu Nại Công Lương
-        </h3>
-        <button type="button" data-close-modal="modalKhieuNai" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
-      </div>
-
-      <form id="formKhieuNai" class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Mã OPS: <span class="text-red-500">*</span></label>
-          <input type="text" name="empId" placeholder="VD: OPS170621 hoặc Ops170621" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none uppercase font-bold placeholder:normal-case" />
-          <p class="text-[11px] text-slate-500 mt-1">Bắt buộc: OPS + 4-6 số (Ví dụ: OPS170621)</p>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Họ và Tên:</label>
-          <input type="text" name="empName" placeholder="VD: Lê Văn Bình" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Số điện thoại liên hệ:</label>
-          <input type="tel" name="phone" placeholder="VD: 0988776655" required class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-mono focus:border-agari-red focus:outline-none" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Loại khiếu nại:</label>
-          <select name="complaintType" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm font-semibold focus:border-agari-red focus:outline-none">
-            <option value="Chấm công sót ca">Chấm công sót ca (Có đi làm nhưng chưa có công)</option>
-            <option value="Sai số giờ làm">Sai số giờ làm / Sai loại ca (Ngày/Đêm)</option>
-            <option value="Tranh chấp ca trực">Tranh chấp vị trí / Trừ phạt không rõ lý do</option>
-            <option value="Khác">Khiếu nại khác</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Nội dung chi tiết khiếu nại:</label>
-          <textarea name="content" rows="3" required placeholder="Mô tả cụ thể ngày, giờ vào/ra, người giám sát ca..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm focus:border-agari-red focus:outline-none"></textarea>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Tải ảnh minh chứng (Ảnh chụp/giấy tờ):</label>
-          <input type="file" name="proofImage" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-agari-red file:text-white hover:file:bg-agari-red-dark cursor-pointer" />
-          <p class="text-[11px] text-slate-400 mt-1">Ảnh sẽ tự động nén dưới 500KB và tải lên hệ thống bảo mật.</p>
-        </div>
-        <button type="submit" class="w-full py-3 rounded-xl bg-agari-red hover:bg-agari-red-dark text-white font-bold text-sm shadow transition">
-          Gửi Khiếu Nại Đến HR
-        </button>
-      </form>
-    </div>
-  </div>
-
   <!-- MODAL 5: TRA CỨU BẢNG LƯƠNG -->
   <div id="modalLookupSalary" class="custom-modal-backdrop">
     <div class="custom-modal-content !max-w-3xl p-6">
@@ -1401,43 +1312,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL 7: XIN SỬA LỊCH ĐÃ ĐĂNG KÝ (CHANGE REQUEST - CR_) [TẠM ĐÓNG BẢO TRÌ] -->
-  <div id="modalChangeRequest" class="custom-modal-backdrop">
-    <div class="custom-modal-content p-6 max-w-md w-full text-center">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-          <span>🔄</span> Sửa Lịch Đã Đăng Ký
-        </h3>
-        <button type="button" data-close-modal="modalChangeRequest" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
-      </div>
-
-      <div class="py-4 flex flex-col items-center">
-        <div class="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-3xl mb-4 shadow-sm">
-          🛠️
-        </div>
-        <h4 class="text-base font-bold text-slate-800 mb-2">Tính Năng Tạm Đóng Bảo Trì</h4>
-        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed mb-4 max-w-xs">
-          Hệ thống tiếp nhận yêu cầu sửa lịch (Change Request) hiện đang được tạm dừng để phục vụ công tác bảo trì & nâng cấp dữ liệu.
-        </p>
-        <div class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs font-medium leading-relaxed text-left w-full mb-4">
-          <div class="font-bold mb-1 flex items-center gap-1.5 text-amber-800">
-            <span>📌</span> Hướng dẫn điều chỉnh lịch:
-          </div>
-          Quý anh/chị có nhu cầu thay đổi ca làm việc hoặc sửa lịch đăng ký vui lòng liên hệ trực tiếp <strong>Quản lý ca</strong> hoặc <strong>Admin Zalo hỗ trợ</strong> để được xử lý trực tiếp!
-        </div>
-        <div class="w-full mb-1">
-          <button type="button" data-open-modal="modalLookupSchedule" data-close-modal="modalChangeRequest" class="w-full py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs shadow flex items-center justify-center gap-1.5 transition">
-            <span>🔍</span> Bấm Vào Đây Để Xem / Tra Cứu Lịch Đã Đăng Ký
-          </button>
-        </div>
-      </div>
-
-      <button type="button" data-close-modal="modalChangeRequest" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm shadow transition">
-        Đã Hiểu
-      </button>
     </div>
   </div>
 
@@ -1812,131 +1686,6 @@
     </div>
   </div>
 
-
-  <!-- ============================================================ -->
-  <!-- MODAL XEM TRƯỚC LỊCH LÀM VIỆC (PREVIEW SCHEDULE)             -->
-  <!-- ============================================================ -->
-  <div id="modalPreviewSchedule" class="custom-modal-backdrop">
-    <div class="custom-modal-content !max-w-4xl p-5 sm:p-7 relative overflow-hidden text-left max-h-[92vh] flex flex-col">
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 flex-shrink-0">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center text-xl shadow-md">
-            🗓️
-          </div>
-          <div>
-            <h3 class="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-              <span>Xem Trước Lịch Phân Bổ Ca</span>
-              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-gradient-to-r from-red-500 to-amber-500 text-white uppercase tracking-wider animate-pulse">
-                01/11 - 15/11
-              </span>
-            </h3>
-            <p class="text-xs text-slate-500">Tra cứu phân bổ ca làm việc chính thức & dự phòng bổ sung kho SW SOC</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button id="btnReloadPreviewSchedule" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition flex items-center gap-1" title="Làm mới dữ liệu từ Google Sheets">
-            <span>🔄</span>
-            <span class="hidden sm:inline">Cập nhật</span>
-          </button>
-          <button data-close-modal="modalPreviewSchedule" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-sm font-bold transition">
-            ✕
-          </button>
-        </div>
-      </div>
-
-      <!-- Tab Navigation -->
-      <div class="flex items-center justify-between gap-2 py-3 border-b border-slate-100 flex-shrink-0">
-        <div class="flex items-center gap-2">
-          <button data-tab="lookup" class="preview-sched-tab-btn px-4 py-1.5 rounded-xl text-xs font-bold transition bg-violet-600 text-white shadow-sm flex items-center gap-1.5">
-            <span>🔍</span>
-            <span>Tra Cứu Cá Nhân</span>
-          </button>
-          <button data-tab="full" class="preview-sched-tab-btn px-4 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center gap-1.5">
-            <span>📋</span>
-            <span>Xem Toàn Bộ Bảng Lịch</span>
-          </button>
-        </div>
-        <div class="text-[11px] text-slate-400 hidden sm:block">
-          Dữ liệu trực tiếp từ Bảng Phân Bổ Ca
-        </div>
-      </div>
-
-      <!-- Tab 1: Tra Cứu Cá Nhân -->
-      <div id="previewSchedPaneLookup" class="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-        <!-- Input Search Bar -->
-        <form id="formPreviewScheduleLookup" class="bg-gradient-to-r from-violet-50 to-indigo-50/50 p-3.5 sm:p-4 rounded-2xl border border-violet-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-          <div class="relative flex-1">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-            </div>
-            <input 
-              type="text" 
-              id="previewSchedLookupInput" 
-              class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold uppercase text-slate-800 placeholder:text-slate-400 placeholder:normal-case focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 transition"
-              placeholder="Nhập Mã OPS (Ví dụ: OPS170621 hoặc 170621)..." 
-              autocomplete="off"
-            />
-          </div>
-          <button 
-            type="button" 
-            id="btnDoPreviewSchedLookup" 
-            class="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 active:scale-[0.98] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition flex items-center justify-center gap-1.5"
-          >
-            <span>Tra Cứu Ngay</span>
-            <span>👉</span>
-          </button>
-        </form>
-
-        <!-- Result Container -->
-        <div id="previewScheduleLookupResult">
-          <!-- Rendered by PreviewScheduleModule -->
-        </div>
-      </div>
-
-      <!-- Tab 2: Xem Toàn Bộ Lịch -->
-      <div id="previewSchedPaneFull" class="flex-1 overflow-y-auto py-4 space-y-3.5 pr-1 hidden">
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
-          <!-- Filter Shift -->
-          <div class="flex items-center gap-1.5">
-            <span class="text-xs font-bold text-slate-600 mr-1">Ca:</span>
-            <button data-shift="all" class="preview-sched-shift-filter px-3 py-1 rounded-lg text-xs font-bold transition bg-violet-600 text-white">Tất Cả</button>
-            <button data-shift="18:00-22:00" class="preview-sched-shift-filter px-3 py-1 rounded-lg text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">18:00 - 22:00</button>
-            <button data-shift="22:00-06:00" class="preview-sched-shift-filter px-3 py-1 rounded-lg text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">22:00 - 06:00</button>
-          </div>
-          <!-- Filter Search -->
-          <div class="relative min-w-[200px]">
-            <input 
-              type="text" 
-              id="previewSchedFullSearch" 
-              class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:border-violet-500" 
-              placeholder="Lọc tên hoặc mã OPS..." 
-            />
-            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400 text-xs">
-              🔍
-            </div>
-          </div>
-        </div>
-
-        <!-- Full Table Container -->
-        <div id="previewScheduleFullTable">
-          <!-- Rendered by PreviewScheduleModule -->
-        </div>
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between gap-2 flex-shrink-0 bg-white">
-        <div class="text-[11px] text-slate-500">
-          💡 Lưu ý: Trạng thái <strong>BỔ SUNG</strong> vẫn tính có lịch làm việc, vui lòng có mặt đúng giờ!
-        </div>
-        <button type="button" data-close-modal="modalPreviewSchedule" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 active:scale-[0.98] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-          <span>Đóng</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-
   <!-- ============================================================ -->
   <!-- MODAL ADMIN TẠO THÔNG BÁO HOẶC BÌNH CHỌN                     -->
   <!-- ============================================================ -->
@@ -2239,23 +1988,22 @@
   </div>
 
   <!-- Javascript Modules (Tuân thủ cấu trúc & Cache-Busting Versioning v92) -->
-  <script src="./js/config.js?v=v103"></script>
-  <script src="./js/utils.js?v=v103"></script>
-  <script src="./js/firebaseInit.js?v=v103"></script>
-  <script src="./js/dataManager.js?v=v103"></script>
-  <script src="./js/employee.js?v=v103"></script>
-  <script src="./js/admin/adminCore.js?v=v103"></script>
-  <script src="./js/admin/adminUI.js?v=v103"></script>
-  <script src="./js/admin/adminSalary.js?v=v103"></script>
-  <script src="./js/admin/adminBooking.js?v=v103"></script>
-  <script src="./js/admin/adminRequests.js?v=v103"></script>
-  <script src="./js/admin/adminRegistration.js?v=v103"></script>
-  <script src="./js/admin/adminManager.js?v=v103"></script>
-  <script src="./js/registration/regAPI.js?v=v103"></script>
-  <script src="./js/registration/regApp.js?v=v103"></script>
-    <script src="./js/announcements.js?v=v103"></script>
-  <script src="./js/admin/adminAnnouncements.js?v=v103"></script>
-  <script src="./js/previewSchedule.js?v=v103"></script>
-  <script src="./js/app.js?v=v103"></script>
+  <script src="./js/config.js?v=v104"></script>
+  <script src="./js/utils.js?v=v104"></script>
+  <script src="./js/firebaseInit.js?v=v104"></script>
+  <script src="./js/dataManager.js?v=v104"></script>
+  <script src="./js/employee.js?v=v104"></script>
+  <script src="./js/admin/adminCore.js?v=v104"></script>
+  <script src="./js/admin/adminUI.js?v=v104"></script>
+  <script src="./js/admin/adminSalary.js?v=v104"></script>
+  <script src="./js/admin/adminBooking.js?v=v104"></script>
+  <script src="./js/admin/adminRequests.js?v=v104"></script>
+  <script src="./js/admin/adminRegistration.js?v=v104"></script>
+  <script src="./js/admin/adminManager.js?v=v104"></script>
+  <script src="./js/registration/regAPI.js?v=v104"></script>
+  <script src="./js/registration/regApp.js?v=v104"></script>
+    <script src="./js/announcements.js?v=v104"></script>
+  <script src="./js/admin/adminAnnouncements.js?v=v104"></script>
+  <script src="./js/app.js?v=v104"></script>
 </body>
 </html>
